@@ -8,15 +8,26 @@ import { PartyModeGame } from './components/PartyModeGame';
 import { MutualPkGame } from './components/MutualPkGame';
 import { CustomCreator } from './components/CustomCreator';
 import { SplashLoader } from './components/SplashLoader';
+import { StartCover } from './components/StartCover';
 import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
 
 export function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [showSplash, setShowSplash] = useState<boolean>(false);
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [gameSessionId, setGameSessionId] = useState<number>(Date.now());
   const [soundOn, setSoundOn] = useState<boolean>(true);
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
+
+  const handlePressStart = () => {
+    unlockAudioContext();
+    if (isSoundEnabled()) {
+      startBgm();
+    }
+    setHasStarted(true);
+    setShowSplash(true);
+  };
 
   const handleSelectMode = (mode: GameMode) => {
     setCurrentMode(mode);
@@ -92,6 +103,11 @@ export function App() {
 
   // Combine default questions with custom questions
   const allAvailableQuestions = [...customQuestions, ...INITIAL_QUESTIONS];
+
+  // Show Cover Screen if player has not clicked PRESS START
+  if (!hasStarted) {
+    return <StartCover onStartGame={handlePressStart} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
