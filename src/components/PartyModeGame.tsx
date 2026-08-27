@@ -293,9 +293,11 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
     );
   }
 
-  // Render Final Party Champion Leaderboard & High-Energy Podium Summary
+  // Render Final Party Champion Leaderboard & Multi-Champion / Tie Support
   const sortedFinalPlayers = [...players].sort((a, b) => b.totalScore - a.totalScore);
-  const champion = sortedFinalPlayers[0];
+  const maxScore = sortedFinalPlayers[0]?.totalScore || 0;
+  const champions = sortedFinalPlayers.filter((p) => p.totalScore === maxScore);
+  const isTie = champions.length > 1;
 
   return (
     <motion.div
@@ -304,36 +306,48 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       className="w-full max-w-xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-amber-500/30 shadow-2xl flex flex-col gap-6 text-center select-none"
     >
       <div className="inline-flex p-3.5 bg-amber-500/10 rounded-2xl border border-amber-500/30 text-amber-400 self-center">
-        <Crown className="w-10 h-10 animate-bounce" />
+        <Crown className="w-10 h-10 animate-bounce text-amber-400" />
       </div>
 
       <div>
         <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-widest inline-flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" /> 同螢幕派對總決算
         </span>
-        <h2 className="text-3xl font-black text-white tracking-tight mt-2">派對電量總冠軍登場！</h2>
+        <h2 className="text-3xl font-black text-white tracking-tight mt-2">
+          {isTie ? '🎉 勢均力敵 · 並列總冠軍！' : '派對電量總冠軍登場！'}
+        </h2>
         <p className="text-xs text-slate-400 mt-1">經歷了 5 題極致荒謬電量考驗</p>
       </div>
 
-      {/* Champion Spring Pop-Out Podium Card */}
+      {/* Champion Podium Card (Supports Single Champion or Parallel Co-Champions) */}
       <motion.div
         initial={{ scale: 0.9, y: 10 }}
         animate={{ scale: 1.05, y: -5 }}
         transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-        className="bg-gradient-to-r from-amber-950/60 via-yellow-950/40 to-amber-950/60 p-6 rounded-3xl border-2 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.5)] flex flex-col items-center gap-3 relative overflow-hidden"
+        className="bg-gradient-to-r from-amber-950/60 via-yellow-950/40 to-amber-950/60 p-6 rounded-3xl border-2 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.5)] flex flex-col items-center gap-4 relative overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-amber-400/10 via-transparent to-transparent pointer-events-none" />
-        
-        <div className="flex items-center gap-2">
-          <span className="text-4xl">{champion.avatar}</span>
-          <h3 className="text-3xl font-black text-amber-300">{champion.name}</h3>
+
+        {/* Co-Champions Grid */}
+        <div className={`grid gap-4 w-full items-center justify-center ${champions.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {champions.map((champ) => {
+            const avgScore = Math.min(100, Math.round(champ.totalScore / 5));
+            return (
+              <div key={champ.id} className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-3xl sm:text-4xl">{champ.avatar}</span>
+                  <h3 className="text-xl sm:text-2xl font-black text-amber-300">{champ.name}</h3>
+                </div>
+
+                <UnifiedBattery value={avgScore} size="md" />
+              </div>
+            );
+          })}
         </div>
 
-        <UnifiedBattery value={Math.min(100, Math.round(champion.totalScore / 5))} size="md" />
-
         <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-amber-500/30 mt-1">
-          <span className="text-xs text-slate-400">總得分：</span>
-          <strong className="text-xl font-black text-emerald-400 ml-1">{champion.totalScore} 分</strong>
+          <span className="text-xs text-slate-400">{isTie ? '並列最高總得分：' : '總得分：'}</span>
+          <strong className="text-xl font-black text-emerald-400 ml-1">{maxScore} 分</strong>
         </div>
       </motion.div>
 
@@ -344,20 +358,31 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         </h4>
 
         {sortedFinalPlayers.map((p, idx) => {
-          const rankBadge = idx === 0 ? '👑 冠軍' : idx === 1 ? '🥈 亞軍' : idx === 2 ? '🥉 季軍' : `#${idx + 1}`;
+          const isCoChampion = p.totalScore === maxScore;
+          
+          let rankBadge = '';
+          if (isCoChampion) {
+            rankBadge = '👑 並列冠軍';
+          } else {
+            // Find rank among non-champions
+            const championCount = champions.length;
+            const nonChampRank = idx - championCount + 2;
+            rankBadge = nonChampRank === 2 ? '🥈 亞軍' : nonChampRank === 3 ? '🥉 季軍' : `#${idx + 1}`;
+          }
+
           const avgScore = Math.min(100, Math.round(p.totalScore / 5));
 
           return (
             <div
               key={p.id}
               className={`p-3.5 rounded-2xl border flex items-center justify-between px-4 transition-all ${
-                idx === 0
+                isCoChampion
                   ? 'bg-amber-500/10 border-amber-500/40 shadow-md'
                   : 'bg-slate-950 border-slate-800'
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`text-xs font-black px-2.5 py-1 rounded-full ${idx === 0 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                <span className={`text-xs font-black px-2.5 py-1 rounded-full ${isCoChampion ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
                   {rankBadge}
                 </span>
                 <span className="text-2xl">{p.avatar}</span>
