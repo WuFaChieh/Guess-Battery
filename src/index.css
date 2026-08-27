@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #030712;
+    color: #f8fafc;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom range slider thumb styling */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.8), 0 0 5px rgba(255, 255, 255, 0.9);
+  border: 3px solid #ffffff;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type=range]::-webkit-slider-thumb:active {
+  transform: scale(1.25);
+}
+
+input[type=range]::-moz-range-thumb {
+  height: 28px;
+  width: 28px;
+  border-radius: 50%;
+  background: #10b981;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.8), 0 0 5px rgba(255, 255, 255, 0.9);
+  border: 3px solid #ffffff;
+}
+
+/* Custom animations */
+@keyframes battery-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 25px rgba(16, 185, 129, 0.9));
+  }
+}
+
+.animate-battery-glow {
+  animation: battery-glow 2s infinite ease-in-out;
+}
