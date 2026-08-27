@@ -81,40 +81,40 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
     }
   };
 
-  // Submit custom question to cloud database / author review endpoint
+  // Submit custom question directly to Google Sheets / Cloud Webhook
   const handleSubmitToOfficialCloud = async (q: Question) => {
     setSubmittingId(q.id);
     try {
-      // Send submission payload to public Cloud API / Formspree Webhook endpoint
-      const response = await fetch('https://formspree.io/f/xbjnqpyz', {
+      const googleSheetsScriptUrl = (import.meta as any).env?.VITE_GOOGLE_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbz_default_sheets_webhook/exec';
+
+      const payload = {
+        submission_type: 'Guess_Battery_Community_Question',
+        id: q.id,
+        title: q.title,
+        officialBattery: q.officialBattery,
+        explanation: q.explanation,
+        category: q.category,
+        emoji: q.emoji,
+        submitted_at: new Date().toISOString()
+      };
+
+      // Send to Google Sheets Apps Script (using text/plain to avoid CORS preflight options)
+      await fetch(googleSheetsScriptUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submission_type: 'Guess_Battery_Community_Question',
-          id: q.id,
-          title: q.title,
-          officialBattery: q.officialBattery,
-          explanation: q.explanation,
-          category: q.category,
-          emoji: q.emoji,
-          submitted_at: new Date().toISOString()
-        })
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
       });
 
-      if (response.ok || response.status < 500) {
-        const nextSubmitted = [...submittedIds, q.id];
-        setSubmittedIds(nextSubmitted);
-        localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-        alert(`🎉 題目「${q.title}」投稿成功！審核通過後將加入官方正式題庫！`);
-      } else {
-        throw new Error('Submission server error');
-      }
-    } catch {
-      // Fallback local acknowledgment
       const nextSubmitted = [...submittedIds, q.id];
       setSubmittedIds(nextSubmitted);
       localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-      alert(`🎉 題目「${q.title}」已記錄投稿！冷月仙會定期審核加入官方資料庫！`);
+      alert(`🎉 題目「${q.title}」投稿成功！冷月仙會於 Google 試算表中審核並加入官方題庫！`);
+    } catch {
+      const nextSubmitted = [...submittedIds, q.id];
+      setSubmittedIds(nextSubmitted);
+      localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
+      alert(`🎉 題目「${q.title}」已記錄投稿！冷月仙會在 Google 試算表中定期審核！`);
     } finally {
       setSubmittingId(null);
     }
