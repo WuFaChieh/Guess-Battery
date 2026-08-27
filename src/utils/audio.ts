@@ -263,3 +263,127 @@ export function playPerfectFanfare(): void {
     console.debug('Audio error:', e);
   }
 }
+
+// ---------------------------------------------------------------------
+// ⚔️ Dedicated 1v1 PK Sound Effects
+// ---------------------------------------------------------------------
+
+// Play high-energy metallic slash / match found sound
+export function playMatchFoundSound(): void {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const freqs = [523.25, 783.99, 1046.50]; // C5, G5, C6
+    freqs.forEach((freq, idx) => {
+      const startTime = now + idx * 0.06;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, startTime + 0.12);
+
+      gain.gain.setValueAtTime(0.25, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
+    });
+  } catch (e) {
+    console.debug('Audio error:', e);
+  }
+}
+
+// Play punchy whoosh when submitting question or guess
+export function playQuestionSubmitSound(): void {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.18);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.22);
+  } catch (e) {
+    console.debug('Audio error:', e);
+  }
+}
+
+// Play triumphant victory fanfare
+export function playVictoryFanfareSound(): void {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
+    notes.forEach((freq, idx) => {
+      const startTime = ctx.currentTime + idx * 0.09;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.28, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.38);
+    });
+  } catch (e) {
+    console.debug('Audio error:', e);
+  }
+}
+
+// Play defeat sound
+export function playDefeatSound(): void {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const notes = [440.00, 349.23, 293.66, 220.00]; // A4, F4, D4, A3
+    notes.forEach((freq, idx) => {
+      const startTime = ctx.currentTime + idx * 0.12;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.18, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.32);
+    });
+  } catch (e) {
+    console.debug('Audio error:', e);
+  }
+}

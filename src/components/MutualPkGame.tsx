@@ -7,7 +7,7 @@ import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
 import { calculateScore } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
-import { playScoreSound, playChargingSound, playTickSound } from '../utils/audio';
+import { playChargingSound, playTickSound, playMatchFoundSound, playQuestionSubmitSound, playVictoryFanfareSound, playDefeatSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
 type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing_opponent_q' | 'opponent_guessing' | 'revealing' | 'revealed';
@@ -85,6 +85,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       });
 
       setStage('matched');
+      playMatchFoundSound(); // ⚔️ Aggressive high-energy match sound!
 
       // Transition to creating stage after 1.5s razor-sharp match celebration
       setTimeout(() => {
@@ -105,11 +106,13 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       alert('請輸入考對手的題目名稱！');
       return;
     }
+    playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
     setStage('guessing_opponent_q');
   };
 
   // Submit Player's Guess & trigger parallel 7-second suspense
   const handleSubmitPlayerGuess = () => {
+    playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
     setStage('opponent_guessing');
 
     // Ensure parallel total time reaches at least ~7 seconds
@@ -122,7 +125,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     }, remainingDelay);
   };
 
-  // Run Simultaneous Side-by-Side Charging & Optical Spotlight Ceremony
+  // Run Simultaneous Side-by-Side Charging Ceremony
   const runSimultaneousChargingCeremony = () => {
     if (!opponentQuestion || !opponent) return;
 
@@ -170,16 +173,16 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       if (stepDone) {
         clearInterval(interval);
 
-        // Smooth Pop-Out & Optical Spotlight Fanfare
+        // Smooth Pop-Out & Winner Fanfare
         setTimeout(() => {
           setIsChargingFinished(true);
           setStage('revealed');
 
           if (pScore >= oScore) {
-            playScoreSound(100);
+            playVictoryFanfareSound(); // 👑 Triumphant 5-note fanfare sound!
             confetti({ particleCount: 160, spread: 90, origin: { y: 0.4 } });
           } else {
-            playScoreSound(40);
+            playDefeatSound(); // ⚡ Minor chord defeat sound
           }
         }, 300);
       }
@@ -253,7 +256,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </div>
       )}
 
-      {/* STAGE 3: AGGRESSIVE HIGH-ENERGY MATCHED CELEBRATION (鋒芒爆發 + 殺氣重炫砲開場) */}
+      {/* STAGE 3: AGGRESSIVE HIGH-ENERGY MATCHED CELEBRATION */}
       {stage === 'matched' && opponent && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -420,7 +423,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 5: OPPONENT GUESSING SUSPENSE (No explicit seconds text!) */}
+      {/* STAGE 5: OPPONENT GUESSING SUSPENSE */}
       {stage === 'opponent_guessing' && opponentQuestion && opponent && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-5 w-full py-6">
           <div className="bg-slate-950 p-4 rounded-2xl border border-rose-500/30 w-full text-left">
@@ -447,11 +450,11 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 6: SIMULTANEOUS REVEAL & BOTTOM-UP SWAYING OPTICAL SPOTLIGHT FANFARE */}
+      {/* STAGE 6: SIMULTANEOUS REVEAL & WINNER SMOOTH POP-OUT */}
       {(stage === 'revealing' || stage === 'revealed') && opponentQuestion && opponent && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-5 w-full relative">
 
-          {/* Sequential Stage Title Banner */}
+          {/* Title Banner */}
           <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-rose-500/40 text-center relative z-20">
             {!isChargingFinished ? (
               <p className="text-xs font-bold text-amber-400 animate-pulse flex items-center justify-center gap-1.5">
@@ -466,7 +469,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 </h3>
                 <p className="text-xs text-amber-400 font-bold mt-1 flex items-center justify-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  鎂光燈聚焦勝利者 · 差距最小者勝出！
+                  差距最小者勝出！
                 </p>
               </>
             )}
@@ -475,112 +478,80 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
           {/* DUAL BATTERY COMPARISON - SIMULTANEOUS CHARGING & WINNER SMOOTH POP-OUT */}
           <div className="grid grid-cols-2 gap-3 sm:gap-5 w-full items-center justify-center my-2 relative z-20">
             {/* Player's Battery Card */}
-            <div className="relative">
-              {/* BOTTOM-UP SWAYING OPTICAL SPOTLIGHT BEAM FOR PLAYER */}
-              {isChargingFinished && isPlayerWinner && (
-                <motion.div
-                  animate={{ rotate: [-6, 6, -6] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[180px] h-[340px] pointer-events-none z-10 origin-bottom"
-                  style={{
-                    background: 'linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.45) 50%, transparent 100%)',
-                    clipPath: 'polygon(0% 0%, 100% 0%, 65% 100%, 35% 100%)',
-                    filter: 'drop-shadow(0 0 25px rgba(251, 191, 36, 0.8))'
-                  }}
-                />
-              )}
+            <motion.div
+              initial={{ scale: 1, y: 0 }}
+              animate={
+                isChargingFinished
+                  ? isPlayerWinner
+                    ? { scale: 1.18, y: -10, zIndex: 30 }
+                    : { scale: 0.88, y: 4, opacity: 0.7 }
+                  : { scale: 1, y: 0 }
+              }
+              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
+                isChargingFinished && isPlayerWinner
+                  ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
+                  : 'bg-emerald-950/30 border-emerald-500/40 opacity-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 font-black text-xs">
+                <span className="text-xl">{playerAvatar}</span>
+                <span className="text-white">你</span>
+                {isChargingFinished && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                    {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                  </span>
+                )}
+              </div>
 
-              <motion.div
-                initial={{ scale: 1, y: 0 }}
-                animate={
-                  isChargingFinished
-                    ? isPlayerWinner
-                      ? { scale: 1.18, y: -10, zIndex: 30 }
-                      : { scale: 0.88, y: 4, opacity: 0.7 }
-                    : { scale: 1, y: 0 }
-                }
-                transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
-                  isChargingFinished && isPlayerWinner
-                    ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
-                    : 'bg-emerald-950/30 border-emerald-500/40 opacity-100'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-black text-xs">
-                  <span className="text-xl">{playerAvatar}</span>
-                  <span className="text-white">你</span>
-                  {isChargingFinished && (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
-                      {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
-                    </span>
-                  )}
-                </div>
+              <UnifiedBattery
+                value={animatedPlayerBattery}
+                size="sm"
+              />
 
-                <UnifiedBattery
-                  value={animatedPlayerBattery}
-                  size="sm"
-                />
-
-                <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                  <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
-                  <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
-                </div>
-              </motion.div>
-            </div>
+              <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
+                <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
+                <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
+              </div>
+            </motion.div>
 
             {/* Opponent's Battery Card */}
-            <div className="relative">
-              {/* BOTTOM-UP SWAYING OPTICAL SPOTLIGHT BEAM FOR OPPONENT */}
-              {isChargingFinished && !isPlayerWinner && (
-                <motion.div
-                  animate={{ rotate: [-6, 6, -6] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[180px] h-[340px] pointer-events-none z-10 origin-bottom"
-                  style={{
-                    background: 'linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.45) 50%, transparent 100%)',
-                    clipPath: 'polygon(0% 0%, 100% 0%, 65% 100%, 35% 100%)',
-                    filter: 'drop-shadow(0 0 25px rgba(251, 191, 36, 0.8))'
-                  }}
-                />
-              )}
+            <motion.div
+              initial={{ scale: 1, y: 0 }}
+              animate={
+                isChargingFinished
+                  ? !isPlayerWinner
+                    ? { scale: 1.18, y: -10, zIndex: 30 }
+                    : { scale: 0.88, y: 4, opacity: 0.7 }
+                  : { scale: 1, y: 0 }
+              }
+              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
+                isChargingFinished && !isPlayerWinner
+                  ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
+                  : 'bg-rose-950/30 border-rose-500/40 opacity-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 font-black text-xs">
+                <span className="text-xl">{opponent.avatar}</span>
+                <span className="text-white">{opponent.name}</span>
+                {isChargingFinished && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                    {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                  </span>
+                )}
+              </div>
 
-              <motion.div
-                initial={{ scale: 1, y: 0 }}
-                animate={
-                  isChargingFinished
-                    ? !isPlayerWinner
-                      ? { scale: 1.18, y: -10, zIndex: 30 }
-                      : { scale: 0.88, y: 4, opacity: 0.7 }
-                    : { scale: 1, y: 0 }
-                }
-                transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
-                  isChargingFinished && !isPlayerWinner
-                    ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
-                    : 'bg-rose-950/30 border-rose-500/40 opacity-100'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-black text-xs">
-                  <span className="text-xl">{opponent.avatar}</span>
-                  <span className="text-white">{opponent.name}</span>
-                  {isChargingFinished && (
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
-                      {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
-                    </span>
-                  )}
-                </div>
+              <UnifiedBattery
+                value={animatedOpponentBattery}
+                size="sm"
+              />
 
-                <UnifiedBattery
-                  value={animatedOpponentBattery}
-                  size="sm"
-                />
-
-                <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                  <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
-                  <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
-                </div>
-              </motion.div>
-            </div>
+              <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
+                <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
+                <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
+              </div>
+            </motion.div>
           </div>
 
           {/* Action Button */}
