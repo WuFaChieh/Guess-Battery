@@ -322,8 +322,248 @@ export const INITIAL_QUESTIONS: Question[] = [
     category: 'math',
     emoji: '⚖️'
   },
+  {
+    id: 'qm_41',
+    title: '泰勒展開式 e^x 在 x=0 處的一階逼近 (1+x) 當 x=0.5 時的值轉化為百分比是多少電量 %？',
+    officialBattery: 50,
+    explanation: '1 + 0.5 = 1.5，取小數點後 0.5 轉化為 50% 電量！',
+    category: 'math',
+    emoji: '📈'
+  },
+  {
+    id: 'qm_42',
+    title: '圓周率 π = 3.14159... 取小數點後前兩位是多少電量 %？',
+    officialBattery: 14,
+    explanation: 'π ≈ 3.14... 小數點後前兩位正是 14% 電量！',
+    category: 'math',
+    emoji: '🥧'
+  },
+  {
+    id: 'qm_43',
+    title: '半徑 r = 5 的圓面積 A = πr² (取 π ≈ 3.14) 的數值小數點前兩位是多少電量 %？',
+    officialBattery: 78,
+    explanation: 'A = 3.14 × 25 = 78.5，取前兩位整數正是 78% 電量！',
+    category: 'math',
+    emoji: '⚪'
+  },
+  {
+    id: 'qm_44',
+    title: '三維空間中單位向量 û 的模長 |û| 轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '單位向量模長定義為 1，即 100% 滿格能量！',
+    category: 'math',
+    emoji: '📐'
+  },
+  {
+    id: 'qm_45',
+    title: '正態分佈 (Normal Distribution) 在 [-σ, +σ] 區間內的概率取整數是多少電量 %？',
+    officialBattery: 68,
+    explanation: '經驗法則 (68-95-99.7 Rule)，一倍標準差區間涵蓋 68.27% ≈ 68% 概率！',
+    category: 'math',
+    emoji: '📊'
+  },
+  {
+    id: 'qm_46',
+    title: '正態分佈在 [-2σ, +2σ] 區間內的概率取整數是多少電量 %？',
+    officialBattery: 95,
+    explanation: '兩倍標準差區間涵蓋 95.45% ≈ 95% 概率！',
+    category: 'math',
+    emoji: '📈'
+  },
+  {
+    id: 'qm_47',
+    title: '三角函數 sin(30°) 的數值轉化為百分比是多少電量 %？',
+    officialBattery: 50,
+    explanation: 'sin(30°) = 1/2 = 0.50，恰好是 50% 半滿電量！',
+    category: 'math',
+    emoji: '📐'
+  },
+  {
+    id: 'qm_48',
+    title: '三角函數 cos(60°) 的數值轉化為百分比是多少電量 %？',
+    officialBattery: 50,
+    explanation: 'cos(60°) = 1/2 = 0.50，恰好是 50% 半滿電量！',
+    category: 'math',
+    emoji: '📐'
+  },
+  {
+    id: 'qm_49',
+    title: '計算定積分 ∫[0 to 1] 2x dx 的結果轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '[x²] 從 0 到 1 等於 1 - 0 = 1，即 100% 滿格電量！',
+    category: 'math',
+    emoji: '∫'
+  },
+  {
+    id: 'qm_50',
+    title: '求極限 lim(x→0) sin(x)/x 轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '經典重要極限結果為 1，即 100% 滿格能量！',
+    category: 'math',
+    emoji: '🎯'
+  },
+  {
+    id: 'qm_51',
+    title: '單位矩陣 I₂ = [[1, 0], [0, 1]] 的跡 tr(I₂) 放大五十倍後是多少電量 %？',
+    officialBattery: 100,
+    explanation: 'tr(I₂) = 1 + 1 = 2，放大 50 倍為 100% 滿格電量！',
+    category: 'math',
+    emoji: '🔲'
+  },
+  {
+    id: 'qm_52',
+    title: '虛數單位 i 的平方 i² 的絕對值 |-1| 轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '|-1| = 1，即 100% 滿格能量！',
+    category: 'math',
+    emoji: '🧮'
+  },
+  {
+    id: 'qm_53',
+    title: '計算 2^10 = 1024 取百位與十位數組合是多少電量 %？',
+    officialBattery: 24,
+    explanation: '1024 的最後兩位數字正是 24% 電量！',
+    category: 'math',
+    emoji: '🔢'
+  },
+  {
+    id: 'qm_54',
+    title: '費氏數列 (Fibonacci) 第 10 項的數值是多少電量 %？',
+    officialBattery: 55,
+    explanation: '數列: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55！第 10 項正是 55% 電量！',
+    category: 'math',
+    emoji: '🌀'
+  },
+  {
+    id: 'qm_55',
+    title: '組合數 C(5, 2) 放大十倍後是多少電量 %？',
+    officialBattery: 100,
+    explanation: 'C(5, 2) = (5×4)/2 = 10，放大十倍為 100% 滿格電量！',
+    category: 'math',
+    emoji: '🎲'
+  },
+  {
+    id: 'qm_56',
+    title: '排列數 P(4, 2) 放大五倍後是多少電量 %？',
+    officialBattery: 60,
+    explanation: 'P(4, 2) = 4×3 = 12，放大 5 倍為 60% 電量！',
+    category: 'math',
+    emoji: '🔀'
+  },
+  {
+    id: 'qm_57',
+    title: '雙曲線方程 x² - y² = 1 的漸近線斜率絕對值 |m| 轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '漸近線 y = ±x，斜率絕對值為 1，即 100% 滿格電量！',
+    category: 'math',
+    emoji: '📈'
+  },
+  {
+    id: 'qm_58',
+    title: '對數 log10(100) 的結果放大五十倍後是多少電量 %？',
+    officialBattery: 100,
+    explanation: 'log10(100) = 2，放大 50 倍為 100% 滿格電量！',
+    category: 'math',
+    emoji: '📐'
+  },
+  {
+    id: 'qm_59',
+    title: '計算定積分 ∫[0 to 2] x dx 的結果放大二十五倍後是多少電量 %？',
+    officialBattery: 50,
+    explanation: '[x²/2] 從 0 到 2 等於 2，放大 25 倍為 50% 電量！',
+    category: 'math',
+    emoji: '∫'
+  },
+  {
+    id: 'qm_60',
+    title: '一元二次方程 x² - 4x + 4 = 0 的重根 x 放大二十五倍後是多少電量 %？',
+    officialBattery: 50,
+    explanation: '(x-2)² = 0 解得重根 x = 2，放大 25 倍為 50% 電量！',
+    category: 'math',
+    emoji: '🔍'
+  },
+  {
+    id: 'qm_61',
+    title: '圓的周長與直徑之比取小數點後前兩位是多少電量 %？',
+    officialBattery: 14,
+    explanation: '周長比直徑即為圓周率 π ≈ 3.14... 小數點後前兩位是 14%！',
+    category: 'math',
+    emoji: '⭕'
+  },
+  {
+    id: 'qm_62',
+    title: '正交向量 a=(3,4) 與 b=(4,-3) 的點積 a·b 加上滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '3×4 + 4×(-3) = 0（正交），0 + 100 = 100% 滿格電量！',
+    category: 'math',
+    emoji: '🏹'
+  },
+  {
+    id: 'qm_63',
+    title: '計算定積分 ∫[0 to 1] 3x² dx 的結果轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '[x³] 從 0 到 1 等於 1 - 0 = 1，即 100% 滿格電量！',
+    category: 'math',
+    emoji: '∫'
+  },
+  {
+    id: 'qm_64',
+    title: '無窮等比級數 1 + 1/2 + 1/4 + 1/8 + ... 的和放大五十倍後是多少電量 %？',
+    officialBattery: 100,
+    explanation: '級數和 S = 1/(1 - 1/2) = 2，放大 50 倍為 100% 滿格電量！',
+    category: 'math',
+    emoji: '♾️'
+  },
+  {
+    id: 'qm_65',
+    title: '拋物線 y = x² 在 x=3 處的切線斜率 dy/dx 放大十倍後是多少電量 %？',
+    officialBattery: 60,
+    explanation: 'dy/dx = 2x，在 x=3 時斜率為 6，放大 10 倍為 60% 電量！',
+    category: 'math',
+    emoji: '📈'
+  },
+  {
+    id: 'qm_66',
+    title: '投擲一次均勻六面骰子，出現點數 ≤ 3 的概率百分比是多少 %？',
+    officialBattery: 50,
+    explanation: '點數 1, 2, 3 共 3 種可能，3/6 = 50% 電量！',
+    category: 'math',
+    emoji: '🎲'
+  },
+  {
+    id: 'qm_67',
+    title: '連續投擲硬幣兩次，結果皆為正面的概率百分比是多少 %？',
+    officialBattery: 25,
+    explanation: '(1/2) × (1/2) = 1/4 = 25% 電量！',
+    category: 'math',
+    emoji: '🪙'
+  },
+  {
+    id: 'qm_68',
+    title: '計算定積分 ∫[0 to π/2] cos(x) dx 的結果轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '[sin x] 從 0 到 π/2 等於 1 - 0 = 1，即 100% 滿格電量！',
+    category: 'math',
+    emoji: '🌊'
+  },
+  {
+    id: 'qm_69',
+    title: '求極限 lim(x→∞) (x² + 1)/(x² + 5) 轉化為滿格電量是多少 %？',
+    officialBattery: 100,
+    explanation: '最高次項係數比為 1/1 = 1，即 100% 滿格電量！',
+    category: 'math',
+    emoji: '🎯'
+  },
+  {
+    id: 'qm_70',
+    title: '自然對數底數 e 減去 2 之後取小數點後前兩位是多少電量 %？',
+    officialBattery: 71,
+    explanation: 'e ≈ 2.71828... 減 2 等於 0.718... 小數點後前兩位是 71%！',
+    category: 'math',
+    emoji: '🧮'
+  },
 
-  // 🥔 荒謬萬物與日常 (Absurd & Daily Life) - 40 題
+  // 🥔 荒謬萬物與日常 (Absurd & Daily Life) - 70 題
   {
     id: 'qa_1',
     title: '如果馬鈴薯會使用 ChatGPT，它現在剩多少電？',
@@ -643,6 +883,246 @@ export const INITIAL_QUESTIONS: Question[] = [
     explanation: '破土而出的生命奇蹟，蘊含著 100% 蓬勃發芽的全新希望電量！',
     category: 'absurd',
     emoji: '🌱'
+  },
+  {
+    id: 'qa_41',
+    title: '星期五下午 5:59 準備收拾包包下班那一刻的心情電量是多少？',
+    officialBattery: 100,
+    explanation: '週末時光即將開啟，靈魂電量瞬間爆發至 100% 滿格狀態！',
+    category: 'absurd',
+    emoji: '🥳'
+  },
+  {
+    id: 'qa_42',
+    title: '星期一早上 8:59 站在公司電梯前排長隊的心情電量是多少？',
+    officialBattery: 2,
+    explanation: '週一症候群與遲到邊緣雙重打擊，電量幾近歸零。',
+    category: 'absurd',
+    emoji: '🥱'
+  },
+  {
+    id: 'qa_43',
+    title: '外送員顯示「餐點已送達」但打開門地上空無一物的心情電量？',
+    officialBattery: 5,
+    explanation: '肚子極度飢餓卻找不到食物，震驚與絕望雙重崩潰。',
+    category: 'absurd',
+    emoji: '📦'
+  },
+  {
+    id: 'qa_44',
+    title: '剛洗完熱水澡吹乾頭髮突然發現忘記拿浴室外毛巾的心情電量？',
+    officialBattery: 18,
+    explanation: '濕答答站在地墊上不敢走動，心智電量受到衝擊。',
+    category: 'absurd',
+    emoji: '🛁'
+  },
+  {
+    id: 'qa_45',
+    title: '戴著全罩式全黑安全帽騎 Gogoro 在等紅燈的帥氣值電量？',
+    officialBattery: 88,
+    explanation: '神祕氣場加持，極具未來看的神秘帥氣能量！',
+    category: 'absurd',
+    emoji: '🛵'
+  },
+  {
+    id: 'qa_46',
+    title: '超商買冰美式抽獎抽中「任選 2 件 55 折」的心情電量？',
+    officialBattery: 92,
+    explanation: '小確幸爆棚，一天的好心情電量瞬間充盈 92%！',
+    category: 'absurd',
+    emoji: '☕'
+  },
+  {
+    id: 'qa_47',
+    title: '熬夜追劇追到最關鍵倒數第 1 集突然跳出「需付費 VIP」的心情電量？',
+    officialBattery: 0,
+    explanation: '懸念被強制中斷，內心防線徹底崩塌，電量 0% 斷電！',
+    category: 'absurd',
+    emoji: '💔'
+  },
+  {
+    id: 'qa_48',
+    title: '柴犬在地板上瘋狂開甩甩頭（Zoomies 狂奔）時的體能電量？',
+    officialBattery: 100,
+    explanation: '柴犬核心發電機全速運轉，輸出 100% 狂暴超載能量！',
+    category: 'absurd',
+    emoji: '🐕'
+  },
+  {
+    id: 'qa_49',
+    title: '躺在沙發上想伸手拿遙控器但手指差 5 公分拿不到的心情電量？',
+    officialBattery: 12,
+    explanation: '慵懶與殘念的極致拉鋸，懶得站起來的電力消耗。',
+    category: 'absurd',
+    emoji: '🛋️'
+  },
+  {
+    id: 'qa_50',
+    title: '鹽酥雞剛炸好打開紙袋傳出濃郁九層塔香氣那一刻的電量？',
+    officialBattery: 99,
+    explanation: '台灣美食靈魂香氣，帶來 99% 極致療癒能量！',
+    category: 'absurd',
+    emoji: '🍗'
+  },
+  {
+    id: 'qa_51',
+    title: '手機螢幕朝下重重摔在地板上不敢撿起來看的緊張電量？',
+    officialBattery: 95,
+    explanation: '心跳加速至極限，交感神經高壓緊張電量爆表！',
+    category: 'absurd',
+    emoji: '📱'
+  },
+  {
+    id: 'qa_52',
+    title: '安靜的會議室裡肚子突然發出超大一聲「咕嚕～」的尷尬電量？',
+    officialBattery: 3,
+    explanation: '全場目光齊刷刷掃過來，社死現場電量直降至 3%。',
+    category: 'absurd',
+    emoji: '😳'
+  },
+  {
+    id: 'qa_53',
+    title: '吃到一口完全沒有骨頭又鮮嫩多汁的椒麻雞排電量？',
+    officialBattery: 98,
+    explanation: '外酥內嫩加上麻辣香氣，注入 98% 幸福熱量！',
+    category: 'absurd',
+    emoji: '🍱'
+  },
+  {
+    id: 'qa_54',
+    title: '大夏天 38 度酷暑走進冷氣開到 18 度的超商那一秒的爽快電量？',
+    officialBattery: 100,
+    explanation: '瞬間從地獄升到天堂，享受 100% 冰爽充電！',
+    category: 'absurd',
+    emoji: '❄️'
+  },
+  {
+    id: 'qa_55',
+    title: '剛買的珍珠奶茶第一口就把吸管裡的珍珠全部吸光的心情電量？',
+    officialBattery: 22,
+    explanation: '後續只剩奶茶沒有珍珠可嚼，口感層次大打折扣。',
+    category: 'absurd',
+    emoji: '🧋'
+  },
+  {
+    id: 'qa_56',
+    title: '赤腳踩到家裡貓咪吐在毛毯上的毛球那一瞬間的震驚電量？',
+    officialBattery: 4,
+    explanation: '觸感難以言喻，靈魂出竅只剩 4% 電量。',
+    category: 'absurd',
+    emoji: '🐈'
+  },
+  {
+    id: 'qa_57',
+    title: '考試結束前 1 分鐘發現答案卡劃錯一格全部順延的絕望電量？',
+    officialBattery: 0,
+    explanation: '腦袋瞬間一片空白，系統崩潰歸零！',
+    category: 'absurd',
+    emoji: '📝'
+  },
+  {
+    id: 'qa_58',
+    title: '穿剛買的新白鞋出門第一天就踩到下雨泥巴水坑的心痛電量？',
+    officialBattery: 8,
+    explanation: '愛鞋受損心在滴血，心情電量極度低落。',
+    category: 'absurd',
+    emoji: '👟'
+  },
+  {
+    id: 'qa_59',
+    title: '吃到一口剛剛好流心熔岩的半熟起司塔幸福電量？',
+    officialBattery: 97,
+    explanation: '濃郁奶香與香濃起司流心，提供 97% 療癒能量！',
+    category: 'absurd',
+    emoji: '🥧'
+  },
+  {
+    id: 'qa_60',
+    title: '聽音樂聽到最猛的高潮段落耳機突然斷連擴音出來的心碎電量？',
+    officialBattery: 1,
+    explanation: '公眾場合社死場面，尷尬值滿格但心情電量 1%。',
+    category: 'absurd',
+    emoji: '🎧'
+  },
+  {
+    id: 'qa_61',
+    title: '吹著涼爽冷氣蓋著厚棉被睡覺的無敵幸福感電量？',
+    officialBattery: 100,
+    explanation: '極致舒適的被窩溫感，提供 100% 滿格睡眠充電！',
+    category: 'absurd',
+    emoji: '🛌'
+  },
+  {
+    id: 'qa_62',
+    title: '逛夜市排隊排了 30 分鐘終於拿到剛出爐熱騰騰地瓜球的電量？',
+    officialBattery: 95,
+    explanation: '外酥內空心的 Q 彈口感，補滿 95% 夜市美食電力！',
+    category: 'absurd',
+    emoji: '🍠'
+  },
+  {
+    id: 'qa_63',
+    title: '洗衣機洗完衣服忘記晾在裡面放了一整夜的悶臭電量？',
+    officialBattery: 6,
+    explanation: '必須全部重新洗一遍，無奈與懊悔的低電量。',
+    category: 'absurd',
+    emoji: '🧺'
+  },
+  {
+    id: 'qa_64',
+    title: '騎車遇到一路連續 8 個綠燈順暢到達目的地的好運電量？',
+    officialBattery: 99,
+    explanation: '綠燈順暢無阻，體驗順水推舟的 99% 好運能量！',
+    category: 'absurd',
+    emoji: '🚦'
+  },
+  {
+    id: 'qa_65',
+    title: '剪頭髮時理髮師問「長度滿意嗎」但其實剪太短卻不敢說話的電量？',
+    officialBattery: 15,
+    explanation: '內心流淚表面微笑，自信電量跌至谷底。',
+    category: 'absurd',
+    emoji: '💈'
+  },
+  {
+    id: 'qa_66',
+    title: '夾娃娃機爪子把娃娃夾到洞口上方卻完全鬆掉掉回去的心碎電量？',
+    officialBattery: 3,
+    explanation: '功虧一潰，差一步就拿到娃娃的殘念低電量。',
+    category: 'absurd',
+    emoji: '🧸'
+  },
+  {
+    id: 'qa_67',
+    title: '微波便當拿出來打開發現中間最厚處還是冰塊的心酸電量？',
+    officialBattery: 10,
+    explanation: '邊緣燙手中間結冰，無奈重新微波的折騰電量。',
+    category: 'absurd',
+    emoji: '🍱'
+  },
+  {
+    id: 'qa_68',
+    title: '冬天泡溫泉全身浸入熱水那一瞬間毛孔舒張的放鬆電量？',
+    officialBattery: 100,
+    explanation: '血液循環舒暢，全身細胞獲得 100% 溫泉充電！',
+    category: 'absurd',
+    emoji: '♨️'
+  },
+  {
+    id: 'qa_69',
+    title: '打遊戲排位賽連敗 5 場最後一局主塔前隊友突然掛機的憤怒電量？',
+    officialBattery: 0,
+    explanation: '血壓標高，遊戲體驗徹底破滅，電量歸零！',
+    category: 'absurd',
+    emoji: '🎮'
+  },
+  {
+    id: 'qa_70',
+    title: '週末早上自然醒發現今天是星期六完全不用上班的極致安心電量？',
+    officialBattery: 100,
+    explanation: '沒有鬧鐘的束縛，獲得 100% 自由與放鬆電量！',
+    category: 'absurd',
+    emoji: '🌅'
   }
 ];
 
