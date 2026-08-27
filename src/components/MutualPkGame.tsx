@@ -10,6 +10,8 @@ import { SliderInput } from './SliderInput';
 import { playScoreSound, playTickSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
+type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing' | 'revealed';
+
 interface MutualPkGameProps {
   onGoToSinglePlayer?: () => void;
 }
