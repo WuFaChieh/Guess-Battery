@@ -11,121 +11,81 @@ interface BatteryGaugeProps {
 
 export const BatteryGauge: React.FC<BatteryGaugeProps> = ({
   value,
-  label,
-  size = 'md',
-  animated = true,
-  colorOverride
+  label = '你猜的電量',
+  size = 'lg',
+  animated = true
 }) => {
   const percentage = Math.min(100, Math.max(0, Math.round(value)));
 
-  // Determine battery level theme
-  const getBatteryTheme = (val: number) => {
-    if (colorOverride) return { color: colorOverride, glow: colorOverride, bg: 'bg-emerald-500' };
-    if (val >= 80) {
-      return {
-        color: 'from-emerald-500 to-teal-400',
-        glow: 'rgba(16, 185, 129, 0.4)',
-        border: 'border-emerald-500/40',
-        text: 'text-emerald-400',
-        icon: '⚡'
-      };
-    } else if (val >= 40) {
-      return {
-        color: 'from-amber-500 to-yellow-400',
-        glow: 'rgba(245, 158, 11, 0.4)',
-        border: 'border-amber-500/40',
-        text: 'text-amber-400',
-        icon: '🔋'
-      };
-    } else if (val >= 1) {
-      return {
-        color: 'from-rose-600 to-red-500',
-        glow: 'rgba(239, 68, 68, 0.4)',
-        border: 'border-rose-500/40',
-        text: 'text-rose-400',
-        icon: '🪫'
-      };
-    } else {
-      return {
-        color: 'from-slate-700 to-slate-800',
-        glow: 'rgba(51, 65, 85, 0.2)',
-        border: 'border-slate-700',
-        text: 'text-slate-500',
-        icon: '💀'
-      };
-    }
+  // Dynamic gradient based on percentage
+  const getGradient = (val: number) => {
+    if (val >= 80) return 'from-lime-400 via-emerald-400 to-teal-400';
+    if (val >= 50) return 'from-yellow-400 via-amber-400 to-emerald-400';
+    if (val >= 20) return 'from-orange-500 via-amber-500 to-yellow-400';
+    return 'from-rose-600 via-red-500 to-orange-500';
   };
 
-  const theme = getBatteryTheme(percentage);
-
-  // Size styling with mobile responsiveness
-  const containerSizes = {
-    sm: 'w-28 sm:w-36 h-14 sm:h-16 p-1 sm:p-1.5',
-    md: 'w-36 sm:w-48 h-20 sm:h-24 p-1.5 sm:p-2',
-    lg: 'w-48 sm:w-64 h-24 sm:h-32 p-2 sm:p-3'
+  const getGlow = (val: number) => {
+    if (val >= 80) return 'rgba(163, 230, 53, 0.4)';
+    if (val >= 50) return 'rgba(245, 158, 11, 0.4)';
+    return 'rgba(239, 68, 68, 0.4)';
   };
 
-  const capSizes = {
-    sm: 'w-2 sm:w-2.5 h-6 sm:h-7 rounded-r-md',
-    md: 'w-2.5 sm:w-3.5 h-8 sm:h-10 rounded-r-lg',
-    lg: 'w-3 sm:w-4 h-11 sm:h-14 rounded-r-xl'
+  const getBorderColor = (val: number) => {
+    if (val >= 80) return 'border-lime-400/70';
+    if (val >= 50) return 'border-amber-400/70';
+    return 'border-rose-500/70';
   };
 
-  const textSizes = {
-    sm: 'text-base sm:text-lg font-extrabold',
-    md: 'text-xl sm:text-2xl font-black',
-    lg: 'text-2xl sm:text-4xl font-black'
+  const sizes = {
+    sm: { container: 'w-36 h-16 p-1.5', text: 'text-xl font-black', cap: 'w-2.5 h-7 rounded-r-md' },
+    md: { container: 'w-44 sm:w-52 h-20 sm:h-24 p-2', text: 'text-2xl sm:text-3xl font-black', cap: 'w-3 h-9 sm:h-10 rounded-r-lg' },
+    lg: { container: 'w-full max-w-[340px] h-24 sm:h-28 p-2.5', text: 'text-4xl sm:text-5xl font-black', cap: 'w-3.5 h-11 sm:h-12 rounded-r-xl' }
   };
+
+  const currentSize = sizes[size];
 
   return (
-    <div className="flex flex-col items-center justify-center select-none my-2">
+    <div className="flex flex-col items-center justify-center select-none w-full my-2">
       {label && (
-        <span className="text-xs font-semibold text-slate-400 mb-1 tracking-wider uppercase">
-          {label}
+        <span className="text-xs font-bold text-slate-400 mb-1.5 tracking-wider flex items-center gap-1">
+          <span>⚡</span>
+          <span>{label}</span>
+          <span>⚡</span>
         </span>
       )}
 
-      <div className="flex items-center">
+      <div className="flex items-center justify-center w-full">
         {/* Main Battery Outer Shell */}
         <div
-          className={`relative bg-slate-900/90 border-2 ${theme.border} rounded-2xl ${containerSizes[size]} flex items-center shadow-2xl overflow-hidden backdrop-blur-sm`}
-          style={{ boxShadow: `0 0 20px ${theme.glow}` }}
+          className={`relative bg-slate-950/90 border-2 ${getBorderColor(percentage)} rounded-[28px] ${currentSize.container} flex items-center shadow-2xl overflow-hidden backdrop-blur-md transition-colors`}
+          style={{ boxShadow: `0 0 25px ${getGlow(percentage)}` }}
         >
-          {/* Background grid line effect */}
-          <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px)] bg-[size:10px_100%]" />
+          {/* Subtle interior vertical texture lines */}
+          <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px)] bg-[size:12px_100%] pointer-events-none" />
 
           {/* Liquid Fill Bar */}
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}
             transition={animated ? { type: 'spring', stiffness: 120, damping: 15 } : { duration: 0.1 }}
-            className={`h-full rounded-xl bg-gradient-to-r ${theme.color} relative overflow-hidden flex items-center justify-end px-2`}
+            className={`h-full rounded-[20px] bg-gradient-to-r ${getGradient(percentage)} relative overflow-hidden flex items-center justify-end shadow-inner`}
           >
-            {/* Shimmer/Gloss effect */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/20" />
-
-            {/* Pulsing light overlay for high battery */}
-            {percentage >= 80 && (
-              <motion.div
-                animate={{ opacity: [0.3, 0.8, 0.3] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="absolute inset-0 bg-white/10"
-              />
-            )}
+            {/* Glossy Top Highlight */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-black/20" />
           </motion.div>
 
-          {/* Number Overlay */}
+          {/* Percentage Text Overlay (Centered, Bold Black Text like Mockup) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            <span className={`${textSizes[size]} text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight flex items-center gap-1`}>
-              <span>{theme.icon}</span>
-              <span>{percentage}%</span>
+            <span className={`${currentSize.text} text-slate-950 drop-shadow-[0_1px_2px_rgba(255,255,255,0.4)] tracking-tight`}>
+              {percentage}%
             </span>
           </div>
         </div>
 
-        {/* Battery Positive Terminal Tip */}
+        {/* Battery Terminal Tip */}
         <div
-          className={`bg-slate-800 border-2 border-l-0 ${theme.border} ${capSizes[size]}`}
+          className={`bg-slate-800 border-2 border-l-0 ${getBorderColor(percentage)} ${currentSize.cap}`}
         />
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { GameMode, Question } from './types/game';
 import { INITIAL_QUESTIONS } from './data/questions';
 import { Navbar } from './components/Navbar';
+import { BottomNav } from './components/BottomNav';
 import { SinglePlayerGame } from './components/SinglePlayerGame';
 import { PartyModeGame } from './components/PartyModeGame';
 import { MutualPkGame } from './components/MutualPkGame';
@@ -55,7 +56,7 @@ export function App() {
   const allAvailableQuestions = [...customQuestions, ...INITIAL_QUESTIONS];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
       {/* Top Header Navbar */}
       <Navbar
         currentMode={currentMode}
@@ -65,7 +66,7 @@ export function App() {
       />
 
       {/* Main Game Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col items-center justify-center">
+      <main className="flex-1 max-w-md w-full mx-auto px-4 py-3 flex flex-col items-center justify-center">
         {currentMode === 'single_5' && (
           <SinglePlayerGame
             allQuestions={allAvailableQuestions}
@@ -94,7 +95,7 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 mb-12">
         <p className="font-semibold text-slate-400">⚡ 猜電量 Guess the Battery — 萬物皆有電量，你猜得準嗎？</p>
         <p className="mt-1 text-slate-500 flex flex-wrap items-center justify-center gap-2">
           <span>無卡牌 · 無機制 · 只有荒謬直覺與爆笑揭曉</span>
@@ -104,6 +105,9 @@ export function App() {
           </span>
         </p>
       </footer>
+
+      {/* Fixed Bottom Navigation Bar matching design mockup */}
+      <BottomNav currentMode={currentMode} onSelectMode={setCurrentMode} />
     </div>
   );
 }
