@@ -7,9 +7,11 @@ import { SinglePlayerGame } from './components/SinglePlayerGame';
 import { PartyModeGame } from './components/PartyModeGame';
 import { MutualPkGame } from './components/MutualPkGame';
 import { CustomCreator } from './components/CustomCreator';
+import { SplashLoader } from './components/SplashLoader';
 import { isSoundEnabled } from './utils/audio';
 
 export function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [gameSessionId, setGameSessionId] = useState<number>(Date.now());
@@ -73,6 +75,9 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
+      {/* Cute Splash Screen Loader */}
+      {showSplash && <SplashLoader onComplete={() => setShowSplash(false)} />}
+
       {/* Top Header Navbar */}
       <Navbar
         currentMode={currentMode}
