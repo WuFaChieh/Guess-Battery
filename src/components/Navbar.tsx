@@ -28,7 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { mode: 'single_5', label: '經典速刷', icon: <Zap className="w-4 h-4 text-emerald-400" /> },
     { mode: 'party', label: '同屏派對', icon: <Users className="w-4 h-4 text-cyan-400" /> },
     { mode: 'custom', label: '自訂題庫', icon: <PlusCircle className="w-4 h-4 text-blue-400" /> },
-    { mode: 'mutual_pk', label: '1v1 互相出題', icon: <Swords className="w-4 h-4 text-rose-400" />, isComingSoon: true }
+    { mode: 'mutual_pk', label: '1v1 互考 PK', icon: <Swords className="w-4 h-4 text-rose-400" /> }
   ];
 
   return (
