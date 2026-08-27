@@ -13,31 +13,42 @@ interface SinglePlayerGameProps {
   allQuestions: Question[];
   questionCount?: number;
   gameModeName?: string;
+  initialCategory?: string;
   onReturnHome?: () => void;
 }
 
 export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   allQuestions,
   questionCount = 5,
-  gameModeName = '5題速刷'
+  gameModeName = '經典速刷',
+  initialCategory = 'all'
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [currentGuess, setCurrentGuess] = useState<number>(50);
   const [gameState, setGameState] = useState<'answering' | 'revealing' | 'completed'>('answering');
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
 
-  // Initialize randomized questions
+  // Check if custom questions exist
+  const hasCustomQuestions = allQuestions.some((q) => q.category === 'custom');
+
+  // Initialize randomized questions pool
   const initGame = (catFilter = selectedCategory) => {
     let pool = allQuestions;
-    if (catFilter !== 'all') {
+
+    if (catFilter === 'custom') {
+      pool = allQuestions.filter((q) => q.category === 'custom');
+      if (pool.length === 0) pool = allQuestions;
+    } else if (catFilter !== 'all') {
       pool = allQuestions.filter((q) => q.category === catFilter);
       if (pool.length === 0) pool = allQuestions;
     }
 
     const shuffled = [...pool].sort(() => 0.5 - Math.random());
-    setQuestions(shuffled.slice(0, questionCount));
+    const finalQuestions = shuffled.slice(0, Math.min(questionCount, pool.length));
+    
+    setQuestions(finalQuestions);
     setCurrentIndex(0);
     setCurrentGuess(50);
     setAnswers([]);
@@ -45,8 +56,14 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   };
 
   useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
+
+  useEffect(() => {
     initGame(selectedCategory);
-  }, [selectedCategory, questionCount]);
+  }, [selectedCategory, questionCount, allQuestions.length]);
 
   const handleSubmitGuess = () => {
     const q = questions[currentIndex];
@@ -90,7 +107,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
       <GameOverModal
         answers={answers}
         onRestart={() => initGame(selectedCategory)}
-        gameModeName={gameModeName}
+        gameModeName={selectedCategory === 'custom' ? '自訂題庫試玩' : gameModeName}
       />
     );
   }
@@ -101,7 +118,9 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
       <div className="flex items-center gap-1.5 overflow-x-auto max-w-xl w-full p-2 mb-2 bg-slate-900/60 rounded-2xl border border-slate-800">
         <Filter className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
         {Object.entries(CATEGORY_LABELS).map(([key, item]) => {
-          if (key === 'custom') return null;
+          // Hide custom filter if user hasn't created custom questions yet
+          if (key === 'custom' && !hasCustomQuestions) return null;
+
           const isActive = selectedCategory === key;
           return (
             <button

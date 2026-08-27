@@ -109,12 +109,12 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       const nextSubmitted = [...submittedIds, q.id];
       setSubmittedIds(nextSubmitted);
       localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-      alert(`🎉 題目「${q.title}」投稿成功！冷月仙會於 Google 試算表中審核並加入官方題庫！`);
+      alert(`🎉 題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
     } catch {
       const nextSubmitted = [...submittedIds, q.id];
       setSubmittedIds(nextSubmitted);
       localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-      alert(`🎉 題目「${q.title}」已記錄投稿！冷月仙會在 Google 試算表中定期審核！`);
+      alert(`🎉 題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
     } finally {
       setSubmittingId(null);
     }

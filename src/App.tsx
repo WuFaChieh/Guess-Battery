@@ -11,8 +11,21 @@ import { isSoundEnabled } from './utils/audio';
 
 export function App() {
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [soundOn, setSoundOn] = useState<boolean>(true);
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
+
+  const handleSelectMode = (mode: GameMode) => {
+    setCurrentMode(mode);
+    if (mode === 'single_5') {
+      setActiveCategory('all');
+    }
+  };
+
+  const handlePlayCustomDeck = () => {
+    setActiveCategory('custom');
+    setCurrentMode('single_5');
+  };
 
   // Load custom questions from localStorage
   useEffect(() => {
@@ -60,7 +73,7 @@ export function App() {
       {/* Top Header Navbar */}
       <Navbar
         currentMode={currentMode}
-        onSelectMode={setCurrentMode}
+        onSelectMode={handleSelectMode}
         soundOn={soundOn}
         setSoundOn={setSoundOn}
       />
@@ -71,12 +84,13 @@ export function App() {
           <SinglePlayerGame
             allQuestions={allAvailableQuestions}
             questionCount={5}
-            gameModeName="經典速刷 MVP"
+            gameModeName="經典速刷"
+            initialCategory={activeCategory}
           />
         )}
 
         {currentMode === 'mutual_pk' && (
-          <MutualPkGame onGoToSinglePlayer={() => setCurrentMode('single_5')} />
+          <MutualPkGame onGoToSinglePlayer={() => handleSelectMode('single_5')} />
         )}
 
         {currentMode === 'party' && (
@@ -89,7 +103,7 @@ export function App() {
             onAddQuestion={handleAddCustomQuestion}
             onDeleteQuestion={handleDeleteCustomQuestion}
             onImportDeck={handleImportCustomDeck}
-            onPlayCustom={() => setCurrentMode('single_5')}
+            onPlayCustom={handlePlayCustomDeck}
           />
         )}
       </main>
@@ -107,7 +121,7 @@ export function App() {
       </footer>
 
       {/* Fixed Bottom Navigation Bar matching design mockup */}
-      <BottomNav currentMode={currentMode} onSelectMode={setCurrentMode} />
+      <BottomNav currentMode={currentMode} onSelectMode={handleSelectMode} />
     </div>
   );
 }
