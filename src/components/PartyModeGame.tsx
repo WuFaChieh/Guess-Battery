@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Question, Player } from '../types/game';
 import { QuestionCard } from './QuestionCard';
 import { BatteryGauge } from './BatteryGauge';
+import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
 import { calculateScore } from '../utils/gameLogic';
-import { playRevealSound, playScoreSound } from '../utils/audio';
+import { playRevealSound, playScoreSound, playVictoryFanfareSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { Users, Crown, EyeOff, ArrowRight, RotateCcw } from 'lucide-react';
+import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
 
 interface PartyModeGameProps {
   allQuestions: Question[];
@@ -94,7 +96,8 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       setGameState('turn');
     } else {
       // Game over! Winner celebration!
-      confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
+      playVictoryFanfareSound();
+      confetti({ particleCount: 160, spread: 90, origin: { y: 0.4 } });
       setGameState('finished');
     }
   };
@@ -102,7 +105,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   // Render Setup Screen
   if (setupStep) {
     return (
-      <div className="w-full max-w-lg mx-auto bg-slate-900/90 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6">
+      <div className="w-full max-w-lg mx-auto bg-slate-900/90 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 select-none">
         <div className="text-center">
           <div className="inline-flex p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 text-cyan-400 mb-2">
             <Users className="w-8 h-8" />
@@ -158,7 +161,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
         <button
           onClick={startPartyGame}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 mt-2"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
         >
           <span>🚀 開始派對對決</span>
         </button>
@@ -172,7 +175,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   // Render Pass & Play Turn
   if (gameState === 'turn') {
     return (
-      <div className="w-full flex flex-col items-center">
+      <div className="w-full flex flex-col items-center select-none">
         <QuestionCard
           question={currentQ}
           currentIndex={questionIndex}
@@ -196,7 +199,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
             <button
               onClick={() => setSecretLocked(true)}
-              className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-base transition-all flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20"
+              className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-base transition-all flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 cursor-pointer"
             >
               <EyeOff className="w-5 h-5" />
               <span>我準備好了，秘密輸入電量</span>
@@ -235,7 +238,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       .sort((a, b) => b.score - a.score);
 
     return (
-      <div className="w-full max-w-2xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 text-center">
+      <div className="w-full max-w-2xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 text-center select-none">
         <div>
           <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
             🎉 本題公開揭曉
@@ -281,7 +284,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         {/* Next Question Button */}
         <button
           onClick={handleNextRound}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>{questionIndex === questions.length - 1 ? '🏆 派對總冠軍統計' : '進入下一題 ➡️'}</span>
           <ArrowRight className="w-5 h-5" />
@@ -290,53 +293,96 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
     );
   }
 
-  // Render Final Party Champion Leaderboard
+  // Render Final Party Champion Leaderboard & High-Energy Podium Summary
   const sortedFinalPlayers = [...players].sort((a, b) => b.totalScore - a.totalScore);
+  const champion = sortedFinalPlayers[0];
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 text-center">
-      <div className="inline-flex p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-amber-400 self-center text-4xl">
-        👑
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full max-w-xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-amber-500/30 shadow-2xl flex flex-col gap-6 text-center select-none"
+    >
+      <div className="inline-flex p-3.5 bg-amber-500/10 rounded-2xl border border-amber-500/30 text-amber-400 self-center">
+        <Crown className="w-10 h-10 animate-bounce" />
       </div>
+
       <div>
-        <h2 className="text-3xl font-black text-white tracking-tight">派對總冠軍登場！</h2>
-        <p className="text-xs text-slate-400 mt-1">經歷了 5 題荒謬電量大考驗</p>
+        <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-widest inline-flex items-center gap-1">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> 同螢幕派對總決算
+        </span>
+        <h2 className="text-3xl font-black text-white tracking-tight mt-2">派對電量總冠軍登場！</h2>
+        <p className="text-xs text-slate-400 mt-1">經歷了 5 題極致荒謬電量考驗</p>
       </div>
 
-      {/* Champion Highlight Card */}
-      <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 p-6 rounded-2xl border border-amber-500/40">
-        <Crown className="w-10 h-10 text-amber-400 mx-auto mb-2 animate-bounce" />
-        <span className="text-4xl block mb-1">{sortedFinalPlayers[0].avatar}</span>
-        <h3 className="text-2xl font-black text-amber-300">{sortedFinalPlayers[0].name}</h3>
-        <p className="text-sm font-bold text-white mt-1">
-          總得分：{sortedFinalPlayers[0].totalScore} 分！
-        </p>
-      </div>
+      {/* Champion Spring Pop-Out Podium Card */}
+      <motion.div
+        initial={{ scale: 0.9, y: 10 }}
+        animate={{ scale: 1.05, y: -5 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+        className="bg-gradient-to-r from-amber-950/60 via-yellow-950/40 to-amber-950/60 p-6 rounded-3xl border-2 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.5)] flex flex-col items-center gap-3 relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-amber-400/10 via-transparent to-transparent pointer-events-none" />
+        
+        <div className="flex items-center gap-2">
+          <span className="text-4xl">{champion.avatar}</span>
+          <h3 className="text-3xl font-black text-amber-300">{champion.name}</h3>
+        </div>
 
-      {/* Leaderboard Table */}
-      <div className="flex flex-col gap-2">
-        {sortedFinalPlayers.map((p, idx) => (
-          <div
-            key={p.id}
-            className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between px-4"
-          >
-            <div className="flex items-center gap-3">
-              <span className="font-black text-slate-500 text-sm">#{idx + 1}</span>
-              <span className="text-xl">{p.avatar}</span>
-              <span className="font-bold text-sm text-white">{p.name}</span>
+        <UnifiedBattery value={Math.min(100, Math.round(champion.totalScore / 5))} size="md" />
+
+        <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-amber-500/30 mt-1">
+          <span className="text-xs text-slate-400">總得分：</span>
+          <strong className="text-xl font-black text-emerald-400 ml-1">{champion.totalScore} 分</strong>
+        </div>
+      </motion.div>
+
+      {/* Full Leaderboard List */}
+      <div className="flex flex-col gap-2.5">
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left pl-1">
+          📊 派對玩家總排名 (Leaderboard)
+        </h4>
+
+        {sortedFinalPlayers.map((p, idx) => {
+          const rankBadge = idx === 0 ? '👑 冠軍' : idx === 1 ? '🥈 亞軍' : idx === 2 ? '🥉 季軍' : `#${idx + 1}`;
+          const avgScore = Math.min(100, Math.round(p.totalScore / 5));
+
+          return (
+            <div
+              key={p.id}
+              className={`p-3.5 rounded-2xl border flex items-center justify-between px-4 transition-all ${
+                idx === 0
+                  ? 'bg-amber-500/10 border-amber-500/40 shadow-md'
+                  : 'bg-slate-950 border-slate-800'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`text-xs font-black px-2.5 py-1 rounded-full ${idx === 0 ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                  {rankBadge}
+                </span>
+                <span className="text-2xl">{p.avatar}</span>
+                <div className="text-left">
+                  <span className="font-bold text-sm text-white block">{p.name}</span>
+                  <span className="text-[11px] text-slate-400">平均精準度 {avgScore}%</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <UnifiedBattery value={avgScore} size="sm" />
+                <span className="font-black text-emerald-400 text-base min-w-[55px] text-right">{p.totalScore} 分</span>
+              </div>
             </div>
-            <span className="font-black text-emerald-400 text-base">{p.totalScore} 分</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <button
         onClick={() => setSetupStep(true)}
-        className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-base shadow-lg shadow-cyan-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+        className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-base shadow-xl shadow-cyan-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border border-cyan-400/30"
       >
         <RotateCcw className="w-5 h-5" />
         <span>重新開一局派對</span>
       </button>
-    </div>
+    </motion.div>
   );
 };
