@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_PROFILES, HUMAN_BOT_QUESTIONS, HumanBotProfile, generateHumanBotGuess } from '../utils/humanAiDeck';
@@ -26,6 +26,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [opponent, setOpponent] = useState<HumanBotProfile | null>(null);
   const [opponentReady, setOpponentReady] = useState(false);
 
+  // Parallel 7-second timer tracking
+  const actionStartTimeRef = useRef<number>(0);
+
   // Player's Question for Opponent
   const [playerTitle, setPlayerTitle] = useState('');
   const [playerOfficialBattery, setPlayerOfficialBattery] = useState(50);
@@ -44,10 +47,10 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [playerScore, setPlayerScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
 
-  // Sequential Reveal Animation States
-  const [revealStep, setRevealStep] = useState<0 | 1 | 2 | 3>(0);
-  const [animatedOpponentBattery, setAnimatedOpponentBattery] = useState(0);
+  // Simultaneous Charging Animation States
   const [animatedPlayerBattery, setAnimatedPlayerBattery] = useState(0);
+  const [animatedOpponentBattery, setAnimatedOpponentBattery] = useState(0);
+  const [isChargingFinished, setIsChargingFinished] = useState(false);
 
   // Fetch real device battery
   useEffect(() => {
@@ -63,6 +66,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const handleStartMatchmaking = () => {
     setStage('matching');
     setOpponentReady(false);
+    setIsChargingFinished(false);
 
     // Simulate 2.2 seconds matchmaking
     setTimeout(() => {
@@ -85,10 +89,12 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       // Transition to creating stage after 1.2s match celebration
       setTimeout(() => {
         setStage('creating');
-        // Opponent takes ~9 seconds to think & complete question
+        actionStartTimeRef.current = Date.now(); // Record start time for parallel 7s timer
+
+        // Opponent completes question in ~7 seconds
         setTimeout(() => {
           setOpponentReady(true);
-        }, 9000);
+        }, 7000);
       }, 1200);
     }, 2200);
   };
@@ -102,19 +108,22 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setStage('guessing_opponent_q');
   };
 
-  // Submit Player's Guess & trigger 5-second opponent guessing suspense
+  // Submit Player's Guess & trigger parallel 7-second suspense
   const handleSubmitPlayerGuess = () => {
     setStage('opponent_guessing');
 
-    // Simulate Opponent taking 5 seconds to guess player's question
+    // Ensure parallel total time reaches at least ~7 seconds
+    const elapsed = Date.now() - actionStartTimeRef.current;
+    const remainingDelay = Math.max(1500, 7000 - (elapsed % 7000));
+
     setTimeout(() => {
       setStage('revealing');
-      runSequentialRevealCeremony();
-    }, 5000);
+      runSimultaneousChargingCeremony();
+    }, remainingDelay);
   };
 
-  // Run Sequential Reveal & Spotlight Ceremony
-  const runSequentialRevealCeremony = () => {
+  // Run Simultaneous Side-by-Side Charging & Optical Spotlight Ceremony
+  const runSimultaneousChargingCeremony = () => {
     if (!opponentQuestion || !opponent) return;
 
     // Calculate Final Gap & Scores
@@ -130,50 +139,49 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setOpponentGap(oGap);
     setOpponentScore(oScore);
 
-    const targetOpponentCharge = Math.max(0, 100 - oGap);
     const targetPlayerCharge = Math.max(0, 100 - pGap);
+    const targetOpponentCharge = Math.max(0, 100 - oGap);
 
-    setRevealStep(1); // Step 1: Reveal Opponent Charge
-
-    // Animate Opponent Battery Charging 0% -> (100 - oGap)%
+    let currentP = 0;
     let currentO = 0;
-    const intervalO = setInterval(() => {
-      currentO += 3;
-      if (currentO > targetOpponentCharge) currentO = targetOpponentCharge;
-      setAnimatedOpponentBattery(currentO);
-      if (currentO % 9 === 0) playChargingSound(currentO);
 
-      if (currentO >= targetOpponentCharge) {
-        clearInterval(intervalO);
+    // Both batteries charge SIMULTANEOUSLY side by side
+    const interval = setInterval(() => {
+      let stepDone = true;
 
-        // Step 2: Reveal Player Charge after 1.2s
+      if (currentP < targetPlayerCharge) {
+        currentP += 2;
+        if (currentP > targetPlayerCharge) currentP = targetPlayerCharge;
+        setAnimatedPlayerBattery(currentP);
+        stepDone = false;
+      }
+
+      if (currentO < targetOpponentCharge) {
+        currentO += 2;
+        if (currentO > targetOpponentCharge) currentO = targetOpponentCharge;
+        setAnimatedOpponentBattery(currentO);
+        stepDone = false;
+      }
+
+      if (currentP % 8 === 0 || currentO % 8 === 0) {
+        playChargingSound(Math.max(currentP, currentO));
+      }
+
+      if (stepDone) {
+        clearInterval(interval);
+
+        // Smooth Pop-Out & Optical Spotlight Fanfare
         setTimeout(() => {
-          setRevealStep(2);
-          let currentP = 0;
-          const intervalP = setInterval(() => {
-            currentP += 3;
-            if (currentP > targetPlayerCharge) currentP = targetPlayerCharge;
-            setAnimatedPlayerBattery(currentP);
-            if (currentP % 9 === 0) playChargingSound(currentP);
+          setIsChargingFinished(true);
+          setStage('revealed');
 
-            if (currentP >= targetPlayerCharge) {
-              clearInterval(intervalP);
-
-              // Step 3: Spotlight & Winner Fanfare after 1.2s
-              setTimeout(() => {
-                setRevealStep(3);
-                setStage('revealed');
-
-                if (pScore >= oScore) {
-                  playScoreSound(100);
-                  confetti({ particleCount: 150, spread: 90, origin: { y: 0.4 } });
-                } else {
-                  playScoreSound(40);
-                }
-              }, 1200);
-            }
-          }, 35);
-        }, 1200);
+          if (pScore >= oScore) {
+            playScoreSound(100);
+            confetti({ particleCount: 160, spread: 90, origin: { y: 0.4 } });
+          } else {
+            playScoreSound(40);
+          }
+        }, 300);
       }
     }, 35);
   };
@@ -185,9 +193,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setPlayerGuess(50);
     setOpponent(null);
     setOpponentQuestion(null);
-    setRevealStep(0);
-    setAnimatedOpponentBattery(0);
     setAnimatedPlayerBattery(0);
+    setAnimatedOpponentBattery(0);
+    setIsChargingFinished(false);
     setOpponentReady(false);
   };
 
@@ -197,6 +205,41 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     <div className="w-full max-w-lg mx-auto bg-slate-900/95 p-5 sm:p-7 rounded-3xl border border-rose-500/30 shadow-2xl flex flex-col items-center text-center gap-5 relative overflow-hidden my-2 select-none">
       {/* Ambient Glow */}
       <div className="absolute -top-20 -right-20 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* REAL OPTICAL SPOTLIGHT BEAM EFFECT ON WINNER */}
+      {isChargingFinished && (
+        <>
+          {/* Top Lens Flare Source Point */}
+          <div
+            className={`absolute -top-4 ${
+              isPlayerWinner ? 'left-1/4' : 'left-3/4'
+            } -translate-x-1/2 w-20 h-20 rounded-full bg-white blur-md z-30 opacity-90 animate-pulse pointer-events-none`}
+          />
+
+          {/* Glowing Optical Conic Spotlight Light Cone */}
+          <div
+            className={`absolute -top-8 ${
+              isPlayerWinner ? 'left-1/4' : 'left-3/4'
+            } -translate-x-1/2 w-[220px] h-[450px] pointer-events-none z-20 opacity-85 transition-all`}
+            style={{
+              background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.45) 45%, transparent 100%)',
+              clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)',
+              filter: 'drop-shadow(0 0 25px rgba(251, 191, 36, 0.8))'
+            }}
+          />
+
+          {/* Broad Ambient Gold Beam Glow */}
+          <div
+            className={`absolute -top-12 ${
+              isPlayerWinner ? 'left-1/4' : 'left-3/4'
+            } -translate-x-1/2 w-[300px] h-[480px] pointer-events-none z-10 opacity-60 animate-pulse`}
+            style={{
+              background: 'radial-gradient(ellipse at top, rgba(251, 191, 36, 0.5) 0%, rgba(251, 191, 36, 0.15) 50%, transparent 80%)',
+              filter: 'blur(15px)'
+            }}
+          />
+        </>
+      )}
 
       {/* STAGE 1: LOBBY */}
       {stage === 'lobby' && (
@@ -266,7 +309,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 4: CREATING QUESTION (10s Opponent Thinking Feel) */}
+      {/* STAGE 4: CREATING QUESTION */}
       {stage === 'creating' && opponent && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 w-full text-left">
           {/* Opponent Thinking & Typing Bar */}
@@ -368,7 +411,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 5: OPPONENT GUESSING (5s Suspense Feel) */}
+      {/* STAGE 5: OPPONENT GUESSING SUSPENSE (No explicit seconds text!) */}
       {stage === 'opponent_guessing' && opponentQuestion && opponent && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-5 w-full py-6">
           <div className="bg-slate-950 p-4 rounded-2xl border border-rose-500/30 w-full text-left">
@@ -386,37 +429,27 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
           <div className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-              <span>{opponent.name} 正在仔細推算您的題目電量 % (約 5 秒)...</span>
+              <span>{opponent.name} 正在連線計算題目電量中...</span>
             </div>
             <p className="text-[11px] text-slate-500">
-              雙方估算完成後，將啟動儀式感逐一公布與鎂光燈特效！
+              雙方估算完成，即將一同累計揭曉對決成績！
             </p>
           </div>
         </motion.div>
       )}
 
-      {/* STAGE 6: REVEAL CEREMONY & SPOTLIGHT (Sequential reveal & charging fill) */}
+      {/* STAGE 6: SIMULTANEOUS REVEAL & REAL OPTICAL SPOTLIGHT FANFARE */}
       {(stage === 'revealing' || stage === 'revealed') && opponentQuestion && opponent && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-5 w-full relative">
-          
-          {/* SPOTLIGHT EFFECT ON WINNER IN STEP 3 */}
-          {revealStep === 3 && (
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[300px] h-[360px] bg-gradient-to-b from-amber-400/25 via-amber-300/10 to-transparent blur-xl pointer-events-none animate-pulse z-0" />
-          )}
 
           {/* Sequential Stage Title Banner */}
-          <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-rose-500/40 text-center relative z-10">
-            {revealStep === 1 && (
-              <p className="text-xs font-bold text-amber-400 animate-pulse">
-                ⏳ 第一步：揭曉【{opponent.name}】的答對精準電量...
+          <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-rose-500/40 text-center relative z-20">
+            {!isChargingFinished ? (
+              <p className="text-xs font-bold text-amber-400 animate-pulse flex items-center justify-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                ⚡ 雙方電池一同電量累計中...
               </p>
-            )}
-            {revealStep === 2 && (
-              <p className="text-xs font-bold text-emerald-400 animate-pulse">
-                ⚡ 第二步：揭曉【你】的答對精準電量...
-              </p>
-            )}
-            {revealStep === 3 && (
+            ) : (
               <>
                 <span className="text-3xl block mb-1">{isPlayerWinner ? '👑' : '⚡'}</span>
                 <h3 className="text-2xl font-black text-white">
@@ -430,27 +463,29 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             )}
           </div>
 
-          {/* DUAL BATTERY COMPARISON - SEQUENTIAL CHARGING & WINNER SPOTLIGHT */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full items-center justify-center my-2 relative z-10">
+          {/* DUAL BATTERY COMPARISON - SIMULTANEOUS CHARGING & WINNER SMOOTH POP-OUT */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 w-full items-center justify-center my-2 relative z-20">
             {/* Player's Battery Card */}
-            <div
+            <motion.div
+              initial={{ scale: 1, y: 0 }}
+              animate={
+                isChargingFinished
+                  ? isPlayerWinner
+                    ? { scale: 1.18, y: -10, zIndex: 30 }
+                    : { scale: 0.88, y: 4, opacity: 0.7 }
+                  : { scale: 1, y: 0 }
+              }
+              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
               className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
-                revealStep === 3 && isPlayerWinner
-                  ? 'bg-amber-950/40 border-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.6)] scale-110 sm:scale-125 z-20'
-                  : revealStep >= 2
-                  ? 'bg-emerald-950/30 border-emerald-500/40 opacity-100 scale-100'
-                  : 'bg-slate-950/80 border-slate-800 opacity-60 scale-95'
+                isChargingFinished && isPlayerWinner
+                  ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
+                  : 'bg-emerald-950/30 border-emerald-500/40 opacity-100'
               }`}
             >
-              {/* Winner Golden Beam Overlay */}
-              {revealStep === 3 && isPlayerWinner && (
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/20 via-transparent to-transparent pointer-events-none" />
-              )}
-
               <div className="flex items-center gap-1.5 font-black text-xs">
                 <span className="text-xl">{playerAvatar}</span>
                 <span className="text-white">你</span>
-                {revealStep === 3 && (
+                {isChargingFinished && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
                     {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
                   </span>
@@ -458,41 +493,37 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               </div>
 
               <UnifiedBattery
-                value={revealStep >= 2 ? animatedPlayerBattery : 0}
+                value={animatedPlayerBattery}
                 size="sm"
               />
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                {revealStep >= 2 ? (
-                  <>
-                    <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
-                    <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-slate-500 animate-pulse">計算累積中...</span>
-                )}
+                <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
+                <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Opponent's Battery Card */}
-            <div
+            <motion.div
+              initial={{ scale: 1, y: 0 }}
+              animate={
+                isChargingFinished
+                  ? !isPlayerWinner
+                    ? { scale: 1.18, y: -10, zIndex: 30 }
+                    : { scale: 0.88, y: 4, opacity: 0.7 }
+                  : { scale: 1, y: 0 }
+              }
+              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
               className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
-                revealStep === 3 && !isPlayerWinner
-                  ? 'bg-amber-950/40 border-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.6)] scale-110 sm:scale-125 z-20'
-                  : revealStep >= 1
-                  ? 'bg-rose-950/30 border-rose-500/40 opacity-100 scale-100'
-                  : 'bg-slate-950/80 border-slate-800 opacity-60 scale-95'
+                isChargingFinished && !isPlayerWinner
+                  ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
+                  : 'bg-rose-950/30 border-rose-500/40 opacity-100'
               }`}
             >
-              {/* Winner Golden Beam Overlay */}
-              {revealStep === 3 && !isPlayerWinner && (
-                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/20 via-transparent to-transparent pointer-events-none" />
-              )}
-
               <div className="flex items-center gap-1.5 font-black text-xs">
                 <span className="text-xl">{opponent.avatar}</span>
                 <span className="text-white">{opponent.name}</span>
-                {revealStep === 3 && (
+                {isChargingFinished && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
                     {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
                   </span>
@@ -500,28 +531,22 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               </div>
 
               <UnifiedBattery
-                value={revealStep >= 1 ? animatedOpponentBattery : 0}
+                value={animatedOpponentBattery}
                 size="sm"
               />
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                {revealStep >= 1 ? (
-                  <>
-                    <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
-                    <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-slate-500 animate-pulse">計算累積中...</span>
-                )}
+                <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
+                <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Action Button */}
           {stage === 'revealed' && (
             <button
               onClick={resetGame}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30 relative z-10"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30 relative z-20"
             >
               <RotateCcw className="w-4 h-4" />
               <span>再配對對決一局！</span>
