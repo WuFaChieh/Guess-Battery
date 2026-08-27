@@ -10,9 +10,11 @@ import { SliderInput } from './SliderInput';
 import { playScoreSound, playTickSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
-type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing' | 'revealed';
+interface MutualPkGameProps {
+  onGoToSinglePlayer?: () => void;
+}
 
-export const MutualPkGame: React.FC = () => {
+export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [stage, setStage] = useState<PkStage>('lobby');
 
   // Player Profile
@@ -328,7 +330,7 @@ export const MutualPkGame: React.FC = () => {
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
                 <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">差距僅：<strong className="text-amber-400">{playerGap}%</strong></span>
+                <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
               </div>
             </div>
 
@@ -352,7 +354,7 @@ export const MutualPkGame: React.FC = () => {
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
                 <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">差距僅：<strong className="text-amber-400">{opponentGap}%</strong></span>
+                <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
               </div>
             </div>
           </div>
