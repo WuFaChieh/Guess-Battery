@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_PROFILES, HUMAN_BOT_QUESTIONS, HumanBotProfile, generateHumanBotGuess } from '../utils/humanAiDeck';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
@@ -86,7 +86,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
       setStage('matched');
 
-      // Transition to creating stage after 1.2s match celebration
+      // Transition to creating stage after 1.5s razor-sharp match celebration
       setTimeout(() => {
         setStage('creating');
         actionStartTimeRef.current = Date.now(); // Record start time for parallel 7s timer
@@ -95,7 +95,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         setTimeout(() => {
           setOpponentReady(true);
         }, 7000);
-      }, 1200);
+      }, 1500);
     }, 2200);
   };
 
@@ -206,41 +206,6 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       {/* Ambient Glow */}
       <div className="absolute -top-20 -right-20 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* REAL OPTICAL SPOTLIGHT BEAM EFFECT ON WINNER */}
-      {isChargingFinished && (
-        <>
-          {/* Top Lens Flare Source Point */}
-          <div
-            className={`absolute -top-4 ${
-              isPlayerWinner ? 'left-1/4' : 'left-3/4'
-            } -translate-x-1/2 w-20 h-20 rounded-full bg-white blur-md z-30 opacity-90 animate-pulse pointer-events-none`}
-          />
-
-          {/* Glowing Optical Conic Spotlight Light Cone */}
-          <div
-            className={`absolute -top-8 ${
-              isPlayerWinner ? 'left-1/4' : 'left-3/4'
-            } -translate-x-1/2 w-[220px] h-[450px] pointer-events-none z-20 opacity-85 transition-all`}
-            style={{
-              background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.45) 45%, transparent 100%)',
-              clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)',
-              filter: 'drop-shadow(0 0 25px rgba(251, 191, 36, 0.8))'
-            }}
-          />
-
-          {/* Broad Ambient Gold Beam Glow */}
-          <div
-            className={`absolute -top-12 ${
-              isPlayerWinner ? 'left-1/4' : 'left-3/4'
-            } -translate-x-1/2 w-[300px] h-[480px] pointer-events-none z-10 opacity-60 animate-pulse`}
-            style={{
-              background: 'radial-gradient(ellipse at top, rgba(251, 191, 36, 0.5) 0%, rgba(251, 191, 36, 0.15) 50%, transparent 80%)',
-              filter: 'blur(15px)'
-            }}
-          />
-        </>
-      )}
-
       {/* STAGE 1: LOBBY */}
       {stage === 'lobby' && (
         <div className="flex flex-col items-center gap-5 w-full">
@@ -288,24 +253,68 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </div>
       )}
 
-      {/* STAGE 3: MATCHED CELEBRATION */}
+      {/* STAGE 3: AGGRESSIVE HIGH-ENERGY MATCHED CELEBRATION (鋒芒爆發 + 殺氣重炫砲開場) */}
       {stage === 'matched' && opponent && (
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 py-8 w-full">
-          <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30 uppercase tracking-wider">
-            🎉 配對成功 MATCHED!
-          </span>
-          <div className="flex items-center justify-center gap-6 my-2">
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-4xl">{playerAvatar}</span>
-              <span className="text-xs font-bold text-white">你</span>
-            </div>
-            <span className="text-2xl font-black text-rose-400">VS</span>
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-4xl">{opponent.avatar}</span>
-              <span className="text-xs font-bold text-white">{opponent.name}</span>
-            </div>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex flex-col items-center gap-5 py-6 w-full relative overflow-hidden"
+        >
+          {/* Crimson Electric Aura Burst */}
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-600/20 via-purple-600/30 to-indigo-600/20 blur-2xl pointer-events-none animate-pulse" />
+
+          {/* Sharp Battle Badge */}
+          <motion.span
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
+            className="text-xs font-black text-rose-300 bg-rose-950/90 px-4 py-1.5 rounded-full border border-rose-500/50 uppercase tracking-widest inline-flex items-center gap-1.5 shadow-[0_0_20px_rgba(244,63,94,0.6)] z-10"
+          >
+            <Flame className="w-4 h-4 text-rose-400 animate-bounce" />
+            <span>🔥 電量生死對決 · 即時配對成功！</span>
+          </motion.span>
+
+          {/* Crossed Blades Metallic Slash Animation */}
+          <motion.div
+            initial={{ rotate: -180, scale: 0 }}
+            animate={{ rotate: 0, scale: 1.2 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+            className="p-3 bg-rose-500/20 rounded-2xl border-2 border-rose-500 text-rose-400 shadow-[0_0_30px_rgba(244,63,94,0.8)] z-10"
+          >
+            <Swords className="w-10 h-10" />
+          </motion.div>
+
+          {/* Player vs Opponent Slam Intro */}
+          <div className="flex items-center justify-center gap-6 my-2 z-10 w-full">
+            <motion.div
+              initial={{ x: -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 250, damping: 18 }}
+              className="flex flex-col items-center gap-1.5 p-3 bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl min-w-[90px]"
+            >
+              <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">{playerAvatar}</span>
+              <span className="text-xs font-black text-white">你</span>
+            </motion.div>
+
+            <motion.span
+              animate={{ scale: [1, 1.4, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 italic drop-shadow-[0_0_15px_rgba(244,63,94,0.9)]"
+            >
+              VS
+            </motion.span>
+
+            <motion.div
+              initial={{ x: 60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 250, damping: 18 }}
+              className="flex flex-col items-center gap-1.5 p-3 bg-slate-950/80 rounded-2xl border border-rose-500/50 shadow-xl min-w-[90px]"
+            >
+              <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(244,63,94,0.5)]">{opponent.avatar}</span>
+              <span className="text-xs font-black text-rose-400">{opponent.name}</span>
+            </motion.div>
           </div>
-          <p className="text-xs text-slate-400 animate-pulse">準備進入互相出題階段...</p>
+
+          <p className="text-xs text-slate-400 font-bold animate-pulse z-10">準備進入互相出題對決...</p>
         </motion.div>
       )}
 
@@ -438,7 +447,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 6: SIMULTANEOUS REVEAL & REAL OPTICAL SPOTLIGHT FANFARE */}
+      {/* STAGE 6: SIMULTANEOUS REVEAL & BOTTOM-UP SWAYING OPTICAL SPOTLIGHT FANFARE */}
       {(stage === 'revealing' || stage === 'revealed') && opponentQuestion && opponent && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-5 w-full relative">
 
@@ -466,80 +475,112 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
           {/* DUAL BATTERY COMPARISON - SIMULTANEOUS CHARGING & WINNER SMOOTH POP-OUT */}
           <div className="grid grid-cols-2 gap-3 sm:gap-5 w-full items-center justify-center my-2 relative z-20">
             {/* Player's Battery Card */}
-            <motion.div
-              initial={{ scale: 1, y: 0 }}
-              animate={
-                isChargingFinished
-                  ? isPlayerWinner
-                    ? { scale: 1.18, y: -10, zIndex: 30 }
-                    : { scale: 0.88, y: 4, opacity: 0.7 }
-                  : { scale: 1, y: 0 }
-              }
-              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
-                isChargingFinished && isPlayerWinner
-                  ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
-                  : 'bg-emerald-950/30 border-emerald-500/40 opacity-100'
-              }`}
-            >
-              <div className="flex items-center gap-1.5 font-black text-xs">
-                <span className="text-xl">{playerAvatar}</span>
-                <span className="text-white">你</span>
-                {isChargingFinished && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
-                    {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
-                  </span>
-                )}
-              </div>
+            <div className="relative">
+              {/* BOTTOM-UP SWAYING OPTICAL SPOTLIGHT BEAM FOR PLAYER */}
+              {isChargingFinished && isPlayerWinner && (
+                <motion.div
+                  animate={{ rotate: [-6, 6, -6] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[180px] h-[340px] pointer-events-none z-10 origin-bottom"
+                  style={{
+                    background: 'linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.45) 50%, transparent 100%)',
+                    clipPath: 'polygon(0% 0%, 100% 0%, 65% 100%, 35% 100%)',
+                    filter: 'drop-shadow(0 0 25px rgba(251, 191, 36, 0.8))'
+                  }}
+                />
+              )}
 
-              <UnifiedBattery
-                value={animatedPlayerBattery}
-                size="sm"
-              />
+              <motion.div
+                initial={{ scale: 1, y: 0 }}
+                animate={
+                  isChargingFinished
+                    ? isPlayerWinner
+                      ? { scale: 1.18, y: -10, zIndex: 30 }
+                      : { scale: 0.88, y: 4, opacity: 0.7 }
+                    : { scale: 1, y: 0 }
+                }
+                transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
+                  isChargingFinished && isPlayerWinner
+                    ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
+                    : 'bg-emerald-950/30 border-emerald-500/40 opacity-100'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-black text-xs">
+                  <span className="text-xl">{playerAvatar}</span>
+                  <span className="text-white">你</span>
+                  {isChargingFinished && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                      {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                    </span>
+                  )}
+                </div>
 
-              <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
-              </div>
-            </motion.div>
+                <UnifiedBattery
+                  value={animatedPlayerBattery}
+                  size="sm"
+                />
+
+                <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
+                  <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
+                  <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
+                </div>
+              </motion.div>
+            </div>
 
             {/* Opponent's Battery Card */}
-            <motion.div
-              initial={{ scale: 1, y: 0 }}
-              animate={
-                isChargingFinished
-                  ? !isPlayerWinner
-                    ? { scale: 1.18, y: -10, zIndex: 30 }
-                    : { scale: 0.88, y: 4, opacity: 0.7 }
-                  : { scale: 1, y: 0 }
-              }
-              transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
-                isChargingFinished && !isPlayerWinner
-                  ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
-                  : 'bg-rose-950/30 border-rose-500/40 opacity-100'
-              }`}
-            >
-              <div className="flex items-center gap-1.5 font-black text-xs">
-                <span className="text-xl">{opponent.avatar}</span>
-                <span className="text-white">{opponent.name}</span>
-                {isChargingFinished && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
-                    {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
-                  </span>
-                )}
-              </div>
+            <div className="relative">
+              {/* BOTTOM-UP SWAYING OPTICAL SPOTLIGHT BEAM FOR OPPONENT */}
+              {isChargingFinished && !isPlayerWinner && (
+                <motion.div
+                  animate={{ rotate: [-6, 6, -6] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[180px] h-[340px] pointer-events-none z-10 origin-bottom"
+                  style={{
+                    background: 'linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(251, 191, 36, 0.45) 50%, transparent 100%)',
+                    clipPath: 'polygon(0% 0%, 100% 0%, 65% 100%, 35% 100%)',
+                    filter: 'drop-shadow(0 0 25px rgba(251, 191, 36, 0.8))'
+                  }}
+                />
+              )}
 
-              <UnifiedBattery
-                value={animatedOpponentBattery}
-                size="sm"
-              />
+              <motion.div
+                initial={{ scale: 1, y: 0 }}
+                animate={
+                  isChargingFinished
+                    ? !isPlayerWinner
+                      ? { scale: 1.18, y: -10, zIndex: 30 }
+                      : { scale: 0.88, y: 4, opacity: 0.7 }
+                    : { scale: 1, y: 0 }
+                }
+                transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
+                  isChargingFinished && !isPlayerWinner
+                    ? 'bg-amber-950/60 border-amber-400 shadow-[0_0_40px_rgba(251,191,36,0.7)]'
+                    : 'bg-rose-950/30 border-rose-500/40 opacity-100'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-black text-xs">
+                  <span className="text-xl">{opponent.avatar}</span>
+                  <span className="text-white">{opponent.name}</span>
+                  {isChargingFinished && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                      {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                    </span>
+                  )}
+                </div>
 
-              <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
-              </div>
-            </motion.div>
+                <UnifiedBattery
+                  value={animatedOpponentBattery}
+                  size="sm"
+                />
+
+                <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
+                  <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
+                  <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
+                </div>
+              </motion.div>
+            </div>
           </div>
 
           {/* Action Button */}
