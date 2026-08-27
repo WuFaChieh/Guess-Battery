@@ -11,13 +11,11 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Fast, snappy fluctuating loading progress steps (~0.7s total)
+    // Organic fluctuating loading steps with distinct noticeable pauses (~1.1s total)
     const steps = [
-      { target: 28, speed: 6 },   // Fast start
-      { target: 38, speed: 18 },  // Brief organic pause
-      { target: 75, speed: 7 },   // Fast burst fill
-      { target: 88, speed: 14 },  // Quick micro-slowdown
-      { target: 100, speed: 5 }   // Final complete
+      { target: 34, speed: 12, pauseAfter: 180 }, // Fast initial charge 0% -> 34%, then distinct 180ms pause
+      { target: 82, speed: 10, pauseAfter: 140 }, // High speed burst 34% -> 82%, then 140ms micro-pause
+      { target: 100, speed: 12, pauseAfter: 220 } // Final complete to 100%
     ];
 
     let currentStep = 0;
@@ -29,25 +27,25 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
         playScoreSound(100);
         setTimeout(() => {
           onComplete();
-        }, 220);
+        }, 300);
         return;
       }
 
-      const { target, speed } = steps[currentStep];
+      const { target, speed, pauseAfter } = steps[currentStep];
 
       const interval = setInterval(() => {
-        currentVal += 2;
+        currentVal += 1;
         if (currentVal > target) currentVal = target;
         setProgress(currentVal);
 
-        if (currentVal % 4 === 0) {
-          playChargingSound(currentVal); // Punchy pitch-rising charging synth audio!
+        if (currentVal % 3 === 0) {
+          playChargingSound(currentVal);
         }
 
         if (currentVal >= target) {
           clearInterval(interval);
           currentStep += 1;
-          setTimeout(runLoading, currentStep === 2 ? 40 : 15);
+          setTimeout(runLoading, pauseAfter); // Distinct noticeable pause between steps!
         }
       }, speed);
     };
