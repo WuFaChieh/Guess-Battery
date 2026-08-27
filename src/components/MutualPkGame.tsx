@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_PROFILES, HUMAN_BOT_QUESTIONS, HumanBotProfile, generateHumanBotGuess } from '../utils/humanAiDeck';
