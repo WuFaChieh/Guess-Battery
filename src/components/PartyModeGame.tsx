@@ -328,21 +328,20 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       >
         <div className="absolute inset-0 bg-gradient-to-t from-amber-400/10 via-transparent to-transparent pointer-events-none" />
 
-        {/* Co-Champions Grid */}
-        <div className={`grid gap-4 w-full items-center justify-center ${champions.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          {champions.map((champ) => {
-            const avgScore = Math.min(100, Math.round(champ.totalScore / 5));
-            return (
-              <div key={champ.id} className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-3xl sm:text-4xl">{champ.avatar}</span>
-                  <h3 className="text-xl sm:text-2xl font-black text-amber-300">{champ.name}</h3>
-                </div>
-
-                <UnifiedBattery value={avgScore} size="md" />
+        {/* Champions Display - Single Shared Battery */}
+        <div className="flex flex-col items-center gap-3 w-full">
+          {/* Champions Avatars & Names */}
+          <div className="flex items-center justify-center flex-wrap gap-4">
+            {champions.map((champ) => (
+              <div key={champ.id} className="flex items-center gap-1.5">
+                <span className="text-3xl sm:text-4xl">{champ.avatar}</span>
+                <h3 className="text-xl sm:text-2xl font-black text-amber-300">{champ.name}</h3>
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Single Shared Battery */}
+          <UnifiedBattery value={Math.min(100, Math.round(maxScore / 5))} size="md" />
         </div>
 
         <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-amber-500/30 mt-1">
