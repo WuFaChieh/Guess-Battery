@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Swords, Smartphone, Send, RotateCcw, Zap, CheckCircle2 } from 'lucide-react';
+import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_PROFILES, HUMAN_BOT_QUESTIONS, HumanBotProfile, generateHumanBotGuess } from '../utils/humanAiDeck';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
@@ -10,9 +10,13 @@ import { SliderInput } from './SliderInput';
 import { playScoreSound, playChargingSound, playTickSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
-type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'opponent_guessing' | 'revealing' | 'revealed';
+type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing_opponent_q' | 'opponent_guessing' | 'revealing' | 'revealed';
 
-export const MutualPkGame: React.FC = () => {
+interface MutualPkGameProps {
+  onGoToSinglePlayer?: () => void;
+}
+
+export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [stage, setStage] = useState<PkStage>('lobby');
 
   // Player Profile
@@ -89,12 +93,17 @@ export const MutualPkGame: React.FC = () => {
     }, 2200);
   };
 
-  // Confirm Player's Question
+  // Confirm Player's Question & proceed to guess opponent's question
   const handleConfirmQuestion = () => {
     if (!playerTitle.trim()) {
       alert('請輸入考對手的題目名稱！');
       return;
     }
+    setStage('guessing_opponent_q');
+  };
+
+  // Submit Player's Guess & trigger 5-second opponent guessing suspense
+  const handleSubmitPlayerGuess = () => {
     setStage('opponent_guessing');
 
     // Simulate Opponent taking 5 seconds to guess player's question
@@ -327,11 +336,35 @@ export const MutualPkGame: React.FC = () => {
 
             <button
               onClick={handleConfirmQuestion}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-xs shadow-lg hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-xs shadow-lg hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              出題完畢！開始猜對手電量
+              <span>出題完畢！開始猜對手電量</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+        </motion.div>
+      )}
+
+      {/* STAGE 4.5: GUESSING OPPONENT'S QUESTION */}
+      {stage === 'guessing_opponent_q' && opponentQuestion && opponent && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-4 w-full">
+          <div className="bg-slate-950 p-4 rounded-2xl border border-rose-500/30 w-full text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl">{opponent.avatar}</span>
+              <span className="text-xs font-bold text-rose-400 uppercase tracking-widest">
+                第二步：請猜 {opponent.name} 出的題目電量 %
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-white">{opponentQuestion.title}</h3>
+          </div>
+
+          <UnifiedBattery value={playerGuess} size="lg" label="你估算的對手電量" />
+
+          <SliderInput
+            value={playerGuess}
+            onChange={setPlayerGuess}
+            onSubmit={handleSubmitPlayerGuess}
+          />
         </motion.div>
       )}
 
@@ -348,7 +381,7 @@ export const MutualPkGame: React.FC = () => {
             <h3 className="text-base sm:text-lg font-black text-white">{opponentQuestion.title}</h3>
           </div>
 
-          <UnifiedBattery value={playerGuess} size="lg" label="你猜的答案電量" />
+          <UnifiedBattery value={playerGuess} size="lg" label="你估算的答案電量" />
 
           <div className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
