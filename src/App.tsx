@@ -8,7 +8,7 @@ import { PartyModeGame } from './components/PartyModeGame';
 import { MutualPkGame } from './components/MutualPkGame';
 import { CustomCreator } from './components/CustomCreator';
 import { SplashLoader } from './components/SplashLoader';
-import { isSoundEnabled } from './utils/audio';
+import { isSoundEnabled, startBgm } from './utils/audio';
 
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -32,7 +32,7 @@ export function App() {
     setCurrentMode('single_5');
   };
 
-  // Load custom questions from localStorage
+  // Load custom questions & initialize ambient BGM
   useEffect(() => {
     setSoundOn(isSoundEnabled());
     try {
@@ -43,6 +43,22 @@ export function App() {
     } catch {
       console.debug('Failed to load custom questions');
     }
+
+    const handleFirstTouch = () => {
+      if (isSoundEnabled()) {
+        startBgm();
+      }
+      window.removeEventListener('click', handleFirstTouch);
+      window.removeEventListener('touchstart', handleFirstTouch);
+    };
+
+    window.addEventListener('click', handleFirstTouch);
+    window.addEventListener('touchstart', handleFirstTouch);
+
+    return () => {
+      window.removeEventListener('click', handleFirstTouch);
+      window.removeEventListener('touchstart', handleFirstTouch);
+    };
   }, []);
 
   // Save custom questions to localStorage
@@ -76,7 +92,14 @@ export function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
       {/* Cute Splash Screen Loader */}
-      {showSplash && <SplashLoader onComplete={() => setShowSplash(false)} />}
+      {showSplash && (
+        <SplashLoader
+          onComplete={() => {
+            setShowSplash(false);
+            startBgm();
+          }}
+        />
+      )}
 
       {/* Top Header Navbar */}
       <Navbar

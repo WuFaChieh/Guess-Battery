@@ -1,7 +1,9 @@
-// Web Audio API Synthesizer for 100% self-contained retro/party game sound effects
+// Web Audio API Synthesizer for 100% self-contained retro/party game sound effects & BGM
 
 let audioCtx: AudioContext | null = null;
 let soundEnabled = true;
+let bgmInterval: number | null = null;
+let bgmStep = 0;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -23,7 +25,79 @@ export function isSoundEnabled(): boolean {
 
 export function setSoundEnabled(enabled: boolean): void {
   soundEnabled = enabled;
+  if (!enabled) {
+    stopBgm();
+  } else {
+    startBgm();
+  }
 }
+
+// ---------------------------------------------------------------------
+// 🎵 Pleasant, Relaxing Chill-Hop BGM Synthesizer (Cmaj7 arpeggio loop)
+// ---------------------------------------------------------------------
+const BGM_CHORDS = [
+  [261.63, 329.63, 392.00, 493.88], // Cmaj7 (C4, E4, G4, B4)
+  [220.00, 261.63, 329.63, 392.00], // Am7 (A3, C4, E4, G4)
+  [174.61, 220.00, 261.63, 329.63], // Fmaj7 (F3, A3, C4, E4)
+  [196.00, 246.94, 293.66, 349.23]  // G7 (G3, B3, D4, F4)
+];
+
+export function startBgm(): void {
+  if (!soundEnabled || bgmInterval !== null) return;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  bgmStep = 0;
+
+  const playBgmStep = () => {
+    if (!soundEnabled) {
+      stopBgm();
+      return;
+    }
+    try {
+      const now = ctx.currentTime;
+      const chordIndex = Math.floor(bgmStep / 8) % BGM_CHORDS.length;
+      const currentChord = BGM_CHORDS[chordIndex];
+      const noteFreq = currentChord[bgmStep % currentChord.length];
+
+      // Soft Arpeggio Melody Synth Note
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(noteFreq, now);
+
+      // Gentle, pleasant rhodes-like envelope
+      gain.gain.setValueAtTime(0.028, now); // Soft ambient BGM volume
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.38);
+
+      bgmStep = (bgmStep + 1) % 32;
+    } catch (e) {
+      console.debug('BGM error:', e);
+    }
+  };
+
+  // Play a step every 260ms (chill upbeat tempo)
+  bgmInterval = window.setInterval(playBgmStep, 260);
+}
+
+export function stopBgm(): void {
+  if (bgmInterval !== null) {
+    clearInterval(bgmInterval);
+    bgmInterval = null;
+  }
+}
+
+// ---------------------------------------------------------------------
+// 🔊 Game Sound Effects
+// ---------------------------------------------------------------------
 
 // Play a quick subtle click sound when slider moves
 export function playTickSound(): void {
