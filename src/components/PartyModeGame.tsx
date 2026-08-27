@@ -368,7 +368,6 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
               </div>
 
               <div className="flex items-center gap-3">
-                <UnifiedBattery value={avgScore} size="sm" />
                 <span className="font-black text-emerald-400 text-base min-w-[55px] text-right">{p.totalScore} 分</span>
               </div>
             </div>
