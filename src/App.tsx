@@ -13,7 +13,7 @@ import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
 
 export function App() {
   const [hasStarted, setHasStarted] = useState<boolean>(false);
-  const [showSplash, setShowSplash] = useState<boolean>(false);
+  const [showSplash, setShowSplash] = useState<boolean>(true);
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [gameSessionId, setGameSessionId] = useState<number>(Date.now());
@@ -104,22 +104,19 @@ export function App() {
   // Combine default questions with custom questions
   const allAvailableQuestions = [...customQuestions, ...INITIAL_QUESTIONS];
 
-  // Show Cover Screen if player has not clicked PRESS START
+  // 1. Initial Splash Loader (0% -> 100% 充能過場)
+  if (showSplash) {
+    return <SplashLoader onComplete={() => setShowSplash(false)} />;
+  }
+
+  // 2. Minimalist Cool Cover Screen with START button
   if (!hasStarted) {
     return <StartCover onStartGame={handlePressStart} />;
   }
 
+  // 3. Main Game Screen
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
-      {/* Cute Splash Screen Loader */}
-      {showSplash && (
-        <SplashLoader
-          onComplete={() => {
-            setShowSplash(false);
-            startBgm();
-          }}
-        />
-      )}
 
       {/* Top Header Navbar */}
       <Navbar
