@@ -648,7 +648,7 @@ export const INITIAL_QUESTIONS: Question[] = [
 
 export const CATEGORY_LABELS: Record<string, { label: string; icon: string }> = {
   all: { label: '全部題目', icon: '🎲' },
-  math: { label: '硬核數學與微分方程', icon: '🤓' },
-  absurd: { label: '荒謬萬物與日常生活', icon: '🥔' },
-  custom: { label: '玩家自訂題目', icon: '✏️' }
+  math: { label: '硬核數學', icon: '🤓' },
+  absurd: { label: '荒謬萬物', icon: '🥔' },
+  custom: { label: '自訂題庫', icon: '✏️' }
 };

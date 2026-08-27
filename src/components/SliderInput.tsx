@@ -35,14 +35,14 @@ export const SliderInput: React.FC<SliderInputProps> = ({
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center gap-5 my-2">
-      {/* Rainbow Range Spectrum Slider */}
+      {/* Spectrum Range Slider */}
       <div className="w-full px-2">
-        <div className="flex items-center justify-between text-xs font-extrabold text-slate-400 mb-1.5 px-1">
+        <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-1.5 px-1">
           <span>0</span>
           <span>100</span>
         </div>
 
-        {/* Rainbow Spectrum Track Slider Container */}
+        {/* Muted Spectrum Track Slider Container */}
         <div className="relative w-full flex flex-col items-center">
           <input
             type="range"
@@ -52,13 +52,13 @@ export const SliderInput: React.FC<SliderInputProps> = ({
             value={value}
             onChange={handleSliderChange}
             disabled={disabled}
-            className="w-full h-3 bg-gradient-to-r from-rose-500 via-amber-400 via-lime-400 to-teal-400 rounded-full appearance-none cursor-pointer accent-white shadow-lg touch-action-none z-10"
+            className="w-full h-3 bg-gradient-to-r from-rose-600/90 via-amber-500/90 via-emerald-500/90 to-teal-600/90 rounded-full appearance-none cursor-pointer accent-emerald-400 shadow-md touch-action-none z-10"
           />
 
           {/* Ticks under track */}
-          <div className="w-full flex justify-between px-1 mt-1 opacity-25">
+          <div className="w-full flex justify-between px-1 mt-1 opacity-20">
             {[...Array(11)].map((_, i) => (
-              <span key={i} className="w-0.5 h-1.5 bg-white rounded-full" />
+              <span key={i} className="w-0.5 h-1.5 bg-slate-300 rounded-full" />
             ))}
           </div>
         </div>
@@ -78,11 +78,11 @@ export const SliderInput: React.FC<SliderInputProps> = ({
               disabled={disabled}
               className={`py-2.5 px-1 rounded-2xl flex flex-col items-center justify-center transition-all ${
                 isSelected
-                  ? 'bg-emerald-950/60 border-2 border-emerald-400 text-lime-400 font-extrabold shadow-lg shadow-emerald-500/20 scale-105'
-                  : 'bg-slate-900/80 border border-slate-800 text-slate-300 hover:bg-slate-800'
+                  ? 'bg-emerald-950/50 border-2 border-emerald-500/60 text-emerald-300 font-bold shadow-md shadow-emerald-950/40 scale-105'
+                  : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
-              <span className={`text-xs ${isSelected ? 'text-lime-300 font-extrabold' : 'text-slate-200'}`}>
+              <span className={`text-xs ${isSelected ? 'text-emerald-300 font-bold' : 'text-slate-300'}`}>
                 {p.label}
               </span>
               <span className="text-sm mt-1">{p.icon}</span>
@@ -91,20 +91,20 @@ export const SliderInput: React.FC<SliderInputProps> = ({
         })}
       </div>
 
-      {/* Main Lock Pill Button & Doodle */}
+      {/* Main Lock Pill Button (Grounded Emerald Palette) */}
       <div className="w-full flex flex-col items-center gap-2 mt-1">
         <button
           onClick={onSubmit}
           disabled={disabled}
-          className="w-full py-4 px-6 rounded-full bg-gradient-to-r from-lime-300 via-emerald-400 to-teal-400 text-slate-950 font-black text-lg sm:text-xl shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5"
+          className="w-full py-3.5 sm:py-4 px-6 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-bold text-lg sm:text-xl shadow-lg shadow-emerald-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >
           <Lock className="w-5 h-5 text-slate-950 stroke-[2.5]" />
           <span>{submitLabel}</span>
-          <Sparkles className="w-5 h-5 text-slate-950" />
+          <Sparkles className="w-4 h-4 text-slate-950" />
         </button>
 
         {/* Doodle caption */}
-        <p className="text-xs text-slate-400 font-medium flex items-center gap-1 opacity-85">
+        <p className="text-xs text-slate-400 font-medium flex items-center gap-1 opacity-80">
           <span>⤤</span>
           <span>準備好了就鎖定吧！</span>
         </p>

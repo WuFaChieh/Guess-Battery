@@ -32,32 +32,32 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-900 px-4 py-3 shadow-xl">
+    <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 px-4 py-3 shadow-md">
       <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Left: Battery Logo + Title */}
         <div 
           onClick={() => onSelectMode('single_5')}
           className="flex items-center gap-3 cursor-pointer group select-none"
         >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-lime-400 via-emerald-500 to-teal-400 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/25 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-500 flex items-center justify-center text-2xl shadow-md shadow-emerald-950/50 group-hover:scale-105 transition-transform">
             🔋
           </div>
           <div>
-            <h1 className="font-black text-xl tracking-tight text-white leading-none">
+            <h1 className="font-extrabold text-xl tracking-tight text-slate-100 leading-none">
               猜電量
             </h1>
-            <p className="text-xs text-lime-400 font-bold mt-0.5 tracking-wide">
+            <p className="text-xs text-emerald-400/80 font-bold mt-0.5 tracking-wide">
               Guess the Battery
             </p>
           </div>
         </div>
 
-        {/* Right: Circular Volume & Menu Action Buttons like Mockup */}
+        {/* Right: Circular Volume & Menu Action Buttons */}
         <div className="flex items-center gap-2.5">
           {/* Volume Button */}
           <button
             onClick={toggleAudio}
-            className="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-800 hover:bg-slate-800 text-slate-200 flex items-center justify-center transition-all shadow-md active:scale-95"
+            className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
             title={soundOn ? '關閉音效' : '開啟音效'}
           >
             {soundOn ? (
@@ -70,10 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Hamburger Menu Button */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-800 hover:bg-slate-800 text-slate-200 flex items-center justify-center transition-all shadow-md active:scale-95"
+            className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
             title="選單"
           >
-            {menuOpen ? <X className="w-5 h-5 text-rose-400" /> : <Menu className="w-5 h-5 text-slate-200" />}
+            {menuOpen ? <X className="w-5 h-5 text-rose-400" /> : <Menu className="w-5 h-5 text-slate-300" />}
           </button>
         </div>
       </div>
