@@ -10,13 +10,13 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Realistic fluctuating loading progress steps
+    // Fast, snappy fluctuating loading progress steps (~0.7s total)
     const steps = [
-      { target: 28, speed: 25 },  // Fast start
-      { target: 36, speed: 70 },  // Slight pause / buffering
-      { target: 72, speed: 30 },  // Fast burst fill
-      { target: 84, speed: 60 },  // Brief slowdown
-      { target: 100, speed: 20 }  // Final complete
+      { target: 28, speed: 6 },   // Fast start
+      { target: 38, speed: 18 },  // Brief organic pause
+      { target: 75, speed: 7 },   // Fast burst fill
+      { target: 88, speed: 14 },  // Quick micro-slowdown
+      { target: 100, speed: 5 }   // Final complete
     ];
 
     let currentStep = 0;
@@ -28,24 +28,25 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
         playScoreSound(100);
         setTimeout(() => {
           onComplete();
-        }, 500);
+        }, 220);
         return;
       }
 
       const { target, speed } = steps[currentStep];
 
       const interval = setInterval(() => {
-        currentVal += 1;
+        currentVal += 2;
+        if (currentVal > target) currentVal = target;
         setProgress(currentVal);
 
-        if (currentVal % 3 === 0) {
+        if (currentVal % 4 === 0) {
           playTickSound();
         }
 
         if (currentVal >= target) {
           clearInterval(interval);
           currentStep += 1;
-          setTimeout(runLoading, currentStep === 2 || currentStep === 4 ? 120 : 40);
+          setTimeout(runLoading, currentStep === 2 ? 40 : 15);
         }
       }, speed);
     };

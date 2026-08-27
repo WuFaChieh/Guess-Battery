@@ -51,6 +51,34 @@ export function playTickSound(): void {
   }
 }
 
+// Play punchier charging sound during ceremony (pitch escalates with progress)
+export function playChargingSound(progressPercent: number): void {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    // Pitch rises from 300Hz up to 950Hz as progress rises from 0% to 100%
+    const baseFreq = 300 + (progressPercent / 100) * 650;
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq + 60, ctx.currentTime + 0.04);
+
+    gain.gain.setValueAtTime(0.25, ctx.currentTime); // Louder & punchier gain
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch (e) {
+    console.debug('Audio error:', e);
+  }
+}
+
 // Play a reveal tension / sweep sound
 export function playRevealSound(): void {
   if (!soundEnabled) return;

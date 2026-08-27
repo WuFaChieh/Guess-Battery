@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AnswerRecord } from '../types/game';
 import { getBadgeForScore } from '../utils/gameLogic';
-import { playTickSound, playScoreSound } from '../utils/audio';
+import { playChargingSound, playScoreSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { RotateCcw, Share2, Check, Sparkles, Zap, Plug } from 'lucide-react';
 
@@ -44,7 +44,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
       return;
     }
 
-    const stepTime = Math.max(15, Math.floor(1200 / target));
+    const stepTime = Math.max(12, Math.floor(1000 / target));
 
     const timer = setInterval(() => {
       current += 1;
@@ -61,11 +61,11 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             spread: 80,
             origin: { y: 0.5 }
           });
-        }, 350);
+        }, 300);
       } else {
         setChargingProgress(current);
-        if (current % 4 === 0) {
-          playTickSound();
+        if (current % 3 === 0) {
+          playChargingSound(current); // Louder & punchier charging synth sound!
         }
       }
     }, stepTime);
@@ -142,13 +142,9 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             <p className="text-xs text-slate-400 mt-0.5">模式：{gameModeName}</p>
           </div>
 
-          {/* Title Badge Card */}
+          {/* Title Badge Card (Crystal ball emoji box removed!) */}
           <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-5 rounded-2xl border border-emerald-500/30 text-center relative overflow-hidden shadow-inner">
-            <div className="inline-flex items-center justify-center p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-3xl mb-1.5">
-              {badge.emoji}
-            </div>
-
-            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest block mb-0.5">
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest block mb-1">
               獲得榮譽稱號
             </span>
             <h3 className="text-xl sm:text-2xl font-black text-emerald-300 drop-shadow-md flex items-center justify-center gap-2">
