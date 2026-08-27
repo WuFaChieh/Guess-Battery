@@ -48,7 +48,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       title: title.trim(),
       officialBattery,
       explanation: explanation.trim() || '出題者的直覺答案！',
-      category: targetCategory,
+      category: 'custom',
       emoji: emoji || '🔋'
     };
 

@@ -12,6 +12,7 @@ import { isSoundEnabled } from './utils/audio';
 export function App() {
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [gameSessionId, setGameSessionId] = useState<number>(Date.now());
   const [soundOn, setSoundOn] = useState<boolean>(true);
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
 
@@ -19,11 +20,13 @@ export function App() {
     setCurrentMode(mode);
     if (mode === 'single_5') {
       setActiveCategory('all');
+      setGameSessionId(Date.now());
     }
   };
 
   const handlePlayCustomDeck = () => {
     setActiveCategory('custom');
+    setGameSessionId(Date.now());
     setCurrentMode('single_5');
   };
 
@@ -82,9 +85,10 @@ export function App() {
       <main className="flex-1 max-w-md w-full mx-auto px-4 py-3 flex flex-col items-center justify-center">
         {currentMode === 'single_5' && (
           <SinglePlayerGame
+            key={`${activeCategory}_${gameSessionId}`}
             allQuestions={allAvailableQuestions}
             questionCount={5}
-            gameModeName="經典速刷"
+            gameModeName={activeCategory === 'custom' ? '自訂題庫試玩' : '經典速刷'}
             initialCategory={activeCategory}
           />
         )}

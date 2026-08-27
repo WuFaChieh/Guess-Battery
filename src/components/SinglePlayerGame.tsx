@@ -31,18 +31,24 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
 
   // Check if custom questions exist
-  const hasCustomQuestions = allQuestions.some((q) => q.category === 'custom');
+  const hasCustomQuestions = allQuestions.some((q) => q.category === 'custom' || q.id.startsWith('custom_'));
 
   // Initialize randomized questions pool
   const initGame = (catFilter = selectedCategory) => {
-    let pool = allQuestions;
+    let pool: Question[] = [];
 
     if (catFilter === 'custom') {
-      pool = allQuestions.filter((q) => q.category === 'custom');
-      if (pool.length === 0) pool = allQuestions;
+      pool = allQuestions.filter((q) => q.category === 'custom' || q.id.startsWith('custom_'));
+      if (pool.length === 0) {
+        pool = allQuestions;
+      }
     } else if (catFilter !== 'all') {
-      pool = allQuestions.filter((q) => q.category === catFilter);
-      if (pool.length === 0) pool = allQuestions;
+      pool = allQuestions.filter((q) => q.category === catFilter && !q.id.startsWith('custom_'));
+      if (pool.length === 0) {
+        pool = allQuestions;
+      }
+    } else {
+      pool = allQuestions;
     }
 
     const shuffled = [...pool].sort(() => 0.5 - Math.random());
@@ -58,6 +64,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   useEffect(() => {
     if (initialCategory) {
       setSelectedCategory(initialCategory);
+      initGame(initialCategory);
     }
   }, [initialCategory]);
 
