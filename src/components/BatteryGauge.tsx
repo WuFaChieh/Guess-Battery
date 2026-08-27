@@ -58,23 +58,23 @@ export const BatteryGauge: React.FC<BatteryGaugeProps> = ({
 
   const theme = getBatteryTheme(percentage);
 
-  // Size styling
+  // Size styling with mobile responsiveness
   const containerSizes = {
-    sm: 'w-36 h-16 p-1.5',
-    md: 'w-48 h-24 p-2',
-    lg: 'w-64 h-32 p-3'
+    sm: 'w-28 sm:w-36 h-14 sm:h-16 p-1 sm:p-1.5',
+    md: 'w-36 sm:w-48 h-20 sm:h-24 p-1.5 sm:p-2',
+    lg: 'w-48 sm:w-64 h-24 sm:h-32 p-2 sm:p-3'
   };
 
   const capSizes = {
-    sm: 'w-2.5 h-7 rounded-r-md',
-    md: 'w-3.5 h-10 rounded-r-lg',
-    lg: 'w-4 h-14 rounded-r-xl'
+    sm: 'w-2 sm:w-2.5 h-6 sm:h-7 rounded-r-md',
+    md: 'w-2.5 sm:w-3.5 h-8 sm:h-10 rounded-r-lg',
+    lg: 'w-3 sm:w-4 h-11 sm:h-14 rounded-r-xl'
   };
 
   const textSizes = {
-    sm: 'text-lg font-extrabold',
-    md: 'text-2xl font-black',
-    lg: 'text-4xl font-black'
+    sm: 'text-base sm:text-lg font-extrabold',
+    md: 'text-xl sm:text-2xl font-black',
+    lg: 'text-2xl sm:text-4xl font-black'
   };
 
   return (
