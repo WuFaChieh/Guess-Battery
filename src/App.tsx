@@ -8,7 +8,7 @@ import { PartyModeGame } from './components/PartyModeGame';
 import { MutualPkGame } from './components/MutualPkGame';
 import { CustomCreator } from './components/CustomCreator';
 import { SplashLoader } from './components/SplashLoader';
-import { isSoundEnabled, startBgm } from './utils/audio';
+import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
 
 export function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -45,19 +45,23 @@ export function App() {
     }
 
     const handleFirstTouch = () => {
+      unlockAudioContext();
       if (isSoundEnabled()) {
         startBgm();
       }
-      window.removeEventListener('click', handleFirstTouch);
+      window.removeEventListener('pointerdown', handleFirstTouch);
       window.removeEventListener('touchstart', handleFirstTouch);
+      window.removeEventListener('click', handleFirstTouch);
     };
 
-    window.addEventListener('click', handleFirstTouch);
+    window.addEventListener('pointerdown', handleFirstTouch);
     window.addEventListener('touchstart', handleFirstTouch);
+    window.addEventListener('click', handleFirstTouch);
 
     return () => {
-      window.removeEventListener('click', handleFirstTouch);
+      window.removeEventListener('pointerdown', handleFirstTouch);
       window.removeEventListener('touchstart', handleFirstTouch);
+      window.removeEventListener('click', handleFirstTouch);
     };
   }, []);
 

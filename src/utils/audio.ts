@@ -19,6 +19,13 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+export function unlockAudioContext(): void {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume();
+  }
+}
+
 export function isSoundEnabled(): boolean {
   return soundEnabled;
 }
