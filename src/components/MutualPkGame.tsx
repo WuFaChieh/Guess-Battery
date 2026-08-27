@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Bot, Sparkles, Smartphone, Check, UserCheck, ShieldAlert, RotateCcw, Send } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Swords, Bot, Sparkles, Smartphone, UserCheck, RotateCcw, Send } from 'lucide-react';
 import { Question } from '../types/game';
-import { AI_BOTS, AiBot, getRandomBot, getAiGuess } from '../utils/aiBots';
-import { getDeviceBatteryLevel } from '../utils/deviceBattery';
+import { AiBot, getRandomBot, getAiGuess } from '../utils/aiBots';
+import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
 import { calculateScore } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
@@ -24,7 +24,6 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   // Player's question for Opponent
   const [playerQuestionTitle, setPlayerQuestionTitle] = useState('');
   const [playerBatteryValue, setPlayerBatteryValue] = useState(50);
-  const [playerExplanation, setPlayerExplanation] = useState('');
   const [deviceBattery, setDeviceBattery] = useState<number | null>(null);
 
   // Opponent's question for Player
@@ -40,7 +39,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
   // Fetch real device battery level if supported
   useEffect(() => {
-    getDeviceBatteryLevel().then((info) => {
+    getDeviceBattery().then((info: DeviceBatteryInfo) => {
       if (info && info.level !== undefined) {
         setDeviceBattery(info.level);
         setPlayerBatteryValue(info.level);
@@ -59,7 +58,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       setMatchedBot(bot);
 
       // AI Bot prepares opponent question
-      const aiQuestions = [
+      const aiQuestions: Question[] = [
         {
           id: 'ai_q1',
           title: `【${bot.name}出題】猜猜我手機剛開機玩一整天剩幾 % 電量？`,
@@ -120,7 +119,6 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setPkState('lobby');
     setPlayerQuestionTitle('');
     setPlayerBatteryValue(deviceBattery || 50);
-    setPlayerExplanation('');
     setPlayerGuess(50);
     setMatchedBot(null);
   };
