@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Swords, Smartphone, Send, RotateCcw, Zap } from 'lucide-react';
+import { Swords, Smartphone, Send, RotateCcw, Zap, CheckCircle2 } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_PROFILES, HUMAN_BOT_QUESTIONS, HumanBotProfile, generateHumanBotGuess } from '../utils/humanAiDeck';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
 import { calculateScore } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
-import { playScoreSound, playTickSound } from '../utils/audio';
+import { playScoreSound, playChargingSound, playTickSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 
-type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing' | 'revealed';
+type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'opponent_guessing' | 'revealing' | 'revealed';
 
-interface MutualPkGameProps {
-  onGoToSinglePlayer?: () => void;
-}
-
-export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
+export const MutualPkGame: React.FC = () => {
   const [stage, setStage] = useState<PkStage>('lobby');
 
   // Player Profile
@@ -24,6 +20,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
   // Opponent Profile (Stealth - looks 100% like real player)
   const [opponent, setOpponent] = useState<HumanBotProfile | null>(null);
+  const [opponentReady, setOpponentReady] = useState(false);
 
   // Player's Question for Opponent
   const [playerTitle, setPlayerTitle] = useState('');
@@ -43,6 +40,11 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [playerScore, setPlayerScore] = useState(0);
   const [opponentScore, setOpponentScore] = useState(0);
 
+  // Sequential Reveal Animation States
+  const [revealStep, setRevealStep] = useState<0 | 1 | 2 | 3>(0);
+  const [animatedOpponentBattery, setAnimatedOpponentBattery] = useState(0);
+  const [animatedPlayerBattery, setAnimatedPlayerBattery] = useState(0);
+
   // Fetch real device battery
   useEffect(() => {
     getDeviceBattery().then((info: DeviceBatteryInfo) => {
@@ -56,6 +58,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   // Matchmaking (Seemlessly pairs opponent)
   const handleStartMatchmaking = () => {
     setStage('matching');
+    setOpponentReady(false);
 
     // Simulate 2.2 seconds matchmaking
     setTimeout(() => {
@@ -78,6 +81,10 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       // Transition to creating stage after 1.2s match celebration
       setTimeout(() => {
         setStage('creating');
+        // Opponent takes ~9 seconds to think & complete question
+        setTimeout(() => {
+          setOpponentReady(true);
+        }, 9000);
       }, 1200);
     }, 2200);
   };
@@ -88,20 +95,25 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       alert('請輸入考對手的題目名稱！');
       return;
     }
-    setStage('guessing');
+    setStage('opponent_guessing');
+
+    // Simulate Opponent taking 5 seconds to guess player's question
+    setTimeout(() => {
+      setStage('revealing');
+      runSequentialRevealCeremony();
+    }, 5000);
   };
 
-  // Submit Player Guess & One-Shot Sudden Death Reveal
-  const handlePKSubmitGuess = () => {
+  // Run Sequential Reveal & Spotlight Ceremony
+  const runSequentialRevealCeremony = () => {
     if (!opponentQuestion || !opponent) return;
 
-    // Player Gap & Score against Opponent's Question
+    // Calculate Final Gap & Scores
     const pGap = Math.abs(playerGuess - opponentQuestion.officialBattery);
     const pScore = calculateScore(playerGuess, opponentQuestion.officialBattery).score;
     setPlayerGap(pGap);
     setPlayerScore(pScore);
 
-    // Opponent Gap & Score against Player's Question
     const oGuess = generateHumanBotGuess(playerOfficialBattery, opponent.accuracyTier);
     const oGap = Math.abs(oGuess - playerOfficialBattery);
     const oScore = calculateScore(oGuess, playerOfficialBattery).score;
@@ -109,15 +121,52 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setOpponentGap(oGap);
     setOpponentScore(oScore);
 
-    setStage('revealed');
+    const targetOpponentCharge = Math.max(0, 100 - oGap);
+    const targetPlayerCharge = Math.max(0, 100 - pGap);
 
-    // Winner Fanfare
-    if (pScore >= oScore) {
-      playScoreSound(100);
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
-    } else {
-      playScoreSound(40);
-    }
+    setRevealStep(1); // Step 1: Reveal Opponent Charge
+
+    // Animate Opponent Battery Charging 0% -> (100 - oGap)%
+    let currentO = 0;
+    const intervalO = setInterval(() => {
+      currentO += 3;
+      if (currentO > targetOpponentCharge) currentO = targetOpponentCharge;
+      setAnimatedOpponentBattery(currentO);
+      if (currentO % 9 === 0) playChargingSound(currentO);
+
+      if (currentO >= targetOpponentCharge) {
+        clearInterval(intervalO);
+
+        // Step 2: Reveal Player Charge after 1.2s
+        setTimeout(() => {
+          setRevealStep(2);
+          let currentP = 0;
+          const intervalP = setInterval(() => {
+            currentP += 3;
+            if (currentP > targetPlayerCharge) currentP = targetPlayerCharge;
+            setAnimatedPlayerBattery(currentP);
+            if (currentP % 9 === 0) playChargingSound(currentP);
+
+            if (currentP >= targetPlayerCharge) {
+              clearInterval(intervalP);
+
+              // Step 3: Spotlight & Winner Fanfare after 1.2s
+              setTimeout(() => {
+                setRevealStep(3);
+                setStage('revealed');
+
+                if (pScore >= oScore) {
+                  playScoreSound(100);
+                  confetti({ particleCount: 150, spread: 90, origin: { y: 0.4 } });
+                } else {
+                  playScoreSound(40);
+                }
+              }, 1200);
+            }
+          }, 35);
+        }, 1200);
+      }
+    }, 35);
   };
 
   const resetGame = () => {
@@ -127,6 +176,10 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setPlayerGuess(50);
     setOpponent(null);
     setOpponentQuestion(null);
+    setRevealStep(0);
+    setAnimatedOpponentBattery(0);
+    setAnimatedPlayerBattery(0);
+    setOpponentReady(false);
   };
 
   const isPlayerWinner = playerScore >= opponentScore;
@@ -151,7 +204,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               1v1 互相出題 PK 戰
             </h2>
             <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-              即時搜尋線上玩家對決！雙方互相編寫一道題目考對方，一戰定勝負！
+              即時搜尋線上玩家對決！雙方互相編寫一道題目考對方，儀式感揭曉一戰定勝負！
             </p>
           </div>
 
@@ -204,19 +257,26 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 4: CREATING QUESTION */}
+      {/* STAGE 4: CREATING QUESTION (10s Opponent Thinking Feel) */}
       {stage === 'creating' && opponent && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 w-full text-left">
-          {/* Opponent Typing Status Bar */}
-          <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          {/* Opponent Thinking & Typing Bar */}
+          <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
               <span className="text-2xl">{opponent.avatar}</span>
               <div>
                 <h4 className="text-xs font-bold text-white">對手：{opponent.name}</h4>
-                <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                  對方也在輸入題目中...
-                </span>
+                {!opponentReady ? (
+                  <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5 mt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    對手正在認真思考並撰寫題目中...
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    對手已完成題目輸入！
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -275,9 +335,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         </motion.div>
       )}
 
-      {/* STAGE 5: GUESSING */}
-      {stage === 'guessing' && opponentQuestion && opponent && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-4 w-full">
+      {/* STAGE 5: OPPONENT GUESSING (5s Suspense Feel) */}
+      {stage === 'opponent_guessing' && opponentQuestion && opponent && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-5 w-full py-6">
           <div className="bg-slate-950 p-4 rounded-2xl border border-rose-500/30 w-full text-left">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">{opponent.avatar}</span>
@@ -290,85 +350,150 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
           <UnifiedBattery value={playerGuess} size="lg" label="你猜的答案電量" />
 
-          <SliderInput
-            value={playerGuess}
-            onChange={setPlayerGuess}
-            onSubmit={handlePKSubmitGuess}
-          />
+          <div className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+              <span>{opponent.name} 正在仔細推算您的題目電量 % (約 5 秒)...</span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              雙方估算完成後，將啟動儀式感逐一公布與鎂光燈特效！
+            </p>
+          </div>
         </motion.div>
       )}
 
-      {/* STAGE 6: REVEALED RESULTS - DUAL BATTERY SCALING */}
-      {stage === 'revealed' && opponentQuestion && opponent && (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-5 w-full">
-          {/* Match Banner */}
-          <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-rose-500/40 text-center">
-            <span className="text-3xl block mb-1">{isPlayerWinner ? '👑' : '⚡'}</span>
-            <h3 className="text-2xl font-black text-white">
-              {isPlayerWinner ? '一戰成名 · 猜電量獲勝！' : '一戰結束 · 殘念惜敗！'}
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">一戰定勝負 · 比對差距最小者勝出！</p>
+      {/* STAGE 6: REVEAL CEREMONY & SPOTLIGHT (Sequential reveal & charging fill) */}
+      {(stage === 'revealing' || stage === 'revealed') && opponentQuestion && opponent && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-5 w-full relative">
+          
+          {/* SPOTLIGHT EFFECT ON WINNER IN STEP 3 */}
+          {revealStep === 3 && (
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[300px] h-[360px] bg-gradient-to-b from-amber-400/25 via-amber-300/10 to-transparent blur-xl pointer-events-none animate-pulse z-0" />
+          )}
+
+          {/* Sequential Stage Title Banner */}
+          <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-rose-500/40 text-center relative z-10">
+            {revealStep === 1 && (
+              <p className="text-xs font-bold text-amber-400 animate-pulse">
+                ⏳ 第一步：揭曉【{opponent.name}】的答對精準電量...
+              </p>
+            )}
+            {revealStep === 2 && (
+              <p className="text-xs font-bold text-emerald-400 animate-pulse">
+                ⚡ 第二步：揭曉【你】的答對精準電量...
+              </p>
+            )}
+            {revealStep === 3 && (
+              <>
+                <span className="text-3xl block mb-1">{isPlayerWinner ? '👑' : '⚡'}</span>
+                <h3 className="text-2xl font-black text-white">
+                  {isPlayerWinner ? '一戰成名 · 猜電量獲勝！' : '一戰結束 · 殘念惜敗！'}
+                </h3>
+                <p className="text-xs text-amber-400 font-bold mt-1 flex items-center justify-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  鎂光燈聚焦勝利者 · 差距最小者勝出！
+                </p>
+              </>
+            )}
           </div>
 
-          {/* DUAL BATTERY COMPARISON - WINNER SCALES LARGE, LOSER SCALES SMALL */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full items-center justify-center my-2">
+          {/* DUAL BATTERY COMPARISON - SEQUENTIAL CHARGING & WINNER SPOTLIGHT */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full items-center justify-center my-2 relative z-10">
             {/* Player's Battery Card */}
             <div
-              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 ${
-                isPlayerWinner
-                  ? 'bg-emerald-950/40 border-emerald-400 shadow-2xl shadow-emerald-500/20 scale-105 sm:scale-110 z-10'
-                  : 'bg-slate-950/80 border-slate-800 opacity-70 scale-95'
+              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
+                revealStep === 3 && isPlayerWinner
+                  ? 'bg-amber-950/40 border-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.6)] scale-110 sm:scale-125 z-20'
+                  : revealStep >= 2
+                  ? 'bg-emerald-950/30 border-emerald-500/40 opacity-100 scale-100'
+                  : 'bg-slate-950/80 border-slate-800 opacity-60 scale-95'
               }`}
             >
+              {/* Winner Golden Beam Overlay */}
+              {revealStep === 3 && isPlayerWinner && (
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/20 via-transparent to-transparent pointer-events-none" />
+              )}
+
               <div className="flex items-center gap-1.5 font-black text-xs">
                 <span className="text-xl">{playerAvatar}</span>
                 <span className="text-white">你</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-emerald-500 text-slate-950 font-black' : 'bg-slate-800 text-slate-400'}`}>
-                  {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
-                </span>
+                {revealStep === 3 && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                    {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                  </span>
+                )}
               </div>
 
-              <UnifiedBattery value={100 - playerGap} size="sm" />
+              <UnifiedBattery
+                value={revealStep >= 2 ? animatedPlayerBattery : 0}
+                size="sm"
+              />
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
+                {revealStep >= 2 ? (
+                  <>
+                    <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
+                    <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-slate-500 animate-pulse">計算累積中...</span>
+                )}
               </div>
             </div>
 
             {/* Opponent's Battery Card */}
             <div
-              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 ${
-                !isPlayerWinner
-                  ? 'bg-rose-950/40 border-rose-400 shadow-2xl shadow-rose-500/20 scale-105 sm:scale-110 z-10'
-                  : 'bg-slate-950/80 border-slate-800 opacity-70 scale-95'
+              className={`p-3 rounded-2xl border transition-all flex flex-col items-center gap-1.5 relative overflow-hidden ${
+                revealStep === 3 && !isPlayerWinner
+                  ? 'bg-amber-950/40 border-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.6)] scale-110 sm:scale-125 z-20'
+                  : revealStep >= 1
+                  ? 'bg-rose-950/30 border-rose-500/40 opacity-100 scale-100'
+                  : 'bg-slate-950/80 border-slate-800 opacity-60 scale-95'
               }`}
             >
+              {/* Winner Golden Beam Overlay */}
+              {revealStep === 3 && !isPlayerWinner && (
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-400/20 via-transparent to-transparent pointer-events-none" />
+              )}
+
               <div className="flex items-center gap-1.5 font-black text-xs">
                 <span className="text-xl">{opponent.avatar}</span>
                 <span className="text-white">{opponent.name}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-rose-500 text-white font-black' : 'bg-slate-800 text-slate-400'}`}>
-                  {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
-                </span>
+                {revealStep === 3 && (
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                    {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                  </span>
+                )}
               </div>
 
-              <UnifiedBattery value={100 - opponentGap} size="sm" />
+              <UnifiedBattery
+                value={revealStep >= 1 ? animatedOpponentBattery : 0}
+                size="sm"
+              />
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
+                {revealStep >= 1 ? (
+                  <>
+                    <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
+                    <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-slate-500 animate-pulse">計算累積中...</span>
+                )}
               </div>
             </div>
           </div>
 
           {/* Action Button */}
-          <button
-            onClick={resetGame}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>再配對對決一局！</span>
-          </button>
+          {stage === 'revealed' && (
+            <button
+              onClick={resetGame}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30 relative z-10"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>再配對對決一局！</span>
+            </button>
+          )}
         </motion.div>
       )}
     </div>
