@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <h1 className="font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5">
               猜電量 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">MVP</span>
             </h1>
-            <p className="text-xs text-slate-400">萬物皆有電量，你猜得準嗎？</p>
+            <p className="text-xs text-slate-400">萬物皆有電量 · <span className="text-slate-300 font-medium">作者：冷月仙</span></p>
           </div>
         </div>
 

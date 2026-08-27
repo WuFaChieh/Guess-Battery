@@ -94,9 +94,15 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-600">
-        <p>⚡ 猜電量 Guess the Battery — 萬物皆有電量，你猜得準嗎？</p>
-        <p className="mt-1 opacity-60">無卡牌 · 無機制 · 只有荒謬直覺與爆笑揭曉</p>
+      <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500">
+        <p className="font-semibold text-slate-400">⚡ 猜電量 Guess the Battery — 萬物皆有電量，你猜得準嗎？</p>
+        <p className="mt-1 text-slate-500 flex flex-wrap items-center justify-center gap-2">
+          <span>無卡牌 · 無機制 · 只有荒謬直覺與爆笑揭曉</span>
+          <span className="hidden sm:inline">|</span>
+          <span className="bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+            遊戲作者：<strong className="text-emerald-400 font-bold">冷月仙</strong>
+          </span>
+        </p>
       </footer>
     </div>
   );
