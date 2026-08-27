@@ -25,6 +25,15 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
   const badge = getBadgeForScore(avgScore);
 
+  // Dynamic facial expression for battery mascot
+  const getBatteryFace = (val: number, done: boolean) => {
+    if (!done) return '( 🔌⚡ 充能精準度... )';
+    if (val >= 90) return '( ⚡💯⚡ 神級精準大師！ )';
+    if (val >= 70) return '( ≧ᗜ≦ 高電量充滿！ )';
+    if (val >= 40) return '( ｡• ᵕ •｡ 滿意充電完成 )';
+    return '( 🪫 需再接再厲！ )';
+  };
+
   // Charging Ceremony Animation on mount
   useEffect(() => {
     let current = 0;
@@ -52,7 +61,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             spread: 80,
             origin: { y: 0.5 }
           });
-        }, 400);
+        }, 350);
       } else {
         setChargingProgress(current);
         if (current % 4 === 0) {
@@ -72,88 +81,86 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-slate-900/95 p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 relative overflow-hidden my-2 select-none">
+    <div className="w-full max-w-xl mx-auto bg-slate-900/95 p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-5 relative overflow-hidden my-2 select-none">
       {/* Background Glow */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* PHASE 1: Cool & Cute Charging Ceremony */}
-      {isCharging && (
-        <div className="flex flex-col items-center justify-center py-8 gap-5">
-          <div className="text-center">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400 inline-flex items-center gap-1.5">
-              <Plug className="w-4 h-4 text-emerald-400 animate-pulse" />
-              <span>成果精準度充電中...</span>
-            </span>
-            <h3 className="text-2xl font-black text-white mt-2">
-              計算個人平均直覺電量
-            </h3>
-          </div>
-
-          {/* Plugged-in Battery Charging Animation */}
-          <div className="flex items-center justify-center w-full max-w-xs my-2">
-            <div className="relative bg-slate-950 border-2 border-emerald-500/60 rounded-[24px] w-full h-24 p-2 shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px)] bg-[size:10px_100%] pointer-events-none" />
-
-              {/* Charging Fill Bar */}
-              <motion.div
-                className="h-full rounded-[16px] bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 relative overflow-hidden flex items-center justify-center shadow-inner"
-                style={{ width: `${chargingProgress}%` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/20" />
-              </motion.div>
-
-              {/* Counter Overlay */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                <span className="text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                  🔌 ( ｡• ᵕ •｡ )
-                </span>
-                <span className="text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight">
-                  {chargingProgress}%
-                </span>
-              </div>
-            </div>
-            <div className="bg-slate-800 border-2 border-l-0 border-emerald-500/60 w-3 h-10 rounded-r-xl" />
-          </div>
-
-          <p className="text-xs text-slate-400 font-medium flex items-center gap-1 animate-pulse">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            正在依據每題差距計算累積充電成果...
-          </p>
+      {/* TOP PERMANENT HERO BATTERY (Never disappears, sits proudly at the very top!) */}
+      <div className="flex flex-col items-center justify-center w-full">
+        <div className="text-center mb-2">
+          <span className="px-3 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400 inline-flex items-center gap-1.5">
+            <Plug className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>{isCharging ? '成果充電進行中...' : '成果充電完成！'}</span>
+          </span>
         </div>
-      )}
 
-      {/* PHASE 2: Full Reveal (Unveils after charging completes) */}
+        {/* Permanent Battery Shell */}
+        <div className="flex items-center justify-center w-full max-w-xs my-1">
+          <div className="relative bg-slate-950 border-2 border-emerald-500/60 rounded-[24px] w-full h-22 sm:h-24 p-2 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px)] bg-[size:10px_100%] pointer-events-none" />
+
+            {/* Charging Fill Bar */}
+            <motion.div
+              className="h-full rounded-[16px] bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 relative overflow-hidden flex items-center justify-center shadow-inner"
+              style={{ width: `${chargingProgress}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/20" />
+            </motion.div>
+
+            {/* Counter Overlay & Mascot Expression */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+              <span className="text-[11px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                {getBatteryFace(chargingProgress, !isCharging)}
+              </span>
+              <span className="text-2xl sm:text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight">
+                {chargingProgress}%
+              </span>
+            </div>
+          </div>
+          <div className="bg-slate-800 border-2 border-l-0 border-emerald-500/60 w-3 h-10 rounded-r-xl" />
+        </div>
+
+        {isCharging && (
+          <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 animate-pulse mt-1">
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
+            正在累積計算您的直覺精準度電量...
+          </p>
+        )}
+      </div>
+
+      {/* FULL REVEAL CONTENT (Slides in below the top battery when charging completes) */}
       {!isCharging && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-5 pt-2 border-t border-slate-800/80"
         >
-          {/* Header Banner */}
-          <div className="text-center relative">
-            <div className="inline-flex items-center justify-center p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 text-4xl mb-2">
-              {badge.emoji}
-            </div>
+          {/* Header Title */}
+          <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">遊戲成果大結算</h2>
-            <p className="text-xs text-slate-400 mt-1">模式：{gameModeName}</p>
+            <p className="text-xs text-slate-400 mt-0.5">模式：{gameModeName}</p>
           </div>
 
           {/* Title Badge Card */}
-          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-5 sm:p-6 rounded-2xl border border-emerald-500/30 text-center relative overflow-hidden shadow-inner">
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block mb-1">
+          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-5 rounded-2xl border border-emerald-500/30 text-center relative overflow-hidden shadow-inner">
+            <div className="inline-flex items-center justify-center p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-3xl mb-1.5">
+              {badge.emoji}
+            </div>
+
+            <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest block mb-0.5">
               獲得榮譽稱號
             </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-emerald-300 drop-shadow-md flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-amber-400" />
+            <h3 className="text-xl sm:text-2xl font-black text-emerald-300 drop-shadow-md flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-400" />
               <span>{badge.title}</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+            <p className="text-xs text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
               {badge.description}
             </p>
 
             {/* Score Stats Grid */}
-            <div className="grid grid-cols-2 gap-4 mt-5 pt-4 border-t border-slate-800">
+            <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-slate-800">
               <div>
                 <span className="text-xs text-slate-500 block">總得分</span>
                 <span className="text-2xl sm:text-3xl font-black text-white">{totalScore}</span>
@@ -168,14 +175,14 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
           {/* Breakdown List */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
               📋 每題數據紀錄
             </h4>
-            <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
               {answers.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs flex items-center justify-between gap-3"
+                  className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 text-xs flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <span className="font-bold text-slate-500">#{idx + 1}</span>
@@ -194,7 +201,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             </div>
           </div>
 
-          {/* Buttons */}
+          {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <button
               onClick={handleShare}

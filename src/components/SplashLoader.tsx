@@ -10,26 +10,47 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    let current = 0;
-    const interval = setInterval(() => {
-      current += Math.floor(Math.random() * 4) + 2;
-      if (current >= 100) {
-        current = 100;
+    // Realistic fluctuating loading progress steps
+    const steps = [
+      { target: 28, speed: 25 },  // Fast start
+      { target: 36, speed: 70 },  // Slight pause / buffering
+      { target: 72, speed: 30 },  // Fast burst fill
+      { target: 84, speed: 60 },  // Brief slowdown
+      { target: 100, speed: 20 }  // Final complete
+    ];
+
+    let currentStep = 0;
+    let currentVal = 0;
+
+    const runLoading = () => {
+      if (currentStep >= steps.length) {
         setProgress(100);
-        clearInterval(interval);
         playScoreSound(100);
         setTimeout(() => {
           onComplete();
-        }, 600);
-      } else {
-        setProgress(current);
-        if (current % 10 < 3) {
+        }, 500);
+        return;
+      }
+
+      const { target, speed } = steps[currentStep];
+
+      const interval = setInterval(() => {
+        currentVal += 1;
+        setProgress(currentVal);
+
+        if (currentVal % 3 === 0) {
           playTickSound();
         }
-      }
-    }, 30);
 
-    return () => clearInterval(interval);
+        if (currentVal >= target) {
+          clearInterval(interval);
+          currentStep += 1;
+          setTimeout(runLoading, currentStep === 2 || currentStep === 4 ? 120 : 40);
+        }
+      }, speed);
+    };
+
+    runLoading();
   }, [onComplete]);
 
   // Cute mascot facial expressions based on battery charge %
@@ -51,7 +72,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
         className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 select-none"
       >
         {/* Background Ambient Glow */}
-        <div className="absolute w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Cute Mascot Battery Container */}
         <div className="relative flex flex-col items-center gap-6 z-10 max-w-xs w-full">
@@ -81,7 +102,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
 
               {/* Cute Mascot Face & Percentage Overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                <span className="text-sm font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                <span className="text-xs font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
                   {mascot.face}
                 </span>
                 <span className="text-2xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight">
