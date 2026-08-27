@@ -8,26 +8,15 @@ import { PartyModeGame } from './components/PartyModeGame';
 import { MutualPkGame } from './components/MutualPkGame';
 import { CustomCreator } from './components/CustomCreator';
 import { SplashLoader } from './components/SplashLoader';
-import { StartCover } from './components/StartCover';
 import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
 
 export function App() {
-  const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [gameSessionId, setGameSessionId] = useState<number>(Date.now());
   const [soundOn, setSoundOn] = useState<boolean>(true);
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
-
-  const handlePressStart = () => {
-    unlockAudioContext();
-    if (isSoundEnabled()) {
-      startBgm();
-    }
-    setHasStarted(true);
-    setShowSplash(true);
-  };
 
   const handleSelectMode = (mode: GameMode) => {
     setCurrentMode(mode);
@@ -109,12 +98,7 @@ export function App() {
     return <SplashLoader onComplete={() => setShowSplash(false)} />;
   }
 
-  // 2. Minimalist Cool Cover Screen with START button
-  if (!hasStarted) {
-    return <StartCover onStartGame={handlePressStart} />;
-  }
-
-  // 3. Main Game Screen
+  // 2. Main Game Screen
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
 
