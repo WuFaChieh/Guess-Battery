@@ -6,7 +6,6 @@ import { SliderInput } from './SliderInput';
 import { RevealScreen } from './RevealScreen';
 import { GameOverModal } from './GameOverModal';
 import { calculateScore } from '../utils/gameLogic';
-import { Filter } from 'lucide-react';
 import { CATEGORY_LABELS } from '../data/questions';
 
 interface SinglePlayerGameProps {
@@ -121,9 +120,8 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Category Filter Selector */}
-      <div className="flex items-center gap-1.5 overflow-x-auto max-w-xl w-full p-2 mb-2 bg-slate-900/60 rounded-2xl border border-slate-800">
-        <Filter className="w-4 h-4 text-slate-500 shrink-0 ml-2" />
+      {/* Category Filter Selector (Equal-width Grid - 100% Scrollbar Free) */}
+      <div className={`grid ${hasCustomQuestions ? 'grid-cols-4' : 'grid-cols-3'} gap-1 max-w-md w-full p-1 mb-2 bg-slate-900/80 rounded-2xl border border-slate-800 select-none`}>
         {Object.entries(CATEGORY_LABELS).map(([key, item]) => {
           // Hide custom filter if user hasn't created custom questions yet
           if (key === 'custom' && !hasCustomQuestions) return null;
@@ -133,13 +131,14 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
             <button
               key={key}
               onClick={() => setSelectedCategory(key)}
-              className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`py-1.5 px-1 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all flex items-center justify-center gap-1 ${
                 isActive
-                  ? 'bg-emerald-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-md'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              {item.icon} {item.label}
+              <span className="text-xs">{item.icon}</span>
+              <span>{item.label}</span>
             </button>
           );
         })}
