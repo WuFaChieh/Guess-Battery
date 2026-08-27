@@ -85,7 +85,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
   const handleSubmitToOfficialCloud = async (q: Question) => {
     setSubmittingId(q.id);
     try {
-      const googleSheetsScriptUrl = (import.meta as any).env?.VITE_GOOGLE_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbz_default_sheets_webhook/exec';
+      const googleSheetsScriptUrl = (import.meta as any).env?.VITE_GOOGLE_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbyOp0LNQ6aX9oFtGFL1Eik5G4vllhAJu_VSfWLWz7O0KFwJpie58IQtu2iHuIi_xdCvIw/exec';
 
       const payload = {
         submission_type: 'Guess_Battery_Community_Question',
