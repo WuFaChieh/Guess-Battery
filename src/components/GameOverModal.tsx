@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AnswerRecord } from '../types/game';
 import { getBadgeForScore } from '../utils/gameLogic';
 import { playChargingSound, playScoreSound } from '../utils/audio';
+import { UnifiedBattery } from './UnifiedBattery';
 import confetti from 'canvas-confetti';
 import { RotateCcw, Share2, Check, Sparkles, Zap, Plug } from 'lucide-react';
 
@@ -94,31 +95,13 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
           </span>
         </div>
 
-        {/* Permanent Battery Shell */}
-        <div className="flex items-center justify-center w-full max-w-xs my-1">
-          <div className="relative bg-slate-950 border-2 border-emerald-500/60 rounded-[24px] w-full h-22 sm:h-24 p-2 shadow-2xl overflow-hidden">
-            <div className="absolute inset-0 opacity-15 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px)] bg-[size:10px_100%] pointer-events-none" />
-
-            {/* Charging Fill Bar */}
-            <motion.div
-              className="h-full rounded-[16px] bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 relative overflow-hidden flex items-center justify-center shadow-inner"
-              style={{ width: `${chargingProgress}%` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-black/20" />
-            </motion.div>
-
-            {/* Counter Overlay & Mascot Expression */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-              <span className="text-[11px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                {getBatteryFace(chargingProgress, !isCharging)}
-              </span>
-              <span className="text-2xl sm:text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-tight">
-                {chargingProgress}%
-              </span>
-            </div>
-          </div>
-          <div className="bg-slate-800 border-2 border-l-0 border-emerald-500/60 w-3 h-10 rounded-r-xl" />
-        </div>
+        {/* Permanent Vector Battery Shell - 100% Crisp on all iOS & Android screens */}
+        <UnifiedBattery
+          value={chargingProgress}
+          size="lg"
+          faceExpression={getBatteryFace(chargingProgress, !isCharging)}
+          isPlugged={true}
+        />
 
         {isCharging && (
           <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 animate-pulse mt-1">
