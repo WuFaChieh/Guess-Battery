@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Question, AnswerRecord } from '../types/game';
 import { QuestionCard } from './QuestionCard';
 import { BatteryGauge } from './BatteryGauge';
 import { SliderInput } from './SliderInput';
 import { RevealScreen } from './RevealScreen';
 import { GameOverModal } from './GameOverModal';
-import { calculateScore } from '../utils/gameLogic';
+import { calculateScore, shuffleArray } from '../utils/gameLogic';
 import { CATEGORY_LABELS } from '../data/questions';
 
 interface SinglePlayerGameProps {
@@ -50,8 +50,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
       pool = allQuestions;
     }
 
-    const shuffled = [...pool].sort(() => 0.5 - Math.random());
-    const finalQuestions = shuffled.slice(0, Math.min(questionCount, pool.length));
+    const finalQuestions = shuffleArray(pool).slice(0, Math.min(questionCount, pool.length));
     
     setQuestions(finalQuestions);
     setCurrentIndex(0);
@@ -71,10 +70,12 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
     initGame(selectedCategory);
   }, [selectedCategory, questionCount, allQuestions.length]);
 
-  const handleSubmitGuess = () => {
+  // Memoized so SliderInput's onSubmit prop stays referentially stable across
+  // re-renders that don't touch the question/guess state this actually reads.
+  const handleSubmitGuess = useCallback(() => {
     const q = questions[currentIndex];
     const { distance, score } = calculateScore(currentGuess, q.officialBattery);
-    
+
     const newRecord: AnswerRecord = {
       question: q,
       userGuess: currentGuess,
@@ -86,7 +87,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
 
     setAnswers((prev) => [...prev, newRecord]);
     setGameState('revealing');
-  };
+  }, [questions, currentIndex, currentGuess]);
 
   const handleNextQuestion = () => {
     if (currentIndex + 1 < questions.length) {

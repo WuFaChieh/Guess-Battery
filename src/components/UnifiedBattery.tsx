@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface UnifiedBatteryProps {
   value: number; // 0 to 100
@@ -9,7 +9,10 @@ interface UnifiedBatteryProps {
   isPlugged?: boolean;
 }
 
-export const UnifiedBattery: React.FC<UnifiedBatteryProps> = ({
+// Memoized: this renders inside high-frequency timer ticks (the PK charging
+// ceremony re-renders its parent every ~35ms) and is pure w.r.t. its props,
+// so React.memo skips re-rendering batteries whose props haven't changed.
+const UnifiedBatteryComponent: React.FC<UnifiedBatteryProps> = ({
   value,
   label,
   size = 'md',
@@ -18,6 +21,13 @@ export const UnifiedBattery: React.FC<UnifiedBatteryProps> = ({
   isPlugged = false
 }) => {
   const percentage = Math.min(100, Math.max(0, Math.round(value)));
+
+  // Unique per-instance IDs so multiple batteries on screen at once
+  // (e.g. player vs. opponent) never collide on the same SVG def IDs.
+  const uid = useId();
+  const gradId = `battGrad_${uid}`;
+  const glossId = `glassGloss_${uid}`;
+  const clipId = `innerBatteryClip_${uid}`;
 
   // Dynamic gradient colors based on percentage
   const getColors = (val: number) => {
@@ -59,21 +69,21 @@ export const UnifiedBattery: React.FC<UnifiedBatteryProps> = ({
         >
           <defs>
             {/* Liquid Fill Gradient */}
-            <linearGradient id={`battGrad_${percentage}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={colors.start} />
               <stop offset="50%" stopColor={colors.middle} />
               <stop offset="100%" stopColor={colors.end} />
             </linearGradient>
 
             {/* Glossy Top Glass Highlight */}
-            <linearGradient id="glassGloss" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id={glossId} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
               <stop offset="35%" stopColor="#ffffff" stopOpacity="0.05" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.25" />
             </linearGradient>
 
             {/* Clip path for battery inner liquid container */}
-            <clipPath id="innerBatteryClip">
+            <clipPath id={clipId}>
               <rect x="15" y="15" width="254" height="110" rx="18" ry="18" />
             </clipPath>
           </defs>
@@ -110,7 +120,7 @@ export const UnifiedBattery: React.FC<UnifiedBatteryProps> = ({
           </g>
 
           {/* 4. Liquid Fill Bar */}
-          <g clipPath="url(#innerBatteryClip)">
+          <g clipPath={`url(#${clipId})`}>
             <rect
               x="15"
               y="15"
@@ -118,12 +128,12 @@ export const UnifiedBattery: React.FC<UnifiedBatteryProps> = ({
               height="110"
               rx="16"
               ry="16"
-              fill={`url(#battGrad_${percentage})`}
+              fill={`url(#${gradId})`}
               className={animated ? 'transition-all duration-300 ease-out' : ''}
             />
 
             {/* Glossy Overlay */}
-            <rect x="15" y="15" width="254" height="110" fill="url(#glassGloss)" pointerEvents="none" />
+            <rect x="15" y="15" width="254" height="110" fill={`url(#${glossId})`} pointerEvents="none" />
           </g>
         </svg>
 
@@ -142,3 +152,6 @@ export const UnifiedBattery: React.FC<UnifiedBatteryProps> = ({
     </div>
   );
 };
+
+export const UnifiedBattery = React.memo(UnifiedBatteryComponent);
+UnifiedBattery.displayName = 'UnifiedBattery';

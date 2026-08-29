@@ -111,10 +111,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
       alert(`🎉 題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
     } catch {
-      const nextSubmitted = [...submittedIds, q.id];
-      setSubmittedIds(nextSubmitted);
-      localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-      alert(`🎉 題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
+      alert(`😢 題目「${q.title}」投稿失敗，請檢查網路連線後再試一次！`);
     } finally {
       setSubmittingId(null);
     }

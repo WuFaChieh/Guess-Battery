@@ -9,7 +9,9 @@ interface BatteryGaugeProps {
   colorOverride?: string;
 }
 
-export const BatteryGauge: React.FC<BatteryGaugeProps> = ({
+// Memoized: a thin wrapper around UnifiedBattery, itself often re-rendered
+// on high-frequency timer ticks (slider drags, charging ceremonies).
+const BatteryGaugeComponent: React.FC<BatteryGaugeProps> = ({
   value,
   label = '你猜的電量',
   size = 'lg',
@@ -24,3 +26,6 @@ export const BatteryGauge: React.FC<BatteryGaugeProps> = ({
     />
   );
 };
+
+export const BatteryGauge = React.memo(BatteryGaugeComponent);
+BatteryGauge.displayName = 'BatteryGauge';

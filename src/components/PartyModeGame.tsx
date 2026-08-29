@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Question, Player } from '../types/game';
 import { QuestionCard } from './QuestionCard';
 import { BatteryGauge } from './BatteryGauge';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
-import { calculateScore } from '../utils/gameLogic';
+import { calculateScore, shuffleArray } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound, playVictoryFanfareSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
@@ -47,8 +47,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       guesses: {}
     }));
 
-    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-    setQuestions(shuffled.slice(0, 5));
+    setQuestions(shuffleArray(allQuestions).slice(0, 5));
     setPlayers(activePlayers);
     setQuestionIndex(0);
     setActivePlayerIndex(0);
@@ -58,7 +57,9 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
     setSetupStep(false);
   };
 
-  const handleLockTurn = () => {
+  // Memoized so SliderInput's onSubmit prop stays referentially stable across
+  // re-renders that don't touch the turn/guess state this actually reads.
+  const handleLockTurn = useCallback(() => {
     const q = questions[questionIndex];
     // Record guess
     const updatedPlayers = [...players];
@@ -73,7 +74,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
     } else {
       // All players answered this question! Reveal!
       playRevealSound();
-      
+
       // Calculate scores for this round
       const scoredPlayers = updatedPlayers.map((p) => {
         const guess = p.guesses[q.id];
@@ -85,7 +86,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       playScoreSound(85);
       setGameState('reveal');
     }
-  };
+  }, [questions, questionIndex, players, activePlayerIndex, currentGuess]);
 
   const handleNextRound = () => {
     if (questionIndex + 1 < questions.length) {
@@ -341,7 +342,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           </div>
 
           {/* Single Shared Battery */}
-          <UnifiedBattery value={Math.min(100, Math.round(maxScore / 5))} size="md" />
+          <UnifiedBattery value={Math.min(100, Math.round(maxScore / questions.length))} size="md" />
         </div>
 
         <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-amber-500/30 mt-1">
@@ -369,7 +370,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
             rankBadge = nonChampRank === 2 ? '🥈 亞軍' : nonChampRank === 3 ? '🥉 季軍' : `#${idx + 1}`;
           }
 
-          const avgScore = Math.min(100, Math.round(p.totalScore / 5));
+          const avgScore = Math.min(100, Math.round(p.totalScore / questions.length));
 
           return (
             <div

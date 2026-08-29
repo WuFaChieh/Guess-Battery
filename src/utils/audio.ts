@@ -40,6 +40,112 @@ export function setSoundEnabled(enabled: boolean): void {
 }
 
 // ---------------------------------------------------------------------
+// 🔧 Shared synth boilerplate
+//
+// Every effect below used to repeat the same "if disabled, bail; grab the
+// context; try/catch around node creation/wiring" dance. `withAudio` folds
+// that guard into one place, and `playTone` / `playNoteSequence` fold the
+// oscillator+gain creation/wiring/scheduling into one place too, so each
+// effect function only needs to describe its own envelope.
+// ---------------------------------------------------------------------
+
+// Runs `fn` with a live AudioContext, silently no-op'ing when sound is
+// disabled, unsupported, or a node fails to schedule.
+function withAudio(fn: (ctx: AudioContext) => void): void {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    fn(ctx);
+  } catch (e) {
+    console.debug('Audio error:', e);
+  }
+}
+
+interface ToneOptions {
+  type: OscillatorType;
+  freq: number;
+  /** Extra discrete frequency jumps (setValueAtTime) after the initial freq, e.g. a two-note blip on one oscillator. */
+  freqSteps?: { value: number; at: number }[];
+  /** Ramp target frequency; ramps from `freq` starting at note time. */
+  freqRampTo?: number;
+  freqRampDuration?: number;
+  freqRampType?: 'exponential' | 'linear';
+  gainPeak: number;
+  gainFloor?: number;
+  gainRampDuration: number;
+  gainRampType?: 'exponential' | 'linear';
+  /** Time (relative to note start) at which the oscillator stops. */
+  stopDuration: number;
+  /** Delay (relative to ctx.currentTime) before this note starts — used to stagger notes in a sequence. */
+  startTimeOffset?: number;
+}
+
+// Schedules a single oscillator+gain "note" with an optional frequency ramp
+// and a gain envelope, then connects it to the destination and starts/stops it.
+function playTone(ctx: AudioContext, opts: ToneOptions): void {
+  const startTime = ctx.currentTime + (opts.startTimeOffset ?? 0);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = opts.type;
+  osc.frequency.setValueAtTime(opts.freq, startTime);
+  opts.freqSteps?.forEach(({ value, at }) => osc.frequency.setValueAtTime(value, startTime + at));
+  if (opts.freqRampTo !== undefined) {
+    const rampTime = startTime + (opts.freqRampDuration ?? opts.gainRampDuration);
+    if (opts.freqRampType === 'linear') {
+      osc.frequency.linearRampToValueAtTime(opts.freqRampTo, rampTime);
+    } else {
+      osc.frequency.exponentialRampToValueAtTime(opts.freqRampTo, rampTime);
+    }
+  }
+
+  gain.gain.setValueAtTime(opts.gainPeak, startTime);
+  const gainTargetTime = startTime + opts.gainRampDuration;
+  if (opts.gainRampType === 'linear') {
+    gain.gain.linearRampToValueAtTime(opts.gainFloor ?? 0.01, gainTargetTime);
+  } else {
+    gain.gain.exponentialRampToValueAtTime(opts.gainFloor ?? 0.001, gainTargetTime);
+  }
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(startTime);
+  osc.stop(startTime + opts.stopDuration);
+}
+
+interface NoteSequenceOptions {
+  type: OscillatorType;
+  notes: number[];
+  /** Seconds between successive note starts. */
+  noteSpacing: number;
+  gainPeak: number;
+  gainRampDuration: number;
+  stopDuration: number;
+  /** When set, each note ramps its frequency up to `freq * freqRampMultiplier`. */
+  freqRampMultiplier?: number;
+  freqRampDuration?: number;
+}
+
+// Plays a staggered sequence of notes (used by the fanfare/victory/defeat
+// stingers) by delegating each note to playTone with an increasing start offset.
+function playNoteSequence(ctx: AudioContext, opts: NoteSequenceOptions): void {
+  opts.notes.forEach((freq, idx) => {
+    playTone(ctx, {
+      type: opts.type,
+      freq,
+      freqRampTo: opts.freqRampMultiplier !== undefined ? freq * opts.freqRampMultiplier : undefined,
+      freqRampDuration: opts.freqRampDuration,
+      gainPeak: opts.gainPeak,
+      gainRampDuration: opts.gainRampDuration,
+      stopDuration: opts.stopDuration,
+      startTimeOffset: idx * opts.noteSpacing
+    });
+  });
+}
+
+// ---------------------------------------------------------------------
 // 🎵 Pleasant, Relaxing Chill-Hop BGM Synthesizer (Cmaj7 arpeggio loop)
 // ---------------------------------------------------------------------
 const BGM_CHORDS = [
@@ -63,27 +169,18 @@ export function startBgm(): void {
       return;
     }
     try {
-      const now = ctx.currentTime;
       const chordIndex = Math.floor(bgmStep / 8) % BGM_CHORDS.length;
       const currentChord = BGM_CHORDS[chordIndex];
       const noteFreq = currentChord[bgmStep % currentChord.length];
 
-      // Soft Arpeggio Melody Synth Note
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(noteFreq, now);
-
-      // Gentle, pleasant rhodes-like envelope
-      gain.gain.setValueAtTime(0.028, now); // Soft ambient BGM volume
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.38);
+      // Soft Arpeggio Melody Synth Note — gentle, pleasant rhodes-like envelope
+      playTone(ctx, {
+        type: 'sine',
+        freq: noteFreq,
+        gainPeak: 0.028, // Soft ambient BGM volume
+        gainRampDuration: 0.35,
+        stopDuration: 0.38
+      });
 
       bgmStep = (bgmStep + 1) % 32;
     } catch (e) {
@@ -108,160 +205,111 @@ export function stopBgm(): void {
 
 // Play a quick subtle click sound when slider moves
 export function playTickSound(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(400, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.03);
-
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.035);
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  withAudio((ctx) => {
+    playTone(ctx, {
+      type: 'sine',
+      freq: 400,
+      freqRampTo: 800,
+      freqRampDuration: 0.03,
+      gainPeak: 0.08,
+      gainRampDuration: 0.03,
+      stopDuration: 0.035
+    });
+  });
 }
 
 // Play punchier charging sound during ceremony (pitch escalates with progress)
 export function playChargingSound(progressPercent: number): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
+  withAudio((ctx) => {
     // Pitch rises from 300Hz up to 950Hz as progress rises from 0% to 100%
     const baseFreq = 300 + (progressPercent / 100) * 650;
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(baseFreq + 60, ctx.currentTime + 0.04);
-
-    gain.gain.setValueAtTime(0.25, ctx.currentTime); // Louder & punchier gain
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.05);
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+    playTone(ctx, {
+      type: 'triangle',
+      freq: baseFreq,
+      freqRampTo: baseFreq + 60,
+      freqRampDuration: 0.04,
+      gainPeak: 0.25, // Louder & punchier gain
+      gainRampDuration: 0.045,
+      stopDuration: 0.05
+    });
+  });
 }
 
 // Play a reveal tension / sweep sound
 export function playRevealSound(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(200, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.5);
-
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.55);
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  withAudio((ctx) => {
+    playTone(ctx, {
+      type: 'triangle',
+      freq: 200,
+      freqRampTo: 800,
+      freqRampDuration: 0.5,
+      gainPeak: 0.15,
+      gainFloor: 0.01,
+      gainRampType: 'linear',
+      gainRampDuration: 0.5,
+      stopDuration: 0.55
+    });
+  });
 }
 
 // Play sound feedback based on score
 export function playScoreSound(score: number): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
+  if (score === 100) {
+    playPerfectFanfare();
+    return;
+  }
 
-    if (score === 100) {
-      playPerfectFanfare();
-      return;
-    }
-
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
+  withAudio((ctx) => {
     if (score >= 85) {
       // High chord / major note
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(523.25, now); // C5
-      osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      playTone(ctx, {
+        type: 'sine',
+        freq: 523.25, // C5
+        freqSteps: [{ value: 659.25, at: 0.1 }], // E5
+        gainPeak: 0.2,
+        gainFloor: 0.01,
+        gainRampDuration: 0.4,
+        stopDuration: 0.45
+      });
     } else if (score >= 60) {
       // Normal chime
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, now); // A4
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      playTone(ctx, {
+        type: 'sine',
+        freq: 440, // A4
+        gainPeak: 0.15,
+        gainFloor: 0.01,
+        gainRampDuration: 0.3,
+        stopDuration: 0.45
+      });
     } else {
       // Low disappointment tone
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.linearRampToValueAtTime(120, now + 0.4);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      playTone(ctx, {
+        type: 'sawtooth',
+        freq: 180,
+        freqRampTo: 120,
+        freqRampType: 'linear',
+        freqRampDuration: 0.4,
+        gainPeak: 0.15,
+        gainFloor: 0.01,
+        gainRampDuration: 0.4,
+        stopDuration: 0.45
+      });
     }
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(now + 0.45);
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  });
 }
 
 // Perfect 100 Fanfare
 export function playPerfectFanfare(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-    notes.forEach((freq, idx) => {
-      const startTime = ctx.currentTime + idx * 0.08;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, startTime);
-
-      gain.gain.setValueAtTime(0.2, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.28);
+  withAudio((ctx) => {
+    playNoteSequence(ctx, {
+      type: 'triangle',
+      notes: [523.25, 659.25, 783.99, 1046.50], // C5, E5, G5, C6
+      noteSpacing: 0.08,
+      gainPeak: 0.2,
+      gainRampDuration: 0.25,
+      stopDuration: 0.28
     });
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  });
 }
 
 // ---------------------------------------------------------------------
@@ -270,120 +318,59 @@ export function playPerfectFanfare(): void {
 
 // Play high-energy metallic slash / match found sound
 export function playMatchFoundSound(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const freqs = [523.25, 783.99, 1046.50]; // C5, G5, C6
-    freqs.forEach((freq, idx) => {
-      const startTime = now + idx * 0.06;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, startTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, startTime + 0.12);
-
-      gain.gain.setValueAtTime(0.25, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.2);
+  withAudio((ctx) => {
+    playNoteSequence(ctx, {
+      type: 'sawtooth',
+      notes: [523.25, 783.99, 1046.50], // C5, G5, C6
+      noteSpacing: 0.06,
+      freqRampMultiplier: 1.5,
+      freqRampDuration: 0.12,
+      gainPeak: 0.25,
+      gainRampDuration: 0.18,
+      stopDuration: 0.2
     });
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  });
 }
 
 // Play punchy whoosh when submitting question or guess
 export function playQuestionSubmitSound(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(220, now);
-    osc.frequency.exponentialRampToValueAtTime(880, now + 0.18);
-
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.22);
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  withAudio((ctx) => {
+    playTone(ctx, {
+      type: 'triangle',
+      freq: 220,
+      freqRampTo: 880,
+      freqRampDuration: 0.18,
+      gainPeak: 0.3,
+      gainRampDuration: 0.2,
+      stopDuration: 0.22
+    });
+  });
 }
 
 // Play triumphant victory fanfare
 export function playVictoryFanfareSound(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
-    notes.forEach((freq, idx) => {
-      const startTime = ctx.currentTime + idx * 0.09;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, startTime);
-
-      gain.gain.setValueAtTime(0.28, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.38);
+  withAudio((ctx) => {
+    playNoteSequence(ctx, {
+      type: 'triangle',
+      notes: [523.25, 659.25, 783.99, 1046.50, 1318.51], // C5, E5, G5, C6, E6
+      noteSpacing: 0.09,
+      gainPeak: 0.28,
+      gainRampDuration: 0.35,
+      stopDuration: 0.38
     });
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  });
 }
 
 // Play defeat sound
 export function playDefeatSound(): void {
-  if (!soundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const notes = [440.00, 349.23, 293.66, 220.00]; // A4, F4, D4, A3
-    notes.forEach((freq, idx) => {
-      const startTime = ctx.currentTime + idx * 0.12;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, startTime);
-
-      gain.gain.setValueAtTime(0.18, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.32);
+  withAudio((ctx) => {
+    playNoteSequence(ctx, {
+      type: 'sawtooth',
+      notes: [440.00, 349.23, 293.66, 220.00], // A4, F4, D4, A3
+      noteSpacing: 0.12,
+      gainPeak: 0.18,
+      gainRampDuration: 0.3,
+      stopDuration: 0.32
     });
-  } catch (e) {
-    console.debug('Audio error:', e);
-  }
+  });
 }

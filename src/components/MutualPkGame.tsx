@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame } from 'lucide-react';
 import { Question } from '../types/game';
-import { HUMAN_BOT_PROFILES, HUMAN_BOT_QUESTIONS, HumanBotProfile, generateHumanBotGuess } from '../utils/humanAiDeck';
+import { HUMAN_BOT_QUESTIONS } from '../utils/humanAiDeck';
+import { getBotGuess, BotDifficulty, PlayerProfile } from '../utils/aiBots';
+import { startMatchmaking, MatchRoomData } from '../utils/matchmaking';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
 import { calculateScore } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
@@ -16,18 +18,97 @@ interface MutualPkGameProps {
   onGoToSinglePlayer?: () => void;
 }
 
+// The resolved opponent for this match, whether a real player found via
+// Supabase matchmaking or the local bot fallback (see utils/matchmaking.ts).
+interface PkOpponent extends PlayerProfile {
+  isBot: boolean;
+  botDifficulty?: BotDifficulty;
+}
+
+// Stable per-browser guest identity for the matchmaking queue, persisted in
+// localStorage (mirrors the pattern CustomCreator.tsx uses for submission
+// ids) so re-rendering mid-search doesn't spawn a new identity each time.
+function getOrCreateGuestId(): string {
+  try {
+    const existing = localStorage.getItem('guess_battery_guest_id');
+    if (existing) return existing;
+    const fresh = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem('guess_battery_guest_id', fresh);
+    return fresh;
+  } catch {
+    return `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+}
+
+function getOrCreateGuestName(): string {
+  try {
+    const existing = localStorage.getItem('guess_battery_guest_name');
+    if (existing) return existing;
+    const fresh = `玩家${Math.floor(1000 + Math.random() * 9000)}`;
+    localStorage.setItem('guess_battery_guest_name', fresh);
+    return fresh;
+  } catch {
+    return `玩家${Math.floor(1000 + Math.random() * 9000)}`;
+  }
+}
+
 export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [stage, setStage] = useState<PkStage>('lobby');
 
   // Player Profile
   const playerAvatar = '😎';
 
-  // Opponent Profile (Stealth - looks 100% like real player)
-  const [opponent, setOpponent] = useState<HumanBotProfile | null>(null);
+  // Opponent Profile (real Supabase-matched player OR bot fallback — see
+  // handleMatched below; "Stealth" in the sense that a bot match still looks
+  // 100% like a real player in the UI).
+  const [opponent, setOpponent] = useState<PkOpponent | null>(null);
   const [opponentReady, setOpponentReady] = useState(false);
+
+  // Stable guest identity used to join the matchmaking queue.
+  const guestIdRef = useRef(getOrCreateGuestId());
+  const guestNameRef = useRef(getOrCreateGuestName());
+
+  // Cancel handle for an in-flight startMatchmaking() search (clears its 8s
+  // timer + Realtime subscription). Null once a match has been found.
+  const matchCancelRef = useRef<(() => void) | null>(null);
 
   // Parallel 7-second timer tracking
   const actionStartTimeRef = useRef<number>(0);
+
+  // Track every pending timeout/interval so they can be cleared on unmount
+  // (this component schedules several chained timers for matchmaking,
+  // question pacing and the charging ceremony animation).
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const scheduleTimeout = useCallback((fn: () => void, delay: number) => {
+    const id = setTimeout(fn, delay);
+    timeoutsRef.current.push(id);
+    return id;
+  }, []);
+
+  // Clear all pending timers on unmount to prevent memory leaks / setting
+  // state on an unmounted component.
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current = [];
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // Cancel any in-flight matchmaking search on unmount, so navigating away
+  // from PK mode mid-search never leaves an orphaned Supabase subscription
+  // or timeout running in the background.
+  useEffect(() => {
+    return () => {
+      matchCancelRef.current?.();
+      matchCancelRef.current = null;
+    };
+  }, []);
 
   // Player's Question for Opponent
   const [playerTitle, setPlayerTitle] = useState('');
@@ -62,42 +143,58 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     });
   }, []);
 
-  // Matchmaking (Seemlessly pairs opponent)
+  // Called once startMatchmaking() resolves — either a real player found via
+  // Supabase Realtime, or the local bot fallback after the 8s timeout.
+  const handleMatched = (roomData: MatchRoomData) => {
+    matchCancelRef.current = null; // the search is over — nothing left to cancel
+
+    setOpponent({
+      ...roomData.opponent,
+      isBot: roomData.isBot,
+      botDifficulty: roomData.botDifficulty
+    });
+
+    // Select the question the opponent challenges the player with. Real
+    // human matches don't exchange a live question over Realtime yet (that's
+    // a separate sync protocol on top of matchmaking.ts's opponent
+    // discovery), so both bot and human matches currently draw from the same
+    // human-style question deck.
+    const qTemplate = HUMAN_BOT_QUESTIONS[Math.floor(Math.random() * HUMAN_BOT_QUESTIONS.length)];
+    setOpponentQuestion({
+      id: `opp_q_${Date.now()}`,
+      title: qTemplate.title,
+      officialBattery: qTemplate.battery,
+      explanation: qTemplate.exp,
+      category: 'custom',
+      emoji: roomData.opponent.avatar
+    });
+
+    setStage('matched');
+    playMatchFoundSound(); // ⚔️ Aggressive high-energy match sound!
+
+    // Transition to creating stage after 1.5s razor-sharp match celebration
+    scheduleTimeout(() => {
+      setStage('creating');
+      actionStartTimeRef.current = Date.now(); // Record start time for parallel 7s timer
+
+      // Opponent completes question in ~7 seconds
+      scheduleTimeout(() => {
+        setOpponentReady(true);
+      }, 7000);
+    }, 1500);
+  };
+
+  // Matchmaking: join the Supabase queue and wait (up to 8s) for a real
+  // opponent via Realtime, automatically falling back to a bot if nobody
+  // shows up in time (see utils/matchmaking.ts).
   const handleStartMatchmaking = () => {
     setStage('matching');
     setOpponentReady(false);
     setIsChargingFinished(false);
 
-    // Simulate 2.2 seconds matchmaking
-    setTimeout(() => {
-      const opp = HUMAN_BOT_PROFILES[Math.floor(Math.random() * HUMAN_BOT_PROFILES.length)];
-      setOpponent(opp);
-
-      // Select human-like question for opponent
-      const qTemplate = HUMAN_BOT_QUESTIONS[Math.floor(Math.random() * HUMAN_BOT_QUESTIONS.length)];
-      setOpponentQuestion({
-        id: `opp_q_${Date.now()}`,
-        title: qTemplate.title,
-        officialBattery: qTemplate.battery,
-        explanation: qTemplate.exp,
-        category: 'custom',
-        emoji: opp.avatar
-      });
-
-      setStage('matched');
-      playMatchFoundSound(); // ⚔️ Aggressive high-energy match sound!
-
-      // Transition to creating stage after 1.5s razor-sharp match celebration
-      setTimeout(() => {
-        setStage('creating');
-        actionStartTimeRef.current = Date.now(); // Record start time for parallel 7s timer
-
-        // Opponent completes question in ~7 seconds
-        setTimeout(() => {
-          setOpponentReady(true);
-        }, 7000);
-      }, 1500);
-    }, 2200);
+    // Guard against a stray double-invocation leaving two searches running.
+    matchCancelRef.current?.();
+    matchCancelRef.current = startMatchmaking(guestIdRef.current, guestNameRef.current, handleMatched);
   };
 
   // Confirm Player's Question & proceed to guess opponent's question
@@ -110,23 +207,11 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setStage('guessing_opponent_q');
   };
 
-  // Submit Player's Guess & trigger parallel 7-second suspense
-  const handleSubmitPlayerGuess = () => {
-    playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
-    setStage('opponent_guessing');
-
-    // Ensure parallel total time reaches at least ~7 seconds
-    const elapsed = Date.now() - actionStartTimeRef.current;
-    const remainingDelay = Math.max(1500, 7000 - (elapsed % 7000));
-
-    setTimeout(() => {
-      setStage('revealing');
-      runSimultaneousChargingCeremony();
-    }, remainingDelay);
-  };
-
-  // Run Simultaneous Side-by-Side Charging Ceremony
-  const runSimultaneousChargingCeremony = () => {
+  // Run Simultaneous Side-by-Side Charging Ceremony. Memoized (and defined
+  // before handleSubmitPlayerGuess, which composes it below) so its identity
+  // only changes when the values it actually reads change — not on every
+  // render — letting handleSubmitPlayerGuess stay referentially stable too.
+  const runSimultaneousChargingCeremony = useCallback(() => {
     if (!opponentQuestion || !opponent) return;
 
     // Calculate Final Gap & Scores
@@ -135,7 +220,10 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setPlayerGap(pGap);
     setPlayerScore(pScore);
 
-    const oGuess = generateHumanBotGuess(playerOfficialBattery, opponent.accuracyTier);
+    // Real matched-human gameplay sync isn't implemented yet (see
+    // handleMatched above), so both bot and human opponents currently share
+    // this simulated guess; bots use their assigned difficulty's error margin.
+    const oGuess = getBotGuess(playerOfficialBattery, opponent.botDifficulty ?? 'medium');
     const oGap = Math.abs(oGuess - playerOfficialBattery);
     const oScore = calculateScore(oGuess, playerOfficialBattery).score;
     setOpponentGuess(oGuess);
@@ -149,6 +237,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     let currentO = 0;
 
     // Both batteries charge SIMULTANEOUSLY side by side
+    if (intervalRef.current) clearInterval(intervalRef.current);
     const interval = setInterval(() => {
       let stepDone = true;
 
@@ -172,9 +261,10 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
       if (stepDone) {
         clearInterval(interval);
+        intervalRef.current = null;
 
         // Smooth Pop-Out & Winner Fanfare
-        setTimeout(() => {
+        scheduleTimeout(() => {
           setIsChargingFinished(true);
           setStage('revealed');
 
@@ -187,9 +277,29 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         }, 300);
       }
     }, 35);
-  };
+    intervalRef.current = interval;
+  }, [opponentQuestion, opponent, playerGuess, playerOfficialBattery, scheduleTimeout]);
+
+  // Submit Player's Guess & trigger parallel 7-second suspense. Memoized so
+  // SliderInput's onSubmit prop stays referentially stable across re-renders
+  // that don't actually change what this needs to do.
+  const handleSubmitPlayerGuess = useCallback(() => {
+    playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
+    setStage('opponent_guessing');
+
+    // Ensure parallel total time reaches at least ~7 seconds
+    const elapsed = Date.now() - actionStartTimeRef.current;
+    const remainingDelay = Math.max(1500, 7000 - (elapsed % 7000));
+
+    scheduleTimeout(() => {
+      setStage('revealing');
+      runSimultaneousChargingCeremony();
+    }, remainingDelay);
+  }, [scheduleTimeout, runSimultaneousChargingCeremony]);
 
   const resetGame = () => {
+    matchCancelRef.current?.();
+    matchCancelRef.current = null;
     setStage('lobby');
     setPlayerTitle('');
     setPlayerOfficialBattery(deviceBattery || 50);
@@ -314,6 +424,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             >
               <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(244,63,94,0.5)]">{opponent.avatar}</span>
               <span className="text-xs font-black text-rose-400">{opponent.name}</span>
+              <span className={`text-[9px] font-bold ${opponent.isBot ? 'text-slate-400' : 'text-emerald-400'}`}>
+                {opponent.isBot ? '🤖 AI 快速配對' : '🌐 真人玩家'}
+              </span>
             </motion.div>
           </div>
 

@@ -10,7 +10,12 @@ interface SliderInputProps {
   submitLabel?: string;
 }
 
-export const SliderInput: React.FC<SliderInputProps> = ({
+// Memoized: re-renders on every slider tick in parents that also drive
+// timer-based animations, so it's worth skipping when its own props are
+// unchanged. Effective only when parents pass stable onChange/onSubmit
+// callbacks (see the useCallback wiring in MutualPkGame/PartyModeGame/
+// SinglePlayerGame).
+const SliderInputComponent: React.FC<SliderInputProps> = ({
   value,
   onChange,
   onSubmit,
@@ -112,3 +117,6 @@ export const SliderInput: React.FC<SliderInputProps> = ({
     </div>
   );
 };
+
+export const SliderInput = React.memo(SliderInputComponent);
+SliderInput.displayName = 'SliderInput';

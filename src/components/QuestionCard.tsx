@@ -15,23 +15,32 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 }) => {
   const catInfo = CATEGORY_LABELS[question.category] || { label: '荒謬萬物', icon: '🥔' };
 
-  // Highlight key terms in title with warm amber text
+  // Highlight key terms in title with warm amber text (no raw HTML injection —
+  // split into plain-text segments and wrap keyword matches in <span>s directly).
   const formatTitle = (title: string) => {
     const keywords = [
-      'Wi-Fi', 'ChatGPT', '馬鈴薯', '牛肉麵', '微分方程', '定積分', 
-      '極限', '歐拉公式', '黃金分割率', '矩陣', '台大', '期末考', 
-      '上班族', '企鵝', '柴犬', '柯基犬', '橡皮鴨', '蟑螂', '金魚', 
+      'Wi-Fi', 'ChatGPT', '馬鈴薯', '牛肉麵', '微分方程', '定積分',
+      '極限', '歐拉公式', '黃金分割率', '矩陣', '台大', '期末考',
+      '上班族', '企鵝', '柴犬', '柯基犬', '橡皮鴨', '蟑螂', '金魚',
       '西瓜', '爆米花', '烏龍茶', '被褥', '麵包', '綠芽', '熱水'
     ];
 
-    let highlighted = title;
-    keywords.forEach((word) => {
-      if (title.includes(word)) {
-        highlighted = title.replace(word, `<span class="text-amber-300 font-extrabold">${word}</span>`);
-      }
-    });
+    const pattern = new RegExp(`(${keywords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
+    const parts = title.split(pattern);
 
-    return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
+    return (
+      <span>
+        {parts.map((part, i) =>
+          keywords.includes(part) ? (
+            <span key={i} className="text-amber-300 font-extrabold">
+              {part}
+            </span>
+          ) : (
+            <React.Fragment key={i}>{part}</React.Fragment>
+          )
+        )}
+      </span>
+    );
   };
 
   return (

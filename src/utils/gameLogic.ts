@@ -74,6 +74,19 @@ export function getBadgeForScore(avgScore: number): TitleBadge {
   return TITLE_BADGES[TITLE_BADGES.length - 1];
 }
 
+// Unbiased Fisher-Yates shuffle. Accepts an optional random source (must
+// return a float in [0, 1)) for deterministic/seeded shuffling — defaults to
+// Math.random() for true randomness. Replaces the common but statistically
+// biased `array.sort(() => 0.5 - Math.random())` pattern used across the app.
+export function shuffleArray<T>(array: T[], random: () => number = Math.random): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // Seeded pseudorandom string hash for Daily Challenge consistency
 export function getDailySeed(dateStr?: string): number {
   const d = dateStr || new Date().toISOString().slice(0, 10);
@@ -87,20 +100,11 @@ export function getDailySeed(dateStr?: string): number {
 }
 
 export function getDailyQuestions(allQuestions: Question[], dateStr?: string): Question[] {
-  const seed = getDailySeed(dateStr);
-  const shuffled = [...allQuestions];
-  
-  // Fisher-Yates with seed
-  let currentSeed = seed;
+  let currentSeed = getDailySeed(dateStr);
   const pseudoRandom = () => {
     const x = Math.sin(currentSeed++) * 10000;
     return x - Math.floor(x);
   };
 
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(pseudoRandom() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-
-  return shuffled.slice(0, 5);
+  return shuffleArray(allQuestions, pseudoRandom).slice(0, 5);
 }
