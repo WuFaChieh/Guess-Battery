@@ -7,9 +7,15 @@ import {
   TITLE_BADGES,
   shuffleArray,
   getDailySeed,
-  getDailyQuestions
+  getDailyQuestions,
+  getCurrentCombo,
+  getComboBonus,
+  getComboBonusSeries,
+  getResultEmoji,
+  getDailyShareText,
+  COMBO_HIT_DISTANCE
 } from './gameLogic';
-import type { Question } from '../types/game';
+import type { Question, AnswerRecord } from '../types/game';
 
 describe('calculateScore', () => {
   it('scores a perfect guess as 100 with zero distance', () => {
@@ -144,5 +150,107 @@ describe('getDailyQuestions', () => {
   it('never returns more questions than the pool has', () => {
     const smallPool = pool.slice(0, 3);
     expect(getDailyQuestions(smallPool, '2026-08-30')).toHaveLength(3);
+  });
+});
+
+describe('getCurrentCombo', () => {
+  const hit = { distance: COMBO_HIT_DISTANCE };
+  const miss = { distance: COMBO_HIT_DISTANCE + 1 };
+
+  it('is 0 for an empty history', () => {
+    expect(getCurrentCombo([])).toBe(0);
+  });
+
+  it('counts consecutive hits ending at the last answer', () => {
+    expect(getCurrentCombo([hit, hit, hit])).toBe(3);
+  });
+
+  it('breaks immediately on a miss, even after a long run of hits', () => {
+    expect(getCurrentCombo([hit, hit, hit, miss])).toBe(0);
+  });
+
+  it('only counts the trailing run, not hits before an earlier miss', () => {
+    expect(getCurrentCombo([hit, miss, hit, hit])).toBe(2);
+  });
+
+  it('treats exactly COMBO_HIT_DISTANCE as a hit, one more as a miss', () => {
+    expect(getCurrentCombo([hit])).toBe(1);
+    expect(getCurrentCombo([miss])).toBe(0);
+  });
+});
+
+describe('getComboBonus', () => {
+  it('pays nothing for zero or a single hit — a streak needs at least two', () => {
+    expect(getComboBonus(0)).toBe(0);
+    expect(getComboBonus(1)).toBe(0);
+  });
+
+  it('grows by 5 per hit beyond the first', () => {
+    expect(getComboBonus(2)).toBe(5);
+    expect(getComboBonus(3)).toBe(10);
+    expect(getComboBonus(4)).toBe(15);
+  });
+
+  it('caps out instead of growing forever', () => {
+    expect(getComboBonus(5)).toBe(20);
+    expect(getComboBonus(50)).toBe(20);
+  });
+});
+
+describe('getComboBonusSeries', () => {
+  it('matches getComboBonus(getCurrentCombo(...)) at every prefix', () => {
+    const answers = [
+      { distance: 5 },
+      { distance: 5 },
+      { distance: 40 }, // breaks the combo
+      { distance: 5 },
+      { distance: 5 }
+    ];
+    expect(getComboBonusSeries(answers)).toEqual([0, 5, 0, 0, 5]);
+  });
+
+  it('returns an empty series for no answers', () => {
+    expect(getComboBonusSeries([])).toEqual([]);
+  });
+});
+
+describe('getResultEmoji', () => {
+  it('bands distance into four tiers, best to worst', () => {
+    expect(getResultEmoji(0)).toBe('🟩');
+    expect(getResultEmoji(8)).toBe('🟩');
+    expect(getResultEmoji(9)).toBe('🟨');
+    expect(getResultEmoji(25)).toBe('🟨');
+    expect(getResultEmoji(26)).toBe('🟧');
+    expect(getResultEmoji(40)).toBe('🟧');
+    expect(getResultEmoji(41)).toBe('🟥');
+    expect(getResultEmoji(100)).toBe('🟥');
+  });
+});
+
+describe('getDailyShareText', () => {
+  const makeAnswer = (distance: number, score: number): AnswerRecord => ({
+    question: { id: 'q', title: 't', officialBattery: 50, explanation: '', category: 'absurd', emoji: '🔋' },
+    userGuess: 50 - distance,
+    officialBattery: 50,
+    distance,
+    score,
+    commentary: ''
+  });
+
+  it('includes one emoji per answer and the rounded average score', () => {
+    const answers = [makeAnswer(0, 100), makeAnswer(50, 50)];
+    const text = getDailyShareText(answers, 1, '2026-08-30');
+    expect(text).toContain('🟩🟥');
+    expect(text).toContain('平均 75%');
+  });
+
+  it('omits the streak line for a streak of 1 (nothing to brag about yet)', () => {
+    const text = getDailyShareText([makeAnswer(0, 100)], 1, '2026-08-30');
+    expect(text).not.toContain('連續挑戰');
+  });
+
+  it('includes the streak line once the streak is more than one day', () => {
+    const text = getDailyShareText([makeAnswer(0, 100)], 5, '2026-08-30');
+    expect(text).toContain('連續挑戰 5 天');
   });
 });

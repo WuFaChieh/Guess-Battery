@@ -9,7 +9,7 @@ export interface Question {
   emoji: string;
 }
 
-export type GameMode = 'single_5' | 'mutual_pk' | 'party' | 'custom';
+export type GameMode = 'single_5' | 'mutual_pk' | 'party' | 'custom' | 'daily';
 
 export interface AnswerRecord {
   question: Question;

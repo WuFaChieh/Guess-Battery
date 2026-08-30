@@ -6,7 +6,7 @@ import { SliderInput } from './SliderInput';
 import { RevealScreen } from './RevealScreen';
 import { GameOverModal } from './GameOverModal';
 import { LoadingState } from './LoadingState';
-import { calculateScore, shuffleArray } from '../utils/gameLogic';
+import { calculateScore, shuffleArray, getCurrentCombo } from '../utils/gameLogic';
 import { CATEGORY_LABELS } from '../data/questions';
 
 interface SinglePlayerGameProps {
@@ -169,6 +169,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
             question={currentQuestion}
             currentIndex={currentIndex}
             totalQuestions={questions.length}
+            comboCount={getCurrentCombo(answers)}
           />
 
           {/* Real-time Battery Gauge Preview */}
@@ -189,6 +190,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
           userGuess={currentGuess}
           onNext={handleNextQuestion}
           isLastQuestion={currentIndex === questions.length - 1}
+          comboCount={getCurrentCombo(answers)}
         />
       )}
     </div>

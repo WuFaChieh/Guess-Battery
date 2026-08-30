@@ -1,5 +1,5 @@
 import { LucideIcon, Trophy, Zap, BatteryCharging, Target, ThumbsUp, HelpCircle, BatteryWarning, Bomb } from 'lucide-react';
-import { TitleBadge, Question } from '../types/game';
+import { TitleBadge, Question, AnswerRecord } from '../types/game';
 
 export function calculateScore(userGuess: number, officialBattery: number): { distance: number; score: number } {
   const distance = Math.abs(userGuess - officialBattery);
@@ -38,6 +38,66 @@ export function getCommentaryIcon(distance: number): LucideIcon {
   if (distance <= 40) return HelpCircle;
   if (distance <= 60) return BatteryWarning;
   return Bomb;
+}
+
+// ---------------------------------------------------------------------
+// 🔥 Combo bonus — a guess this close (or closer) to the official answer
+// keeps a combo alive; one further than this breaks it. Matches the
+// "非常接近" commentary tier and everything better than it, i.e. the
+// distances a player would recognize as "a good guess", not a lucky miss.
+// ---------------------------------------------------------------------
+export const COMBO_HIT_DISTANCE = 15;
+
+// Trailing streak of consecutive hits (distance <= COMBO_HIT_DISTANCE),
+// counting back from the end of the list — breaks the moment one answer
+// misses. Takes just the `distance` field so it works against either a full
+// AnswerRecord history or a lighter-weight list of just-scored distances.
+export function getCurrentCombo(answers: { distance: number }[]): number {
+  let combo = 0;
+  for (let i = answers.length - 1; i >= 0; i--) {
+    if (answers[i].distance <= COMBO_HIT_DISTANCE) combo++;
+    else break;
+  }
+  return combo;
+}
+
+// Bonus points for a combo of the given length. A single hit (combo === 1)
+// doesn't pay out yet — it takes two in a row to feel like a streak — then
+// +5 per additional hit, capped so one lucky run can't dwarf the base
+// 0-100 accuracy scores it's layered on top of.
+export function getComboBonus(comboCount: number): number {
+  return Math.min(Math.max(0, comboCount - 1) * 5, 20);
+}
+
+// Per-answer combo bonus, in the same order as `answers` — for a results
+// breakdown list and its total.
+export function getComboBonusSeries(answers: { distance: number }[]): number[] {
+  return answers.map((_, idx) => getComboBonus(getCurrentCombo(answers.slice(0, idx + 1))));
+}
+
+// ---------------------------------------------------------------------
+// 📋 Wordle-style shareable result grid
+// ---------------------------------------------------------------------
+
+// One emoji square per answer, coarser than the 8-tier commentary ladder —
+// just enough bands to read as a grid at a glance, the way Wordle's
+// green/yellow/gray does.
+export function getResultEmoji(distance: number): string {
+  if (distance <= 8) return '🟩';
+  if (distance <= 25) return '🟨';
+  if (distance <= 40) return '🟧';
+  return '🟥';
+}
+
+// Builds the shareable "today's daily challenge" text block: an emoji grid
+// of how each answer landed, the average score, and the current streak —
+// the same shape as a Wordle share (a spoiler-free result grid plus a
+// one-line brag), handed to utils/share.ts's shareResult().
+export function getDailyShareText(answers: AnswerRecord[], streakDays: number, dateStr: string): string {
+  const grid = answers.map((a) => getResultEmoji(a.distance)).join('');
+  const avgScore = answers.length > 0 ? Math.round(answers.reduce((acc, a) => acc + a.score, 0) / answers.length) : 0;
+  const streakLine = streakDays > 1 ? `\n🔥 連續挑戰 ${streakDays} 天！` : '';
+  return `🔋猜電量 每日挑戰 ${dateStr}\n${grid}  平均 ${avgScore}%${streakLine}\n萬物皆有電量，你猜得準嗎？快來試試！`;
 }
 
 export const TITLE_BADGES: TitleBadge[] = [

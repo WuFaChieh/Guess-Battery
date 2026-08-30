@@ -7,6 +7,7 @@ import { BottomNav } from './components/BottomNav';
 import { SplashLoader } from './components/SplashLoader';
 import { StartCover } from './components/StartCover';
 import { LoadingState } from './components/LoadingState';
+import { DailyChallengeBanner } from './components/DailyChallengeBanner';
 import { getVolume, startBgm, unlockAudioContext } from './utils/audio';
 
 // Each mode is its own chunk — only the one the player actually picks gets
@@ -17,6 +18,7 @@ const SinglePlayerGame = lazy(() => import('./components/SinglePlayerGame').then
 const PartyModeGame = lazy(() => import('./components/PartyModeGame').then((m) => ({ default: m.PartyModeGame })));
 const MutualPkGame = lazy(() => import('./components/MutualPkGame').then((m) => ({ default: m.MutualPkGame })));
 const CustomCreator = lazy(() => import('./components/CustomCreator').then((m) => ({ default: m.CustomCreator })));
+const DailyGame = lazy(() => import('./components/DailyGame').then((m) => ({ default: m.DailyGame })));
 
 export function App() {
   const [showSplash, setShowSplash] = useState<boolean>(true);
@@ -142,6 +144,12 @@ export function App() {
 
           {/* Main Game Container */}
           <main className="flex-1 max-w-md w-full mx-auto px-4 py-3 flex flex-col items-center justify-center">
+            {/* Daily Challenge entry point — only on the default home tab, so
+                it's the first thing seen without being in the way elsewhere. */}
+            {currentMode === 'single_5' && (
+              <DailyChallengeBanner onOpen={() => handleSelectMode('daily')} />
+            )}
+
             <Suspense fallback={<LoadingState />}>
               {/* Keyed by mode so switching tabs always fades the new mode's
                   content in, instead of it just snapping into place —
@@ -180,6 +188,10 @@ export function App() {
                     onImportDeck={handleImportCustomDeck}
                     onPlayCustom={handlePlayCustomDeck}
                   />
+                )}
+
+                {currentMode === 'daily' && (
+                  <DailyGame allQuestions={allAvailableQuestions} />
                 )}
               </motion.div>
             </Suspense>

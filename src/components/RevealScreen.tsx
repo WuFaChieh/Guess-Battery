@@ -2,32 +2,42 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Question } from '../types/game';
 import { BatteryGauge } from './BatteryGauge';
-import { calculateScore, getCommentary, getCommentaryIcon } from '../utils/gameLogic';
-import { playRevealSound, playScoreSound } from '../utils/audio';
+import { calculateScore, getCommentary, getCommentaryIcon, getComboBonus } from '../utils/gameLogic';
+import { playRevealSound, playScoreSound, playMatchFoundSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { ArrowRight, Trophy, Lightbulb } from 'lucide-react';
+import { ArrowRight, Trophy, Lightbulb, Flame } from 'lucide-react';
 
 interface RevealScreenProps {
   question: Question;
   userGuess: number;
   onNext: () => void;
   isLastQuestion?: boolean;
+  /** Combo streak as of this answer (0 = no combo). */
+  comboCount?: number;
 }
 
 export const RevealScreen: React.FC<RevealScreenProps> = ({
   question,
   userGuess,
   onNext,
-  isLastQuestion = false
+  isLastQuestion = false,
+  comboCount = 0
 }) => {
   const { distance, score } = calculateScore(userGuess, question.officialBattery);
   const commentary = getCommentary(distance);
   const CommentaryIcon = getCommentaryIcon(distance);
+  const comboBonus = getComboBonus(comboCount);
 
   useEffect(() => {
     playRevealSound();
     const timer = setTimeout(() => {
       playScoreSound(score);
+      if (comboBonus > 0) {
+        // A dedicated sting for the combo bonus itself, layered after the
+        // regular score sound, so a combo reads as its own little event
+        // instead of blending into the normal reveal.
+        playMatchFoundSound();
+      }
       if (score >= 90) {
         confetti({
           particleCount: score === 100 ? 100 : 50,
@@ -38,7 +48,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [score]);
+  }, [score, comboBonus]);
 
   return (
     <div className="w-full max-w-xl mx-auto bg-slate-900/90 p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col items-center gap-4 sm:gap-6">
@@ -92,6 +102,19 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
             </strong>
           </span>
         </div>
+
+        {/* Combo bonus celebration — only appears once a streak actually pays out */}
+        {comboBonus > 0 && (
+          <motion.div
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.15, type: 'spring', stiffness: 300, damping: 15 }}
+            className="px-3.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-300 text-xs sm:text-sm font-bold flex items-center gap-1.5"
+          >
+            <Flame className="w-4 h-4 text-orange-400" />
+            <span>連擊 x{comboCount}！額外 +{comboBonus} 分！</span>
+          </motion.div>
+        )}
 
         {/* Reaction commentary */}
         <p className="text-emerald-300 font-bold text-sm sm:text-base md:text-lg flex items-center gap-1.5 justify-center mt-0.5">

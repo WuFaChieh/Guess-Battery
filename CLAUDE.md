@@ -16,7 +16,7 @@ npm run test         # vitest run -- unit tests
 npm run test:watch   # vitest in watch mode
 ```
 
-Vitest covers `src/utils/gameLogic.ts`'s pure functions only (`*.test.ts` next to the file it tests) — scoring, commentary/badge tiers, the shuffle, and the daily-seed determinism. Nothing else in the codebase has test coverage; UI components and the Supabase-backed matchmaking/PK-sync flows are still verified manually.
+Vitest covers pure functions only (`*.test.ts` next to the file it tests): `src/utils/gameLogic.ts` (scoring, commentary/badge tiers, the shuffle, the daily-seed determinism, the combo bonus, the Wordle-style share-grid text) and `src/utils/dailyStreak.ts` (the streak date math, via its exported `computeNextStreak`). UI components and the Supabase-backed matchmaking/PK-sync flows are still verified manually.
 
 ## Known issues
 
@@ -26,7 +26,7 @@ Also: within Bash/git-bash, the bare `cap` command (used by `npm run cap:sync`'s
 
 Ruled out earlier while diagnosing the original hang: corrupted `node_modules`, low disk space on `C:`, memory pressure, Windows Defender, this session's sandbox, and the project directory's Chinese name. This remains a local-machine issue, not a code defect — Vercel builds run on Vercel's own (Linux) infrastructure and are unaffected either way.
 
-**DONE 2026-08-31**: the four primary CTA buttons now share one accent instead of a different gradient per mode/screen. `StartCover`/`SliderInput`'s lock button/PK mode's match+rematch buttons already used violet→indigo→purple; Party mode's start/next-round/restart buttons and `GameOverModal`/`RevealScreen`'s restart/next buttons (previously cyan→blue and emerald→teal respectively) were switched to match. Picked violet→indigo→purple as the target since `SliderInput`'s guess-lock button — shared by every mode — already made it the de facto dominant accent app-wide, so extending it elsewhere was the smaller diff. The bottom nav's per-mode colors were left untouched (that color-coding is a separate, intentional pattern, not a CTA). Out of scope and untouched on purpose: `Navbar`'s logo-icon gradient, `PartyModeGame`'s per-player avatar color palette (`from-emerald-500 to-teal-400`/`from-cyan-500 to-blue-400` at lines 19-20 — player identity colors, not a CTA), and `DeviceBatteryGame.tsx`, which is dead code (not imported/rendered anywhere, like `DailyGame`).
+**DONE 2026-08-31**: the four primary CTA buttons now share one accent instead of a different gradient per mode/screen. `StartCover`/`SliderInput`'s lock button/PK mode's match+rematch buttons already used violet→indigo→purple; Party mode's start/next-round/restart buttons and `GameOverModal`/`RevealScreen`'s restart/next buttons (previously cyan→blue and emerald→teal respectively) were switched to match. Picked violet→indigo→purple as the target since `SliderInput`'s guess-lock button — shared by every mode — already made it the de facto dominant accent app-wide, so extending it elsewhere was the smaller diff. The bottom nav's per-mode colors were left untouched (that color-coding is a separate, intentional pattern, not a CTA). Out of scope and untouched on purpose: `Navbar`'s logo-icon gradient, `PartyModeGame`'s per-player avatar color palette (`from-emerald-500 to-teal-400`/`from-cyan-500 to-blue-400` at lines 19-20 — player identity colors, not a CTA), and `DeviceBatteryGame.tsx`, which is dead code (not imported/rendered anywhere) — unlike `DailyGame`, which is wired in and live as of 2026-08-31 (see Architecture below).
 
 ## Architecture
 
@@ -52,22 +52,31 @@ The web build also carries a PWA manifest (`public/manifest.json`, `public/icons
 
 ### App shell and mode switching (`src/App.tsx`)
 
-`App.tsx` owns top-level flow state: splash screen -> start cover -> main game shell. Once past the cover, it renders exactly one of four game mode components based on `currentMode: GameMode` (`src/types/game.ts`), switched via `Navbar`/`BottomNav`:
+`App.tsx` owns top-level flow state: splash screen -> start cover -> main game shell. Once past the cover, it renders exactly one of five game mode components based on `currentMode: GameMode` (`src/types/game.ts`), switched via `Navbar`/`BottomNav`:
 
 - `single_5` -> `SinglePlayerGame` — solo run through 5 questions, filterable by category
+- `daily` -> `DailyGame` — the Daily Challenge (see below); reached via `Navbar`'s menu or the `DailyChallengeBanner` shown above the mode content whenever `currentMode === 'single_5'`, not via `BottomNav` (its 4-tab grid was left alone rather than squeezed to 5)
 - `mutual_pk` -> `MutualPkGame` — 1v1 realtime PK battle
 - `party` -> `PartyModeGame` — pass-and-play, 2-4 players on one device
 - `custom` -> `CustomCreator` — build/import/manage a custom question deck
 
-All four are `React.lazy()`-loaded (each is its own chunk) so a player who only plays one mode doesn't download the others — notably, `MutualPkGame`'s chunk carries the entire Supabase client and is by far the largest (only loaded if PK mode is opened). `SplashLoader` and `StartCover` are the only components that must render on first paint, so they're imported eagerly; both use Framer Motion, which is why the main chunk still includes it regardless of which mode is picked.
+All five are `React.lazy()`-loaded (each is its own chunk) so a player who only plays one mode doesn't download the others — notably, `MutualPkGame`'s chunk carries the entire Supabase client and is by far the largest (only loaded if PK mode is opened). `SplashLoader`, `StartCover`, and `DailyChallengeBanner` are the only components that must render on first paint (the banner needs to be visible without opening any mode), so they're imported eagerly; `StartCover` uses Framer Motion, which is why the main chunk still includes it regardless of which mode is picked.
 
 Custom questions are persisted to `localStorage` (`guess_battery_custom_questions`) and merged with `INITIAL_QUESTIONS` (`src/data/questions.ts`) into `allAvailableQuestions`, passed down to every mode that needs a question pool.
 
-`DailyGame.tsx` and `getDailyQuestions()`/`getDailySeed()` (`src/utils/gameLogic.ts`) implement a deterministic "daily challenge" seeded by date, but `DailyGame` is not currently wired into `App.tsx` — it's dead code as of now, not a live mode.
-
 ### Scoring model
 
-Every mode scores guesses the same way (`calculateScore` in `src/utils/gameLogic.ts`): `score = 100 - |guess - officialBattery|`, clamped at 0. `getCommentary`/`getCommentaryIcon` map the resulting distance to one of 8 flavor-text tiers; `getBadgeForScore` maps a session's average score to one of the `TITLE_BADGES`.
+Every mode scores guesses the same way (`calculateScore` in `src/utils/gameLogic.ts`): `score = 100 - |guess - officialBattery|`, clamped at 0. `getCommentary`/`getCommentaryIcon` map the resulting distance to one of 8 flavor-text tiers; `getBadgeForScore` maps a session's average score to one of the `TITLE_BADGES` — deliberately based on `score` alone (see Combo below), so a lucky streak never inflates the title a player earns.
+
+### Combo bonus (`getCurrentCombo`/`getComboBonus`/`getComboBonusSeries`, `src/utils/gameLogic.ts`)
+
+`single_5` and `daily` (not Party or PK — see below) layer a combo system on top of the base score: a guess within `COMBO_HIT_DISTANCE` (15) of the official answer extends a streak; anything further breaks it back to 0. `getCurrentCombo` derives the current streak length purely from an `AnswerRecord[]` history's trailing `distance` values — no separate combo state — so `QuestionCard` (a live "連擊中" chip while answering) and `RevealScreen`/`GameOverModal` (the reveal celebration and the results breakdown/total) all compute it the same way from whatever `answers` they already have. `getComboBonus` pays nothing for a single hit (needs two in a row to feel like a streak), then +5 per hit beyond that, capped at +20. Not wired into `PartyModeGame`/`MutualPkGame` — a combo spanning different players' turns, or PK's single-question format, wouldn't mean the same thing.
+
+### Daily Challenge & streak (`DailyGame.tsx`, `src/utils/dailyStreak.ts`)
+
+`DailyGame` plays the same 5-question flow as `SinglePlayerGame`, but the questions come from `getDailyQuestions()`/`getDailySeed()` (`src/utils/gameLogic.ts`) — a deterministic shuffle seeded by today's date string, so every player sees the same 5 questions on the same day (Wordle-style). On completing it, `dailyStreak.ts`'s `recordDailyCompletion()` updates a `currentStreak`/`longestStreak` persisted to `localStorage` (`guess_battery_daily_streak`); `computeNextStreak`, the pure date-diffing core of that, is what's actually unit-tested (extends on the very next day, resets to 1 after any gap, is a no-op replaying the same day). The completed view adds a streak banner and a "分享今日戰績方格" button above the shared `GameOverModal`, building a Wordle-style emoji grid (`getResultEmoji`/`getDailyShareText`) rather than touching `GameOverModal` itself.
+
+Both the daily seed and the streak's day boundary come from `new Date().toISOString().slice(0, 10)` — UTC, not local time. For a player east of UTC (this dev machine's zone included), "today" flips over at their local morning hours rather than at their midnight; a session straddling that window could see the daily puzzle/streak roll over earlier than they'd expect. Pre-existing behavior from the original `getDailySeed()` (not introduced by the streak feature) and not yet fixed — switching to a local-date key would fix it but wasn't in scope when this was wired up.
 
 ### PK mode matchmaking (`src/utils/matchmaking.ts`)
 

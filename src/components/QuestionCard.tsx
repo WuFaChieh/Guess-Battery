@@ -1,18 +1,23 @@
 import React from 'react';
-import { ArrowDownRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowDownRight, Flame } from 'lucide-react';
 import { Question } from '../types/game';
 import { CATEGORY_LABELS } from '../data/questions';
+import { getComboBonus } from '../utils/gameLogic';
 
 interface QuestionCardProps {
   question: Question;
   currentIndex?: number;
   totalQuestions?: number;
+  /** Current combo streak going into this question (0 = no combo yet). */
+  comboCount?: number;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   currentIndex = 0,
-  totalQuestions = 5
+  totalQuestions = 5,
+  comboCount = 0
 }) => {
   const catInfo = CATEGORY_LABELS[question.category] || { label: '荒謬萬物', icon: '🥔' };
 
@@ -67,6 +72,20 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             />
           ))}
         </div>
+
+        {/* Live Combo Chip — only once a streak actually pays a bonus (see
+            getComboBonus), so this never shows a combo that isn't real yet. */}
+        {comboCount >= 2 && (
+          <motion.span
+            key={comboCount}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="px-3 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-300 text-xs font-bold flex items-center gap-1 shadow-sm shadow-orange-950/30"
+          >
+            <Flame className="w-3.5 h-3.5 text-orange-400" />
+            <span>連擊中 x{comboCount}（+{getComboBonus(comboCount)} 加成）</span>
+          </motion.span>
+        )}
       </div>
 
       {/* Main Question Card Box */}

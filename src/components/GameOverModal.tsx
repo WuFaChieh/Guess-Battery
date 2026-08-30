@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AnswerRecord } from '../types/game';
-import { getBadgeForScore } from '../utils/gameLogic';
+import { getBadgeForScore, getComboBonusSeries } from '../utils/gameLogic';
 import { playChargingSound, playScoreSound } from '../utils/audio';
 import { UnifiedBattery } from './UnifiedBattery';
 import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
-import { RotateCcw, Share2, Check, Sparkles, Zap, Plug, ClipboardList } from 'lucide-react';
+import { RotateCcw, Share2, Check, Sparkles, Zap, Plug, ClipboardList, Flame } from 'lucide-react';
 
 interface GameOverModalProps {
   answers: AnswerRecord[];
@@ -24,8 +24,13 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   const [isCharging, setIsCharging] = useState(true);
 
   const totalScore = answers.reduce((acc, a) => acc + a.score, 0);
+  // avgScore/badge deliberately stay pure-accuracy — based on totalScore
+  // alone — so a lucky combo run never inflates the title a player earns.
   const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
   const badge = getBadgeForScore(avgScore);
+  const comboBonusSeries = getComboBonusSeries(answers);
+  const totalComboBonus = comboBonusSeries.reduce((acc, b) => acc + b, 0);
+  const grandTotal = totalScore + totalComboBonus;
 
   // Dynamic facial expression for battery mascot. Plain text throughout — no
   // kaomoji here — keeps the results screen reading as a stats card rather
@@ -78,7 +83,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   }, [avgScore]);
 
   const handleShare = async () => {
-    const shareText = `🔋【猜電量 Guess the Battery】\n我在《${gameModeName}》中獲得了 ${totalScore} 分（平均精準度 ${avgScore}%）！\n獲得榮譽稱號：${badge.title} ${badge.emoji}\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！`;
+    const comboLine = totalComboBonus > 0 ? `（含連擊加成 +${totalComboBonus}）` : '';
+    const shareText = `🔋【猜電量 Guess the Battery】\n我在《${gameModeName}》中獲得了 ${grandTotal} 分${comboLine}（平均精準度 ${avgScore}%）！\n獲得榮譽稱號：${badge.title} ${badge.emoji}\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！`;
     const outcome = await shareResult(shareText);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
@@ -146,14 +152,22 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             <div className="grid grid-cols-2 gap-4 mt-4 pt-3 border-t border-slate-800">
               <div>
                 <span className="text-xs text-slate-500 block">總得分</span>
-                <span className="text-2xl sm:text-3xl font-black text-white">{totalScore}</span>
-                <span className="text-xs text-slate-500"> / {answers.length * 100}</span>
+                <span className="text-2xl sm:text-3xl font-black text-white">{grandTotal}</span>
+                <span className="text-xs text-slate-500"> / {answers.length * 100}{totalComboBonus > 0 ? '+' : ''}</span>
               </div>
               <div>
                 <span className="text-xs text-slate-500 block">平均精準度</span>
                 <span className="text-2xl sm:text-3xl font-black text-emerald-400">{avgScore}%</span>
               </div>
             </div>
+
+            {/* Combo Bonus Callout — only shown when a streak actually paid out */}
+            {totalComboBonus > 0 && (
+              <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-center gap-1.5 text-orange-300 text-xs sm:text-sm font-bold">
+                <Flame className="w-4 h-4 text-orange-400" />
+                <span>本局連擊加成：+{totalComboBonus} 分！</span>
+              </div>
+            )}
           </div>
 
           {/* Breakdown List */}
@@ -175,6 +189,11 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
                     <span className="text-slate-400 text-[11px]">
                       猜 <strong className="text-white">{item.userGuess}%</strong> / 答 <strong className="text-amber-400">{item.officialBattery}%</strong>
                     </span>
+                    {comboBonusSeries[idx] > 0 && (
+                      <span className="font-extrabold px-2 py-0.5 rounded-md text-xs bg-orange-500/20 text-orange-300 flex items-center gap-0.5">
+                        <Flame className="w-3 h-3" />+{comboBonusSeries[idx]}
+                      </span>
+                    )}
                     <span className={`font-extrabold px-2 py-0.5 rounded-md text-xs ${item.score >= 90 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-300'}`}>
                       +{item.score}
                     </span>

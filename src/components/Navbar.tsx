@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GameMode } from '../types/game';
-import { Volume2, Volume1, VolumeX, Menu, Zap, Users, PlusCircle, Swords, X, Lock } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Menu, Zap, Users, PlusCircle, Swords, X, Lock, Calendar, Flame } from 'lucide-react';
 import { setVolume, playTickSound } from '../utils/audio';
+import { getDailyStreak } from '../utils/dailyStreak';
 
 interface NavbarProps {
   currentMode: GameMode;
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [volumePopoverOpen, setVolumePopoverOpen] = useState(false);
+  const [dailyStreakDays, setDailyStreakDays] = useState(0);
 
   // Remembers the last non-zero volume so the mute button can restore it
   // instead of just snapping back to 100%.
@@ -39,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems: { mode: GameMode; label: string; icon: React.ReactNode; isComingSoon?: boolean }[] = [
     { mode: 'single_5', label: '經典速刷', icon: <Zap className="w-4 h-4 text-emerald-400" /> },
+    { mode: 'daily', label: '每日挑戰', icon: <Calendar className="w-4 h-4 text-purple-400" /> },
     { mode: 'party', label: '同屏派對', icon: <Users className="w-4 h-4 text-cyan-400" /> },
     { mode: 'custom', label: '自訂題庫', icon: <PlusCircle className="w-4 h-4 text-blue-400" /> },
     { mode: 'mutual_pk', label: '1v1 互考 PK', icon: <Swords className="w-4 h-4 text-rose-400" /> }
@@ -121,7 +124,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Hamburger Menu Button */}
           <button
             onClick={() => {
-              setMenuOpen(!menuOpen);
+              setMenuOpen((open) => {
+                const next = !open;
+                // Refresh right when the drawer opens, so a streak earned by
+                // finishing today's Daily Challenge shows up immediately
+                // instead of waiting for some unrelated re-render.
+                if (next) setDailyStreakDays(getDailyStreak().currentStreak);
+                return next;
+              });
               setVolumePopoverOpen(false);
             }}
             className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
@@ -159,6 +169,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {item.icon}
                   <span>{item.label}</span>
                 </div>
+                {item.mode === 'daily' && dailyStreakDays > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-300 font-bold border border-orange-500/30 inline-flex items-center gap-0.5">
+                    <Flame className="w-2.5 h-2.5" /> {dailyStreakDays} 天
+                  </span>
+                )}
                 {item.isComingSoon && (
                   <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 inline-flex items-center gap-0.5">
                     <Lock className="w-2.5 h-2.5" /> 待更新
