@@ -111,7 +111,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
       {/* Next Question Button */}
       <button
         onClick={onNext}
-        className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-base sm:text-lg shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+        className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base sm:text-lg shadow-lg shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 border border-violet-400/30"
       >
         <span>{isLastQuestion ? '進入總結算' : '下一題'}</span>
         {isLastQuestion ? <Trophy className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}

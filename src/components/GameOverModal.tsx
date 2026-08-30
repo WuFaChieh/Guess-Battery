@@ -196,7 +196,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
             <button
               onClick={onRestart}
-              className="py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+              className="py-3.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-xs sm:text-sm shadow-lg shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 border border-violet-400/30"
             >
               <RotateCcw className="w-4 h-4" />
               <span>再玩一局！</span>

@@ -178,7 +178,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
         <button
           onClick={startPartyGame}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-lg shadow-lg shadow-purple-950/50 hover:brightness-110 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer border border-violet-400/30"
         >
           <Rocket className="w-5 h-5" />
           <span>開始派對對決</span>
@@ -302,7 +302,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         {/* Next Question Button */}
         <button
           onClick={handleNextRound}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-lg shadow-lg shadow-purple-950/50 hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
         >
           <span>{questionIndex === questions.length - 1 ? '派對總冠軍統計' : '進入下一題'}</span>
           <ArrowRight className="w-5 h-5" />
@@ -445,7 +445,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
         <button
           onClick={() => setSetupStep(true)}
-          className="py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-base shadow-xl shadow-cyan-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border border-cyan-400/30"
+          className="py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base shadow-xl shadow-purple-950/50 hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
         >
           <RotateCcw className="w-5 h-5" />
           <span>重新開一局派對</span>
