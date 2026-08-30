@@ -18,6 +18,16 @@ npm run test:watch   # vitest in watch mode
 
 Vitest covers `src/utils/gameLogic.ts`'s pure functions only (`*.test.ts` next to the file it tests) — scoring, commentary/badge tiers, the shuffle, and the daily-seed determinism. Nothing else in the codebase has test coverage; UI components and the Supabase-backed matchmaking/PK-sync flows are still verified manually.
 
+## Known issues
+
+**`npm run build` hangs on this Windows dev machine, in this exact project directory, as of 2026-08-31.** It reliably stops right after `vite build` logs "transforming... N modules transformed" — the process gets killed externally partway into Rollup's chunk-rendering phase, with no JS-level exception, rejection, or `process.on('exit')` firing (i.e. not a code error, something external is killing it). `npm run dev`, `npx tsc --noEmit`, `npm run lint`, and `npm run test` are all unaffected — only this later stage of a production build.
+
+Ruled out while diagnosing: corrupted `node_modules` (a full `rm -rf node_modules && npm install` didn't fix it — same hang, byte-identical `rollup`/`esbuild` native binaries before and after), low disk space on `C:` (a real, separate problem found along the way — it briefly had only ~3.7GB free, since recovered to the 15-20GB range — but freeing it didn't fix the build either), memory pressure, Windows Defender (real-time protection is off), this session's sandbox (reproduces with `dangerouslyDisableSandbox: true` too), and the project directory's Chinese name (copying the exact same code + a fresh `node_modules` into a *different* directory — including one also given a Chinese name — builds and passes all tests every time). That last test is the key data point: it isolates the problem to something specific to this one `D:\電量遊戲` directory entry on this machine, not the code or dependencies.
+
+If you hit this: the code is almost certainly fine — verify by copying the repo to another directory and building there. A machine restart is the standard fix for this class of symptom (a single directory silently breaking native-module loading, with no error trail) and hasn't been tried yet as of this writing. This is a local-machine issue, not a code defect — Vercel builds run on Vercel's own (Linux) infrastructure and are very unlikely to be affected.
+
+**Not yet done**: the four primary CTA buttons use a different gradient per mode/screen (`StartCover`/`SliderInput`'s lock button/PK mode's match button all use violet→indigo→purple; Party mode's start button uses cyan→blue; `GameOverModal`/`RevealScreen`'s next/restart buttons use emerald→teal). This was judged a reasonable design choice (color-coding modes, like the bottom nav already does) rather than an "AI-generated" tell, so it was left alone — but if a single unified accent is ever wanted instead, this is where to start.
+
 ## Architecture
 
 **Stack**: React 18 + TypeScript + Vite, Tailwind for styling, Framer Motion for animation, `@supabase/supabase-js` for realtime PK matchmaking, `canvas-confetti` for celebration effects, `lucide-react` for icons, `@capacitor/*` for the native iOS shell. No router — the whole app is a single page with client-side mode switching.
