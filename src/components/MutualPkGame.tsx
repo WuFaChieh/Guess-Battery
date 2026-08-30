@@ -424,8 +424,11 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             >
               <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(244,63,94,0.5)]">{opponent.avatar}</span>
               <span className="text-xs font-black text-rose-400">{opponent.name}</span>
-              <span className={`text-[9px] font-bold ${opponent.isBot ? 'text-slate-400' : 'text-emerald-400'}`}>
-                {opponent.isBot ? '🤖 AI 快速配對' : '🌐 真人玩家'}
+              {/* Bot vs. real opponent must look identical here — opponent.isBot
+                  is used elsewhere for internal pacing/difficulty only and
+                  should never surface a "this is a bot" tell in the UI. */}
+              <span className="text-[9px] font-bold text-emerald-400">
+                🌐 配對成功
               </span>
             </motion.div>
           </div>

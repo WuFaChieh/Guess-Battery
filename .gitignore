@@ -12,6 +12,11 @@ dist
 dist-isolation
 *.local
 
+# Environment variables — contains Supabase keys / webhook URLs, never commit
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
