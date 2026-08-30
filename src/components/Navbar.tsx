@@ -32,7 +32,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 px-4 py-3 shadow-md">
+    <header
+      className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 px-4 pb-3 shadow-md"
+      style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
+    >
       <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Left: Battery Logo + Title */}
         <div 

@@ -9,7 +9,13 @@ interface StartCoverProps {
 
 export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-between p-6 select-none overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-between p-6 select-none overflow-hidden"
+      style={{
+        paddingTop: 'calc(1.5rem + env(safe-area-inset-top))',
+        paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))'
+      }}
+    >
       {/* Ambient Radial Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 

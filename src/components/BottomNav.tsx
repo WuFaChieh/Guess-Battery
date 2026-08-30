@@ -9,7 +9,10 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode }) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-lg border-t border-slate-900 px-4 py-2 shadow-xl">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-lg border-t border-slate-900 px-4 pt-2 shadow-xl"
+      style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
+    >
       <div className="max-w-md mx-auto grid grid-cols-4 gap-1 items-center text-center">
         {/* Tab 1: 猜電量 */}
         <button

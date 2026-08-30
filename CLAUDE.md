@@ -12,9 +12,11 @@ npm run preview      # serve the production build locally
 npx tsc --noEmit     # type-check only, without building
 npm run cap:sync     # build + `cap sync` -> refreshes ios/ from dist/ and native deps
 npm run cap:open:ios # open the Xcode project (needs a Mac; see iOS section below)
+npm run test         # vitest run -- unit tests
+npm run test:watch   # vitest in watch mode
 ```
 
-There is no test suite/framework configured in this project (no `test` script, no test runner in `package.json`).
+Vitest covers `src/utils/gameLogic.ts`'s pure functions only (`*.test.ts` next to the file it tests) — scoring, commentary/badge tiers, the shuffle, and the daily-seed determinism. Nothing else in the codebase has test coverage; UI components and the Supabase-backed matchmaking/PK-sync flows are still verified manually.
 
 ## Architecture
 
@@ -35,6 +37,8 @@ The dev machine for this project is Windows, which cannot open or build the Xcod
 **Keeping the two targets in parity**: don't branch app logic on platform by hand. The existing pattern (`src/utils/deviceBattery.ts`, `src/utils/share.ts`) is to call a `@capacitor/*` plugin unconditionally — each one detects the platform itself and either bridges to the real native API (iOS) or wraps the closest web equivalent, with a further graceful fallback (e.g. clipboard copy) when neither exists. Follow that shape for any new native-feeling feature instead of adding `Capacitor.isNativePlatform()` checks throughout feature code — it's what keeps the web build's behavior unchanged while the iOS build gets the real native API for free.
 
 `capacitor.config.ts`'s `appId` (`com.guessbattery.app`) is a placeholder and must be replaced with a real reverse-DNS identifier before any App Store Connect record is created — it's effectively permanent once submitted.
+
+The web build also carries a PWA manifest (`public/manifest.json`, `public/icons/`) and iOS-specific meta tags in `index.html` (`apple-touch-icon`, `apple-mobile-web-app-*`), so it can be "added to home screen" with a real icon on both Android and iOS Safari — the closest thing to an installed app for anyone using the web version before/without the native App Store release. `viewport-fit=cover` is also set there; `Navbar`/`BottomNav`/`StartCover` pad themselves with `env(safe-area-inset-*)` to compensate, for the native iOS shell's notch/Dynamic Island/home indicator (a no-op on the web, where those `env()` values just resolve to 0).
 
 ### App shell and mode switching (`src/App.tsx`)
 
