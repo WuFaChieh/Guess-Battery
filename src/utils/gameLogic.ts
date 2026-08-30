@@ -1,3 +1,4 @@
+import { LucideIcon, Trophy, Zap, BatteryCharging, Target, ThumbsUp, HelpCircle, BatteryWarning, Bomb } from 'lucide-react';
 import { TitleBadge, Question } from '../types/game';
 
 export function calculateScore(userGuess: number, officialBattery: number): { distance: number; score: number } {
@@ -8,57 +9,70 @@ export function calculateScore(userGuess: number, officialBattery: number): { di
 
 export function getCommentary(distance: number): string {
   if (distance === 0) {
-    return '💯 完美命中！你是不是偷看了出題者的腦袋？！';
+    return '完美命中！你是不是偷看了出題者的腦袋？！';
   } else if (distance <= 3) {
-    return '⚡ 神級直覺！幾乎與官方答案完全重合！';
+    return '神級直覺！幾乎與官方答案完全重合！';
   } else if (distance <= 8) {
-    return '🔋 超級精準！你對這個荒謬世界洞察力極高！';
+    return '超級精準！你對這個荒謬世界洞察力極高！';
   } else if (distance <= 15) {
-    return '🎯 非常接近！直覺相當可靠喔！';
+    return '非常接近！直覺相當可靠喔！';
   } else if (distance <= 25) {
-    return '👍 還算靠譜！雖然有點差距但方向是對的。';
+    return '還算靠譜！雖然有點差距但方向是對的。';
   } else if (distance <= 40) {
-    return '🤔 稍微偏了！你的世界觀可能跟出題者不大一樣？';
+    return '稍微偏了！你的世界觀可能跟出題者不大一樣？';
   } else if (distance <= 60) {
-    return '🪫 離譜落差！這已經是另一個平行宇宙的電量了！';
+    return '離譜落差！這已經是另一個平行宇宙的電量了！';
   } else {
-    return '💥 荒謬至極！馬鈴薯看了都搖頭的超遙遠答案！';
+    return '荒謬至極！馬鈴薯看了都搖頭的超遙遠答案！';
   }
+}
+
+/** Icon paired with getCommentary()'s text, one per distance tier — rendered
+ * alongside the commentary instead of an emoji baked into the string. */
+export function getCommentaryIcon(distance: number): LucideIcon {
+  if (distance === 0) return Trophy;
+  if (distance <= 3) return Zap;
+  if (distance <= 8) return BatteryCharging;
+  if (distance <= 15) return Target;
+  if (distance <= 25) return ThumbsUp;
+  if (distance <= 40) return HelpCircle;
+  if (distance <= 60) return BatteryWarning;
+  return Bomb;
 }
 
 export const TITLE_BADGES: TitleBadge[] = [
   {
-    title: '⚡ 電量靈媒 (Battery Psychic)',
+    title: '電量靈媒 (Battery Psychic)',
     minAvgScore: 95,
     emoji: '🧙‍♂️',
     description: '你的直覺已經超越人類極限，萬物的電量在你眼裡一覽無遺！'
   },
   {
-    title: '🔋 滿格神算 (Battery Oracle)',
+    title: '滿格神算 (Battery Oracle)',
     minAvgScore: 85,
     emoji: '🔮',
     description: '抓得超級準！無論多荒謬的題目都難不倒你的直覺！'
   },
   {
-    title: '🔌 直覺充沛 (Intuitive Charger)',
+    title: '直覺充沛 (Intuitive Charger)',
     minAvgScore: 75,
     emoji: '⚡',
     description: '電量感知能力極強，玩派對遊戲的絕對主力！'
   },
   {
-    title: '📱 穩定中規中矩 (Balanced User)',
+    title: '穩定中規中矩 (Balanced User)',
     minAvgScore: 60,
     emoji: '⚖️',
     description: '猜得四規八矩，偶爾神來一筆，偶爾大翻車！'
   },
   {
-    title: '🪫 嚴重漏電 (Leaky Battery)',
+    title: '嚴重漏電 (Leaky Battery)',
     minAvgScore: 40,
     emoji: '🪫',
     description: '你的電量直覺似乎有點受潮，建議重新開機！'
   },
   {
-    title: '🥔 馬鈴薯同路人 (Potato Soulmate)',
+    title: '馬鈴薯同路人 (Potato Soulmate)',
     minAvgScore: 0,
     emoji: '🥔',
     description: '完全無法用常人邏輯思考！但這樣的荒謬正是派對的核心樂趣！'

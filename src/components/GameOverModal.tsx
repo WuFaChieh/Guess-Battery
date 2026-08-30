@@ -5,7 +5,7 @@ import { getBadgeForScore } from '../utils/gameLogic';
 import { playChargingSound, playScoreSound } from '../utils/audio';
 import { UnifiedBattery } from './UnifiedBattery';
 import confetti from 'canvas-confetti';
-import { RotateCcw, Share2, Check, Sparkles, Zap, Plug } from 'lucide-react';
+import { RotateCcw, Share2, Check, Sparkles, Zap, Plug, ClipboardList } from 'lucide-react';
 
 interface GameOverModalProps {
   answers: AnswerRecord[];
@@ -28,11 +28,11 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
   // Dynamic facial expression for battery mascot
   const getBatteryFace = (val: number, done: boolean) => {
-    if (!done) return '( 🔌⚡ 充能精準度... )';
-    if (val >= 90) return '( ⚡💯⚡ 神級精準大師！ )';
+    if (!done) return '( 充能精準度... )';
+    if (val >= 90) return '( 神級精準大師！ )';
     if (val >= 70) return '( ≧ᗜ≦ 高電量充滿！ )';
     if (val >= 40) return '( ｡• ᵕ •｡ 滿意充電完成 )';
-    return '( 🪫 需再接再厲！ )';
+    return '( 需再接再厲！ )';
   };
 
   // Charging Ceremony Animation on mount
@@ -154,8 +154,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
           {/* Breakdown List */}
           <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              📋 每題數據紀錄
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+              <ClipboardList className="w-3.5 h-3.5" /> 每題數據紀錄
             </h4>
             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
               {answers.map((item, idx) => (

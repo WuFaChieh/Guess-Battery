@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Question } from '../types/game';
 import { BatteryGauge } from './BatteryGauge';
-import { PlusCircle, Trash2, Play, Download, Upload, Check, Send, Sparkles } from 'lucide-react';
+import { PlusCircle, Trash2, Play, Download, Upload, Check, Send, Sparkles, Package } from 'lucide-react';
 
 interface CustomCreatorProps {
   customQuestions: Question[];
@@ -83,10 +83,17 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
 
   // Submit custom question directly to Google Sheets / Cloud Webhook
   const handleSubmitToOfficialCloud = async (q: Question) => {
+    const googleSheetsScriptUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+    // No hardcoded fallback URL here on purpose — a literal webhook URL baked
+    // into shipped client JS defeats the point of keeping it in an env var
+    // (see the .env leak this app already had). Fail loudly instead.
+    if (!googleSheetsScriptUrl) {
+      alert('題目投稿功能尚未設定雲端資料庫連結，請聯絡開發者！');
+      return;
+    }
+
     setSubmittingId(q.id);
     try {
-      const googleSheetsScriptUrl = (import.meta as any).env?.VITE_GOOGLE_SHEETS_URL || 'https://script.google.com/macros/s/AKfycbyOp0LNQ6aX9oFtGFL1Eik5G4vllhAJu_VSfWLWz7O0KFwJpie58IQtu2iHuIi_xdCvIw/exec';
-
       const payload = {
         submission_type: 'Guess_Battery_Community_Question',
         id: q.id,
@@ -109,9 +116,9 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       const nextSubmitted = [...submittedIds, q.id];
       setSubmittedIds(nextSubmitted);
       localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-      alert(`🎉 題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
+      alert(`題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
     } catch {
-      alert(`😢 題目「${q.title}」投稿失敗，請檢查網路連線後再試一次！`);
+      alert(`題目「${q.title}」投稿失敗，請檢查網路連線後再試一次！`);
     } finally {
       setSubmittingId(null);
     }
@@ -227,8 +234,8 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
 
       {/* Export / Import Deck Section */}
       <div className="pt-3 border-t border-slate-800 flex flex-col gap-2.5">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-          📦 題庫分享與匯入
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+          <Package className="w-3.5 h-3.5" /> 題庫分享與匯入
         </h3>
 
         <div className="flex flex-col sm:flex-row gap-2.5">

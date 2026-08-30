@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
 import { BatteryGauge } from './BatteryGauge';
 import { SliderInput } from './SliderInput';
-import { calculateScore, getCommentary } from '../utils/gameLogic';
+import { calculateScore, getCommentary, getCommentaryIcon } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { Smartphone, Zap, RefreshCw, RotateCcw, ArrowRight } from 'lucide-react';
+import { Smartphone, Zap, RefreshCw, RotateCcw, ArrowRight, Lightbulb } from 'lucide-react';
 
 export const DeviceBatteryGame: React.FC = () => {
   const [batteryInfo, setBatteryInfo] = useState<DeviceBatteryInfo | null>(null);
@@ -64,17 +64,20 @@ export const DeviceBatteryGame: React.FC = () => {
           <Smartphone className="w-8 h-8" />
         </div>
         <h2 className="text-2xl font-black text-white">猜你手機/電腦真實電量</h2>
-        <p className="text-xs text-slate-400 mt-1">
-          {batteryInfo?.supported
-            ? '⚡ 已成功對接瀏覽器 Web Battery API！即時測量真正電量！'
-            : '💡 當前瀏覽器環境不支援硬體 API，已開啟模擬電量對決模式！'}
+        <p className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
+          {batteryInfo?.supported ? <Zap className="w-3.5 h-3.5 shrink-0" /> : <Lightbulb className="w-3.5 h-3.5 shrink-0" />}
+          <span>
+            {batteryInfo?.supported
+              ? '已成功對接瀏覽器 Web Battery API！即時測量真正電量！'
+              : '當前瀏覽器環境不支援硬體 API，已開啟模擬電量對決模式！'}
+          </span>
         </p>
       </div>
 
       {gameState === 'prompt' && (
         <div className="w-full flex flex-col items-center gap-5 text-center">
           <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 w-full flex flex-col items-center gap-3">
-            <span className="text-4xl">📱</span>
+            <Smartphone className="w-9 h-9 text-emerald-400" />
             <h3 className="text-xl font-bold text-white">荒謬考驗課題：</h3>
             <p className="text-sm text-emerald-300 font-semibold leading-relaxed">
               「猜猜看眼前這台手機/電腦，在經過今天的各種運作後，現在實體電量到底還剩幾 %？」
@@ -99,7 +102,7 @@ export const DeviceBatteryGame: React.FC = () => {
             value={userGuess}
             onChange={setUserGuess}
             onSubmit={handleLockGuess}
-            submitLabel="🔒 鎖定猜測並讀取實體電量"
+            submitLabel="鎖定猜測並讀取實體電量"
           />
         </div>
       )}
@@ -114,7 +117,11 @@ export const DeviceBatteryGame: React.FC = () => {
           {/* Real hardware battery details badge */}
           <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 w-full text-xs flex items-center justify-between px-6">
             <span className="text-slate-400">
-              充電狀態：{batteryInfo.charging ? <strong className="text-emerald-400">⚡ 充電中</strong> : <span className="text-amber-400">未充電</span>}
+              充電狀態：{batteryInfo.charging ? (
+                <strong className="text-emerald-400 inline-flex items-center gap-0.5"><Zap className="w-3 h-3" /> 充電中</strong>
+              ) : (
+                <span className="text-amber-400">未充電</span>
+              )}
             </span>
             <span className="text-slate-400">
               硬體實體電量：<strong className="text-white font-bold">{batteryInfo.level}%</strong>
@@ -130,8 +137,12 @@ export const DeviceBatteryGame: React.FC = () => {
                 得分：<strong className="text-emerald-400 font-black text-xl">+{scoreResult.score}</strong>
               </span>
             </div>
-            <p className="text-emerald-300 font-bold text-base mt-1">
-              {getCommentary(scoreResult.distance)}
+            <p className="text-emerald-300 font-bold text-base mt-1 flex items-center justify-center gap-1.5">
+              {(() => {
+                const CommentaryIcon = getCommentaryIcon(scoreResult.distance);
+                return <CommentaryIcon className="w-4 h-4 shrink-0" />;
+              })()}
+              <span>{getCommentary(scoreResult.distance)}</span>
             </p>
           </div>
 

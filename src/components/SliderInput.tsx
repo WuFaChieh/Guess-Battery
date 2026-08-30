@@ -1,6 +1,6 @@
 import React from 'react';
 import { playTickSound } from '../utils/audio';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock, Sparkles, Skull, BatteryWarning, BatteryMedium, Zap, Bomb } from 'lucide-react';
 
 interface SliderInputProps {
   value: number;
@@ -31,11 +31,11 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
   };
 
   const presets = [
-    { label: '0%', val: 0, icon: '💀' },
-    { label: '25%', val: 25, icon: '🪫' },
-    { label: '50%', val: 50, icon: '🔋' },
-    { label: '75%', val: 75, icon: '⚡' },
-    { label: '100%', val: 100, icon: '💥' }
+    { label: '0%', val: 0, Icon: Skull, iconColor: 'text-slate-500' },
+    { label: '25%', val: 25, Icon: BatteryWarning, iconColor: 'text-rose-500' },
+    { label: '50%', val: 50, Icon: BatteryMedium, iconColor: 'text-amber-500' },
+    { label: '75%', val: 75, Icon: Zap, iconColor: 'text-emerald-500' },
+    { label: '100%', val: 100, Icon: Bomb, iconColor: 'text-teal-400' }
   ];
 
   return (
@@ -90,7 +90,7 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
               <span className={`text-xs ${isSelected ? 'text-emerald-300 font-bold' : 'text-slate-300'}`}>
                 {p.label}
               </span>
-              <span className="text-sm mt-1">{p.icon}</span>
+              <p.Icon className={`w-4 h-4 mt-1 ${isSelected ? 'text-emerald-300' : p.iconColor}`} />
             </button>
           );
         })}

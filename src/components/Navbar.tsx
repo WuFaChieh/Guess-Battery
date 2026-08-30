@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GameMode } from '../types/game';
-import { Volume2, VolumeX, Menu, Zap, Users, PlusCircle, Swords, X } from 'lucide-react';
+import { Volume2, VolumeX, Menu, Zap, Users, PlusCircle, Swords, X, Lock } from 'lucide-react';
 import { setSoundEnabled } from '../utils/audio';
 
 interface NavbarProps {
@@ -104,8 +104,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span>{item.label}</span>
                 </div>
                 {item.isComingSoon && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
-                    🔒 待更新
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 inline-flex items-center gap-0.5">
+                    <Lock className="w-2.5 h-2.5" /> 待更新
                   </span>
                 )}
               </button>

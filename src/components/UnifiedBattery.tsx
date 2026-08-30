@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import { Zap, Plug } from 'lucide-react';
 
 interface UnifiedBatteryProps {
   value: number; // 0 to 100
@@ -54,9 +55,8 @@ const UnifiedBatteryComponent: React.FC<UnifiedBatteryProps> = ({
     <div className="flex flex-col items-center justify-center select-none w-full my-1">
       {label && (
         <span className="text-xs font-bold text-slate-400 mb-1 tracking-wider flex items-center gap-1">
-          <span className="opacity-60">⚡</span>
+          <Zap className="w-3 h-3 opacity-60" />
           <span>{label}</span>
-          <span className="opacity-60">⚡</span>
         </span>
       )}
 
@@ -140,8 +140,9 @@ const UnifiedBatteryComponent: React.FC<UnifiedBatteryProps> = ({
         {/* 5. Center Text Overlay (Face Expression & Percentage) */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pr-6">
           {faceExpression && (
-            <span className="text-[11px] sm:text-xs font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] mb-0.5">
-              {isPlugged ? `🔌 ${faceExpression}` : faceExpression}
+            <span className="text-[11px] sm:text-xs font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] mb-0.5 flex items-center gap-1">
+              {isPlugged && <Plug className="w-3 h-3" />}
+              <span>{faceExpression}</span>
             </span>
           )}
           <span className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">

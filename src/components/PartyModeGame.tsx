@@ -8,7 +8,7 @@ import { SliderInput } from './SliderInput';
 import { calculateScore, shuffleArray } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound, playVictoryFanfareSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
+import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles, Rocket, Medal, BarChart3 } from 'lucide-react';
 
 interface PartyModeGameProps {
   allQuestions: Question[];
@@ -164,7 +164,8 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           onClick={startPartyGame}
           className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer"
         >
-          <span>🚀 開始派對對決</span>
+          <Rocket className="w-5 h-5" />
+          <span>開始派對對決</span>
         </button>
       </div>
     );
@@ -185,8 +186,8 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
         {!secretLocked ? (
           <div className="w-full max-w-lg bg-slate-900/90 p-6 rounded-3xl border border-slate-800 text-center flex flex-col items-center gap-4 my-2">
-            <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-              👥 輪到玩家下注
+            <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 inline-flex items-center gap-1">
+              <Users className="w-3.5 h-3.5" /> 輪到玩家下注
             </span>
 
             <div className="flex items-center gap-3 my-1">
@@ -220,7 +221,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
               value={currentGuess}
               onChange={setCurrentGuess}
               onSubmit={handleLockTurn}
-              submitLabel={`🔒 鎖定 ${activeP.name} 的答案`}
+              submitLabel={`鎖定 ${activeP.name} 的答案`}
             />
           </div>
         )}
@@ -241,8 +242,8 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
     return (
       <div className="w-full max-w-2xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 text-center select-none">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-            🎉 本題公開揭曉
+          <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 inline-flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5" /> 本題公開揭曉
           </span>
           <h3 className="text-xl font-black text-white mt-2">{currentQ.title}</h3>
         </div>
@@ -287,7 +288,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           onClick={handleNextRound}
           className="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-lg shadow-lg shadow-cyan-500/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          <span>{questionIndex === questions.length - 1 ? '🏆 派對總冠軍統計' : '進入下一題 ➡️'}</span>
+          <span>{questionIndex === questions.length - 1 ? '派對總冠軍統計' : '進入下一題'}</span>
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>
@@ -315,7 +316,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           <Sparkles className="w-3.5 h-3.5 text-amber-400" /> 同螢幕派對總決算
         </span>
         <h2 className="text-3xl font-black text-white tracking-tight mt-2">
-          {isTie ? '🎉 勢均力敵 · 並列總冠軍！' : '派對電量總冠軍登場！'}
+          {isTie ? '勢均力敵 · 並列總冠軍！' : '派對電量總冠軍登場！'}
         </h2>
         <p className="text-xs text-slate-400 mt-1">經歷了 5 題極致荒謬電量考驗</p>
       </div>
@@ -353,21 +354,37 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
       {/* Full Leaderboard List */}
       <div className="flex flex-col gap-2.5">
-        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left pl-1">
-          📊 派對玩家總排名 (Leaderboard)
+        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left pl-1 flex items-center gap-1">
+          <BarChart3 className="w-3.5 h-3.5" /> 派對玩家總排名 (Leaderboard)
         </h4>
 
         {sortedFinalPlayers.map((p, idx) => {
           const isCoChampion = p.totalScore === maxScore;
-          
-          let rankBadge = '';
+
+          // Rank badge: co-champions get a crown, 2nd/3rd get a tinted medal
+          // (silver/bronze), everyone else just gets their placement number.
+          let RankIcon: typeof Crown | null = null;
+          let rankIconColor = '';
+          let rankText = '';
           if (isCoChampion) {
-            rankBadge = '👑 並列冠軍';
+            RankIcon = Crown;
+            rankIconColor = 'text-slate-950';
+            rankText = '並列冠軍';
           } else {
             // Find rank among non-champions
             const championCount = champions.length;
             const nonChampRank = idx - championCount + 2;
-            rankBadge = nonChampRank === 2 ? '🥈 亞軍' : nonChampRank === 3 ? '🥉 季軍' : `#${idx + 1}`;
+            if (nonChampRank === 2) {
+              RankIcon = Medal;
+              rankIconColor = 'text-slate-300';
+              rankText = '亞軍';
+            } else if (nonChampRank === 3) {
+              RankIcon = Medal;
+              rankIconColor = 'text-amber-700';
+              rankText = '季軍';
+            } else {
+              rankText = `#${idx + 1}`;
+            }
           }
 
           const avgScore = Math.min(100, Math.round(p.totalScore / questions.length));
@@ -382,8 +399,9 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`text-xs font-black px-2.5 py-1 rounded-full ${isCoChampion ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
-                  {rankBadge}
+                <span className={`text-xs font-black px-2.5 py-1 rounded-full inline-flex items-center gap-1 ${isCoChampion ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-400'}`}>
+                  {RankIcon && <RankIcon className={`w-3 h-3 ${rankIconColor}`} />}
+                  {rankText}
                 </span>
                 <span className="text-2xl">{p.avatar}</span>
                 <div className="text-left">

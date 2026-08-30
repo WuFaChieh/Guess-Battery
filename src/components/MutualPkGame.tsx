@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame } from 'lucide-react';
+import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame, Crown, Globe } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_QUESTIONS } from '../utils/humanAiDeck';
 import { getBotGuess, BotDifficulty, PlayerProfile } from '../utils/aiBots';
@@ -353,8 +353,8 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         <div className="flex flex-col items-center justify-center py-12 gap-6 w-full">
           <div className="relative flex items-center justify-center">
             <div className="w-24 h-24 rounded-full bg-rose-500/20 border-2 border-rose-500/50 animate-ping absolute" />
-            <div className="w-20 h-20 rounded-full bg-slate-950 border-2 border-rose-500 flex items-center justify-center text-3xl shadow-2xl z-10">
-              ⚔️
+            <div className="w-20 h-20 rounded-full bg-slate-950 border-2 border-rose-500 flex items-center justify-center shadow-2xl z-10">
+              <Swords className="w-8 h-8 text-rose-400" />
             </div>
           </div>
           <div>
@@ -383,7 +383,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             className="text-xs font-black text-rose-300 bg-rose-950/90 px-4 py-1.5 rounded-full border border-rose-500/50 uppercase tracking-widest inline-flex items-center gap-1.5 shadow-[0_0_20px_rgba(244,63,94,0.6)] z-10"
           >
             <Flame className="w-4 h-4 text-rose-400 animate-bounce" />
-            <span>🔥 電量生死對決 · 即時配對成功！</span>
+            <span>電量生死對決 · 即時配對成功！</span>
           </motion.span>
 
           {/* Crossed Blades Metallic Slash Animation */}
@@ -427,8 +427,8 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               {/* Bot vs. real opponent must look identical here — opponent.isBot
                   is used elsewhere for internal pacing/difficulty only and
                   should never surface a "this is a bot" tell in the UI. */}
-              <span className="text-[9px] font-bold text-emerald-400">
-                🌐 配對成功
+              <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
+                <Globe className="w-2.5 h-2.5" /> 配對成功
               </span>
             </motion.div>
           </div>
@@ -575,11 +575,13 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             {!isChargingFinished ? (
               <p className="text-xs font-bold text-amber-400 animate-pulse flex items-center justify-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                ⚡ 雙方電池一同電量累計中...
+                雙方電池一同電量累計中...
               </p>
             ) : (
               <>
-                <span className="text-3xl block mb-1">{isPlayerWinner ? '👑' : '⚡'}</span>
+                <div className="flex justify-center mb-1">
+                  {isPlayerWinner ? <Crown className="w-8 h-8 text-amber-400" /> : <Zap className="w-8 h-8 text-slate-500" />}
+                </div>
                 <h3 className="text-2xl font-black text-white">
                   {isPlayerWinner ? '一戰成名 · 猜電量獲勝！' : '一戰結束 · 殘念惜敗！'}
                 </h3>
@@ -614,8 +616,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 <span className="text-xl">{playerAvatar}</span>
                 <span className="text-white">你</span>
                 {isChargingFinished && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
-                    {isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-0.5 ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                    {isPlayerWinner && <Crown className="w-2.5 h-2.5" />}
+                    {isPlayerWinner ? '獲勝' : '敗北'}
                   </span>
                 )}
               </div>
@@ -652,8 +655,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 <span className="text-xl">{opponent.avatar}</span>
                 <span className="text-white">{opponent.name}</span>
                 {isChargingFinished && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
-                    {!isPlayerWinner ? '👑 獲勝' : '⚡ 敗北'}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-0.5 ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
+                    {!isPlayerWinner && <Crown className="w-2.5 h-2.5" />}
+                    {!isPlayerWinner ? '獲勝' : '敗北'}
                   </span>
                 )}
               </div>

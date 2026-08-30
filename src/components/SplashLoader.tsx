@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Zap } from 'lucide-react';
 import { playChargingSound, playScoreSound } from '../utils/audio';
 import { UnifiedBattery } from './UnifiedBattery';
 
@@ -58,7 +59,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
     if (val < 30) return { face: '( ｡>﹏<｡ )', label: '開機充能中...' };
     if (val < 70) return { face: '( ｡• ᵕ •｡ )', label: '熱量與直覺蓄積中...' };
     if (val < 99) return { face: '( ≧ᗜ≦ )', label: '能量滿載！' };
-    return { face: '( ⚡💯⚡ )', label: '萬物皆有電量！' };
+    return { face: '( 💯 )', label: '萬物皆有電量！' };
   };
 
   const mascot = getMascotExpression(progress);
@@ -99,7 +100,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
             animate={{ opacity: 1, y: 0 }}
             className="text-xs font-bold text-emerald-400/90 tracking-wider flex items-center gap-1.5 mt-1"
           >
-            <span className="animate-spin text-amber-400 text-sm">⚡</span>
+            <Zap className="w-3.5 h-3.5 text-amber-400 animate-spin" />
             <span>{mascot.label}</span>
           </motion.div>
         </div>
