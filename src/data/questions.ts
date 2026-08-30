@@ -4,9 +4,9 @@ export const INITIAL_QUESTIONS: Question[] = [
   // 🤓 硬核數學與微分方程 (Hardcore Math & Differential Equations) - 40 題
   {
     id: 'qm_1',
-    title: '微分方程 dy/dx + 3y = 6 (已知 y(0)=0)，當 x→∞ 時 y 的穩態值轉為百分比是多少電量 %？',
+    title: '微分方程 dy/dx + 3y = 300 (已知 y(0)=0)，當 x→∞ 時 y 的穩態值是多少電量 %？',
     officialBattery: 100,
-    explanation: '解出 y(x) = 2(1 - e^(-3x))，當 x→∞ 時 y 趨近於 2！定義極限 2 為 100% 滿格電量！',
+    explanation: '解出 y(x) = 100(1 - e^(-3x))，當 x→∞ 時 y 趨近於 100！剛好是 100% 滿格電量！',
     category: 'math',
     emoji: '📐'
   },
@@ -20,17 +20,17 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_3',
-    title: '計算定積分 ∫[0 to 1] x³ dx 的結果轉化為百分比是多少電量 %？',
+    title: '計算定積分 ∫[0 to 1] 100x³ dx 的結果是多少電量 %？',
     officialBattery: 25,
-    explanation: '積分公式 [x⁴/4] 從 0 到 1 等於 1/4 = 0.25，正是 25% 電量！',
+    explanation: '積分公式 [25x⁴] 從 0 到 1 等於 25，直接就是 25% 電量！',
     category: 'math',
     emoji: '∫'
   },
   {
     id: 'qm_4',
-    title: '計算定積分 ∫[0 to π] sin(x) dx 放大十倍後轉化為電量是多少 %？',
+    title: '計算定積分 ∫[0 to π] 10sin(x) dx 的結果是多少電量 %？',
     officialBattery: 20,
-    explanation: '[-cos x] 從 0 到 π 等於 1 - (-1) = 2！放大 10 倍為 20% 電量！',
+    explanation: '[-10cos x] 從 0 到 π 等於 10 - (-10) = 20，直接就是 20% 電量！',
     category: 'math',
     emoji: '🌊'
   },
@@ -44,9 +44,9 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_6',
-    title: '歐拉公式 e^(iπ) + 1 = 0，將 |e^(iπ)| 的模長轉為滿格電量是多少 %？',
+    title: '複數 100e^(iπ) 的模長 |100e^(iπ)| 是多少電量 %？',
     officialBattery: 100,
-    explanation: '歐拉恆等式！|e^(iπ)| = |-1| = 1，完美 100% 滿格能量！',
+    explanation: '歐拉恆等式 e^(iπ) = -1，所以 100e^(iπ) = -100，其模長 |-100| = 100，直接滿格 100% 能量！',
     category: 'math',
     emoji: '🧮'
   },
@@ -60,41 +60,41 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_8',
-    title: '二階微分方程 y\'\' - 5y\' + 6y = 0 的較大特徵根放大十倍後是多少電量 %？',
+    title: '二階微分方程 y\'\' - 33y\' + 90y = 0 的較大特徵根是多少電量 %？',
     officialBattery: 30,
-    explanation: '特徵方程 r² - 5r + 6 = 0 解得 r = 2 與 3！較大特徵根 3 放大十倍為 30%！',
+    explanation: '特徵方程 r² - 33r + 90 = 0 解得 r = 3 與 30！較大特徵根直接就是 30% 電量！',
     category: 'math',
     emoji: '🔍'
   },
   {
     id: 'qm_9',
-    title: '矩陣 A = [[4, 1], [2, 3]] 的行列式 det(A) 放大十倍後是多少電量 %？',
+    title: '矩陣 A = [[40, 10], [2, 3]] 的行列式 det(A) 是多少電量 %？',
     officialBattery: 100,
-    explanation: 'det(A) = 4×3 - 2×1 = 10！放大十倍為 100% 滿格電量！',
+    explanation: 'det(A) = 40×3 - 2×10 = 120 - 20 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '🔲'
   },
   {
     id: 'qm_10',
-    title: '計算瑕積分 ∫[0 to ∞] e^(-x) dx 的結果轉化為滿格電量是幾 %？',
+    title: '計算瑕積分 ∫[0 to ∞] 100e^(-x) dx 的結果是多少電量 %？',
     officialBattery: 100,
-    explanation: '[-e^(-x)] 從 0 到 ∞ 等於 0 - (-1) = 1，即 100% 滿格能量！',
+    explanation: '[-100e^(-x)] 從 0 到 ∞ 等於 0 - (-100) = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '⚡'
   },
   {
     id: 'qm_11',
-    title: '求極限 lim(x→0) (1 - cos x)/x² 轉化為百分比是多少電量 %？',
+    title: '求極限 lim(x→0) 100(1 - cos x)/x² 的結果是多少電量 %？',
     officialBattery: 50,
-    explanation: '洛必達法則或泰勒展開結果為 1/2 = 0.50，恰好是 50% 半滿電量！',
+    explanation: '洛必達法則或泰勒展開，原極限為 1/2，乘以 100 後結果為 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '⚖️'
   },
   {
     id: 'qm_12',
-    title: '複數 z = 3 + 4i 的模長 |z| 放大十倍後是多少電量 %？',
+    title: '複數 z = 30 + 40i 的模長 |z| 是多少電量 %？',
     officialBattery: 50,
-    explanation: '勾股定理模長 |z| = √(3² + 4²) = 5！放大 10 倍為 50% 電量！',
+    explanation: '勾股定理模長 |z| = √(30² + 40²) = √2500 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '📐'
   },
@@ -124,9 +124,9 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_16',
-    title: '曲線 y = 1/x 從 x = 1 到 x = e 的曲邊梯形面積轉化為滿格電量是幾 %？',
+    title: '曲線 y = 100/x 從 x = 1 到 x = e 的曲邊梯形面積是多少電量 %？',
     officialBattery: 100,
-    explanation: '∫[1 to e] 1/x dx = ln(e) - ln(1) = 1，完美 100% 能量！',
+    explanation: '∫[1 to e] 100/x dx = 100(ln(e) - ln(1)) = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '📉'
   },
@@ -140,17 +140,17 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_18',
-    title: '計算定積分 ∫[0 to π/4] sec²(x) dx 的結果轉化為滿格電量是幾 %？',
+    title: '計算定積分 ∫[0 to π/4] 100sec²(x) dx 的結果是多少電量 %？',
     officialBattery: 100,
-    explanation: '[tan x] 從 0 到 π/4 等於 tan(π/4) - 0 = 1，滿格 100%！',
+    explanation: '[100tan x] 從 0 到 π/4 等於 100tan(π/4) - 0 = 100，直接就是 100% 電量！',
     category: 'math',
     emoji: '✨'
   },
   {
     id: 'qm_19',
-    title: '求極限 lim(x→0) (x - sin x)/x³ 的結果轉化為百分比（取整數）是多少 %？',
+    title: '求極限 lim(x→0) 100(x - sin x)/x³ 的結果（取整數）是多少電量 %？',
     officialBattery: 16,
-    explanation: '泰勒展開 x - sin x ≈ x³/6，極限為 1/6 ≈ 16.66%，取整數 16%！',
+    explanation: '泰勒展開 x - sin x ≈ x³/6，乘以 100 後極限為 100/6 ≈ 16.66，取整數 16% 電量！',
     category: 'math',
     emoji: '🔬'
   },
@@ -164,9 +164,9 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_21',
-    title: '對數方程 log₁₀(x) = 2 的解 x 轉化為滿格電量是多少 %？',
+    title: '對數方程 log₁₀(x) = 2 的解 x 是多少電量 %？',
     officialBattery: 100,
-    explanation: 'x = 10² = 100！剛好是 100% 滿格電量！',
+    explanation: 'x = 10² = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '🔢'
   },
@@ -196,33 +196,33 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_25',
-    title: '計算定積分 ∫[0 to 2] 3x² dx 放大十倍轉化為電量是多少 %？',
+    title: '計算定積分 ∫[0 to 2] 30x² dx 的結果是多少電量 %？',
     officialBattery: 80,
-    explanation: '[x³] 從 0 到 2 等於 8，放大十倍為 80% 電量！',
+    explanation: '[10x³] 從 0 到 2 等於 10×8 = 80，直接就是 80% 電量！',
     category: 'math',
     emoji: '∫'
   },
   {
     id: 'qm_26',
-    title: '二階常微分方程 y\'\' + 16y = 0 的固有角頻率 ω 放大十倍後是多少電量 %？',
+    title: '二階常微分方程 y\'\' + 1600y = 0 的固有角頻率 ω 是多少電量 %？',
     officialBattery: 40,
-    explanation: '角頻率 ω = √16 = 4，放大十倍正是 40% 電量！',
+    explanation: '角頻率 ω = √1600 = 40，直接就是 40% 電量！',
     category: 'math',
     emoji: '📈'
   },
   {
     id: 'qm_27',
-    title: '計算極限 lim(x→0) tan(x)/x 轉化為滿格電量是多少 %？',
+    title: '計算極限 lim(x→0) 100·tan(x)/x 是多少電量 %？',
     officialBattery: 100,
-    explanation: '經典三角函數極限等於 1，即 100% 滿格能量！',
+    explanation: '經典三角函數極限 tan(x)/x → 1，乘以 100 後為 100，直接滿格 100% 能量！',
     category: 'math',
     emoji: '🎯'
   },
   {
     id: 'qm_28',
-    title: '泰勒級數 cos(x) 當 x = 0 時的第一項係數數值轉化為滿格電量是多少 %？',
+    title: '函數 100cos(x) 當 x = 0 時的數值是多少電量 %？',
     officialBattery: 100,
-    explanation: 'cos(0) = 1，完美 100% 電量！',
+    explanation: '100cos(0) = 100×1 = 100，直接就是 100% 電量！',
     category: 'math',
     emoji: '📐'
   },
@@ -252,9 +252,9 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_32',
-    title: '微分方程 dy/dx = 4x (已知 y(0)=0)，求 x = 5 時 y(5) 轉化為百分比是多少電量 %？',
+    title: '微分方程 dy/dx = 4x (已知 y(0)=0)，求 x = 5 時 y(5) 是多少電量 %？',
     officialBattery: 50,
-    explanation: 'y(x) = 2x²，y(5) = 2 × 25 = 50，恰好是 50% 半滿電量！',
+    explanation: 'y(x) = 2x²，y(5) = 2 × 25 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '📊'
   },
@@ -268,65 +268,65 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_34',
-    title: '計算定積分 ∫[0 to 1] 4x³ dx 的結果轉化為滿格電量是多少 %？',
+    title: '計算定積分 ∫[0 to 1] 400x³ dx 的結果是多少電量 %？',
     officialBattery: 100,
-    explanation: '[x⁴] 從 0 到 1 等於 1，完美 100% 滿格能量！',
+    explanation: '[100x⁴] 從 0 到 1 等於 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '∫'
   },
   {
     id: 'qm_35',
-    title: '二階微分方程 y\'\' - 9y = 0 的正特徵根放大十倍後是多少電量 %？',
+    title: '二階微分方程 y\'\' - 900y = 0 的正特徵根是多少電量 %？',
     officialBattery: 30,
-    explanation: '特徵方程 r² - 9 = 0 解得 r = 3，放大十倍為 30% 電量！',
+    explanation: '特徵方程 r² - 900 = 0 解得 r = 30（正根），直接就是 30% 電量！',
     category: 'math',
     emoji: '🔍'
   },
   {
     id: 'qm_36',
-    title: '對角矩陣 B = [[2, 0], [0, 4]] 的特徵值之和放大十倍後是多少電量 %？',
+    title: '對角矩陣 B = [[20, 0], [0, 40]] 的特徵值之和是多少電量 %？',
     officialBattery: 60,
-    explanation: '特徵值為 2 與 4，和為 6，放大十倍為 60% 電量！',
+    explanation: '特徵值為 20 與 40，和為 60，直接就是 60% 電量！',
     category: 'math',
     emoji: '🔲'
   },
   {
     id: 'qm_37',
-    title: '無窮等比級數 1/2 + 1/4 + 1/8 + ... 的級數和轉化為滿格電量是多少 %？',
+    title: '無窮等比級數 50 + 25 + 12.5 + ... 的級數和是多少電量 %？',
     officialBattery: 100,
-    explanation: '收斂級數和 a/(1-r) = (1/2)/(1/2) = 1，滿格 100% 電量！',
+    explanation: '收斂級數和 a/(1-r) = 50/(1-1/2) = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '♾️'
   },
   {
     id: 'qm_38',
-    title: '平面向量 (3, 4) 的模長乘以十放大後是多少電量 %？',
+    title: '平面向量 (30, 40) 的模長是多少電量 %？',
     officialBattery: 50,
-    explanation: '√(3² + 4²) = 5，放大十倍為 50% 電量！',
+    explanation: '√(30² + 40²) = √2500 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '↗️'
   },
   {
     id: 'qm_39',
-    title: '阻尼振動微分方程 y\'\' + 4y\' + 13y = 0 的固有衰減角頻率 ω 放大十倍後是多少電量 %？',
+    title: '阻尼振動微分方程 y\'\' + 40y\' + 1300y = 0 的固有衰減角頻率 ω 是多少電量 %？',
     officialBattery: 30,
-    explanation: '特徵根 r = -2 ± 3i，虛部角頻率 ω = 3，放大十倍為 30%！',
+    explanation: '特徵根 r = -20 ± 30i，虛部角頻率 ω = 30，直接就是 30% 電量！',
     category: 'math',
     emoji: '〰️'
   },
   {
     id: 'qm_40',
-    title: '連續型均勻分佈 U(0, 1) 的期望值 E[X] 轉化為百分比是多少電量 %？',
+    title: '連續型均勻分佈 U(0, 100) 的期望值 E[X] 是多少電量 %？',
     officialBattery: 50,
-    explanation: 'E[X] = (0 + 1)/2 = 0.50，恰好是 50% 半滿電量！',
+    explanation: 'E[X] = (0 + 100)/2 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '⚖️'
   },
   {
     id: 'qm_41',
-    title: '泰勒展開式 e^x 在 x=0 處的一階逼近 (1+x) 當 x=0.5 時的值轉化為百分比是多少電量 %？',
+    title: '一階線性函數 100x 在 x = 0.5 時的值是多少電量 %？',
     officialBattery: 50,
-    explanation: '1 + 0.5 = 1.5，取小數點後 0.5 轉化為 50% 電量！',
+    explanation: '100 × 0.5 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '📈'
   },
@@ -348,9 +348,9 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_44',
-    title: '三維空間中單位向量 û 的模長 |û| 轉化為滿格電量是多少 %？',
+    title: '三維空間中向量 100û（û 為單位向量）的模長 |100û| 是多少電量 %？',
     officialBattery: 100,
-    explanation: '單位向量模長定義為 1，即 100% 滿格能量！',
+    explanation: '單位向量模長為 1，所以 |100û| = 100×1 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '📐'
   },
@@ -372,49 +372,49 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_47',
-    title: '三角函數 sin(30°) 的數值轉化為百分比是多少電量 %？',
+    title: '三角函數 100·sin(30°) 的數值是多少電量 %？',
     officialBattery: 50,
-    explanation: 'sin(30°) = 1/2 = 0.50，恰好是 50% 半滿電量！',
+    explanation: '100 × sin(30°) = 100 × 0.5 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '📐'
   },
   {
     id: 'qm_48',
-    title: '三角函數 cos(60°) 的數值轉化為百分比是多少電量 %？',
+    title: '三角函數 100·cos(60°) 的數值是多少電量 %？',
     officialBattery: 50,
-    explanation: 'cos(60°) = 1/2 = 0.50，恰好是 50% 半滿電量！',
+    explanation: '100 × cos(60°) = 100 × 0.5 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '📐'
   },
   {
     id: 'qm_49',
-    title: '計算定積分 ∫[0 to 1] 2x dx 的結果轉化為滿格電量是多少 %？',
+    title: '計算定積分 ∫[0 to 1] 200x dx 的結果是多少電量 %？',
     officialBattery: 100,
-    explanation: '[x²] 從 0 到 1 等於 1 - 0 = 1，即 100% 滿格電量！',
+    explanation: '[100x²] 從 0 到 1 等於 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '∫'
   },
   {
     id: 'qm_50',
-    title: '求極限 lim(x→0) sin(x)/x 轉化為滿格電量是多少 %？',
+    title: '求極限 lim(x→0) 100·sin(x)/x 是多少電量 %？',
     officialBattery: 100,
-    explanation: '經典重要極限結果為 1，即 100% 滿格能量！',
+    explanation: '經典重要極限 sin(x)/x → 1，乘以 100 後為 100，直接滿格 100% 能量！',
     category: 'math',
     emoji: '🎯'
   },
   {
     id: 'qm_51',
-    title: '單位矩陣 I₂ = [[1, 0], [0, 1]] 的跡 tr(I₂) 放大五十倍後是多少電量 %？',
+    title: '對角矩陣 50I₂ = [[50, 0], [0, 50]] 的跡 tr(50I₂) 是多少電量 %？',
     officialBattery: 100,
-    explanation: 'tr(I₂) = 1 + 1 = 2，放大 50 倍為 100% 滿格電量！',
+    explanation: 'tr(50I₂) = 50 + 50 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '🔲'
   },
   {
     id: 'qm_52',
-    title: '虛數單位 i 的平方 i² 的絕對值 |-1| 轉化為滿格電量是多少 %？',
+    title: '虛數運算 100i² 的絕對值 |100i²| 是多少電量 %？',
     officialBattery: 100,
-    explanation: '|-1| = 1，即 100% 滿格能量！',
+    explanation: 'i² = -1，所以 100i² = -100，絕對值 |-100| = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '🧮'
   },
@@ -436,49 +436,49 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_55',
-    title: '組合數 C(5, 2) 放大十倍後是多少電量 %？',
+    title: '計算 10 × C(5, 2) 是多少電量 %？',
     officialBattery: 100,
-    explanation: 'C(5, 2) = (5×4)/2 = 10，放大十倍為 100% 滿格電量！',
+    explanation: 'C(5, 2) = (5×4)/2 = 10，10 × 10 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '🎲'
   },
   {
     id: 'qm_56',
-    title: '排列數 P(4, 2) 放大五倍後是多少電量 %？',
+    title: '計算 5 × P(4, 2) 是多少電量 %？',
     officialBattery: 60,
-    explanation: 'P(4, 2) = 4×3 = 12，放大 5 倍為 60% 電量！',
+    explanation: 'P(4, 2) = 4×3 = 12，5 × 12 = 60，直接就是 60% 電量！',
     category: 'math',
     emoji: '🔀'
   },
   {
     id: 'qm_57',
-    title: '雙曲線方程 x² - y² = 1 的漸近線斜率絕對值 |m| 轉化為滿格電量是多少 %？',
+    title: '雙曲線 x² - y² = 1 的漸近線斜率絕對值為 |m|，數值 100|m| 是多少電量 %？',
     officialBattery: 100,
-    explanation: '漸近線 y = ±x，斜率絕對值為 1，即 100% 滿格電量！',
+    explanation: '漸近線 y = ±x，斜率絕對值為 1，100 × 1 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '📈'
   },
   {
     id: 'qm_58',
-    title: '對數 log10(100) 的結果放大五十倍後是多少電量 %？',
+    title: '計算 50 × log₁₀(100) 是多少電量 %？',
     officialBattery: 100,
-    explanation: 'log10(100) = 2，放大 50 倍為 100% 滿格電量！',
+    explanation: 'log₁₀(100) = 2，50 × 2 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '📐'
   },
   {
     id: 'qm_59',
-    title: '計算定積分 ∫[0 to 2] x dx 的結果放大二十五倍後是多少電量 %？',
+    title: '計算定積分 ∫[0 to 2] 25x dx 的結果是多少電量 %？',
     officialBattery: 50,
-    explanation: '[x²/2] 從 0 到 2 等於 2，放大 25 倍為 50% 電量！',
+    explanation: '[12.5x²] 從 0 到 2 等於 12.5×4 = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '∫'
   },
   {
     id: 'qm_60',
-    title: '一元二次方程 x² - 4x + 4 = 0 的重根 x 放大二十五倍後是多少電量 %？',
+    title: '一元二次方程 x² - 100x + 2500 = 0 的重根 x 是多少電量 %？',
     officialBattery: 50,
-    explanation: '(x-2)² = 0 解得重根 x = 2，放大 25 倍為 50% 電量！',
+    explanation: '(x-50)² = 0 解得重根 x = 50，直接就是 50% 電量！',
     category: 'math',
     emoji: '🔍'
   },
@@ -500,25 +500,25 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_63',
-    title: '計算定積分 ∫[0 to 1] 3x² dx 的結果轉化為滿格電量是多少 %？',
+    title: '計算定積分 ∫[0 to 1] 300x² dx 的結果是多少電量 %？',
     officialBattery: 100,
-    explanation: '[x³] 從 0 到 1 等於 1 - 0 = 1，即 100% 滿格電量！',
+    explanation: '[100x³] 從 0 到 1 等於 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '∫'
   },
   {
     id: 'qm_64',
-    title: '無窮等比級數 1 + 1/2 + 1/4 + 1/8 + ... 的和放大五十倍後是多少電量 %？',
-    officialBattery: 100,
-    explanation: '級數和 S = 1/(1 - 1/2) = 2，放大 50 倍為 100% 滿格電量！',
+    title: '無窮等比級數 40 + 20 + 10 + 5 + ... 的和是多少電量 %？',
+    officialBattery: 80,
+    explanation: '級數和 S = 40/(1 - 1/2) = 80，直接就是 80% 電量！',
     category: 'math',
     emoji: '♾️'
   },
   {
     id: 'qm_65',
-    title: '拋物線 y = x² 在 x=3 處的切線斜率 dy/dx 放大十倍後是多少電量 %？',
+    title: '拋物線 y = 10x² 在 x=3 處的切線斜率 dy/dx 是多少電量 %？',
     officialBattery: 60,
-    explanation: 'dy/dx = 2x，在 x=3 時斜率為 6，放大 10 倍為 60% 電量！',
+    explanation: 'dy/dx = 20x，在 x=3 時斜率為 20×3 = 60，直接就是 60% 電量！',
     category: 'math',
     emoji: '📈'
   },
@@ -540,17 +540,17 @@ export const INITIAL_QUESTIONS: Question[] = [
   },
   {
     id: 'qm_68',
-    title: '計算定積分 ∫[0 to π/2] cos(x) dx 的結果轉化為滿格電量是多少 %？',
+    title: '計算定積分 ∫[0 to π/2] 100cos(x) dx 的結果是多少電量 %？',
     officialBattery: 100,
-    explanation: '[sin x] 從 0 到 π/2 等於 1 - 0 = 1，即 100% 滿格電量！',
+    explanation: '[100sin x] 從 0 到 π/2 等於 100 - 0 = 100，直接就是 100% 滿格電量！',
     category: 'math',
     emoji: '🌊'
   },
   {
     id: 'qm_69',
-    title: '求極限 lim(x→∞) (x² + 1)/(x² + 5) 轉化為滿格電量是多少 %？',
+    title: '求極限 lim(x→∞) 100(x² + 1)/(x² + 5) 是多少電量 %？',
     officialBattery: 100,
-    explanation: '最高次項係數比為 1/1 = 1，即 100% 滿格電量！',
+    explanation: '最高次項係數比為 1/1 = 1，乘以 100 後為 100，直接滿格 100% 電量！',
     category: 'math',
     emoji: '🎯'
   },
