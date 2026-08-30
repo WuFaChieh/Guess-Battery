@@ -75,6 +75,8 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
             onChange={handleSliderChange}
             disabled={disabled}
             style={trackStyle}
+            aria-label="你猜的電量百分比"
+            aria-valuetext={`${value}%`}
             className="w-full h-3 rounded-full appearance-none cursor-pointer accent-emerald-400 shadow-md touch-action-none z-10 transition-[background] duration-150"
           />
 

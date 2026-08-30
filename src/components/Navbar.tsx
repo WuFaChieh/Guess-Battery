@@ -62,6 +62,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={toggleAudio}
             className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
             title={soundOn ? '關閉音效' : '開啟音效'}
+            aria-label={soundOn ? '關閉音效' : '開啟音效'}
+            aria-pressed={soundOn}
           >
             {soundOn ? (
               <Volume2 className="w-5 h-5 text-emerald-400" />
@@ -75,6 +77,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setMenuOpen(!menuOpen)}
             className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
             title="選單"
+            aria-label="選單"
+            aria-expanded={menuOpen}
           >
             {menuOpen ? <X className="w-5 h-5 text-rose-400" /> : <Menu className="w-5 h-5 text-slate-300" />}
           </button>

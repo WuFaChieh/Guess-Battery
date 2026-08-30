@@ -10,6 +10,7 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode }) => {
   return (
     <nav
+      aria-label="遊戲模式導覽"
       className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-lg border-t border-slate-900 px-4 pt-2 shadow-xl"
       style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
     >
@@ -17,6 +18,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
         {/* Tab 1: 猜電量 */}
         <button
           onClick={() => onSelectMode('single_5')}
+          aria-current={currentMode === 'single_5' ? 'page' : undefined}
           className={`flex flex-col items-center justify-center py-1 transition-all ${
             currentMode === 'single_5'
               ? 'text-emerald-400 font-bold'
@@ -30,6 +32,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
         {/* Tab 2: 1v1 對決 / 排行榜 */}
         <button
           onClick={() => onSelectMode('mutual_pk')}
+          aria-current={currentMode === 'mutual_pk' ? 'page' : undefined}
           className={`flex flex-col items-center justify-center py-1 transition-all ${
             currentMode === 'mutual_pk'
               ? 'text-emerald-400 font-bold'
@@ -43,6 +46,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
         {/* Tab 3: 同屏派對 */}
         <button
           onClick={() => onSelectMode('party')}
+          aria-current={currentMode === 'party' ? 'page' : undefined}
           className={`flex flex-col items-center justify-center py-1 transition-all ${
             currentMode === 'party'
               ? 'text-emerald-400 font-bold'
@@ -56,6 +60,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
         {/* Tab 4: 自訂題庫 / 更多 */}
         <button
           onClick={() => onSelectMode('custom')}
+          aria-current={currentMode === 'custom' ? 'page' : undefined}
           className={`flex flex-col items-center justify-center py-1 transition-all ${
             currentMode === 'custom'
               ? 'text-emerald-400 font-bold'
