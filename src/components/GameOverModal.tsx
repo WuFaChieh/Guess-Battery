@@ -27,12 +27,14 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   const avgScore = answers.length > 0 ? Math.round(totalScore / answers.length) : 0;
   const badge = getBadgeForScore(avgScore);
 
-  // Dynamic facial expression for battery mascot
+  // Dynamic facial expression for battery mascot. Plain text throughout — no
+  // kaomoji here — keeps the results screen reading as a stats card rather
+  // than mixing register with the loading screen's cuter mascot voice.
   const getBatteryFace = (val: number, done: boolean) => {
     if (!done) return '( 充能精準度... )';
     if (val >= 90) return '( 神級精準大師！ )';
-    if (val >= 70) return '( ≧ᗜ≦ 高電量充滿！ )';
-    if (val >= 40) return '( ｡• ᵕ •｡ 滿意充電完成 )';
+    if (val >= 70) return '( 高電量充滿！ )';
+    if (val >= 40) return '( 滿意充電完成 )';
     return '( 需再接再厲！ )';
   };
 

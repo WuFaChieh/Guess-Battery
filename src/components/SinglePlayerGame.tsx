@@ -5,6 +5,7 @@ import { BatteryGauge } from './BatteryGauge';
 import { SliderInput } from './SliderInput';
 import { RevealScreen } from './RevealScreen';
 import { GameOverModal } from './GameOverModal';
+import { LoadingState } from './LoadingState';
 import { calculateScore, shuffleArray } from '../utils/gameLogic';
 import { CATEGORY_LABELS } from '../data/questions';
 
@@ -120,11 +121,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   };
 
   if (questions.length === 0) {
-    return (
-      <div className="text-center py-12 text-slate-400">
-        載入題庫中...
-      </div>
-    );
+    return <LoadingState label="載入題庫中..." />;
   }
 
   const currentQuestion = questions[currentIndex];

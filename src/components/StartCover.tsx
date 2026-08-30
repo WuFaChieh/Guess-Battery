@@ -32,7 +32,7 @@ export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
           <UnifiedBattery
             value={100}
             size="lg"
-            faceExpression="( 💯 電量滿載！ )"
+            faceExpression="( ✧ω✧ 電量滿載！ )"
           />
         </motion.div>
 

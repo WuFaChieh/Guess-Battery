@@ -6,6 +6,7 @@ import { BatteryGauge } from './BatteryGauge';
 import { SliderInput } from './SliderInput';
 import { RevealScreen } from './RevealScreen';
 import { GameOverModal } from './GameOverModal';
+import { LoadingState } from './LoadingState';
 import { calculateScore } from '../utils/gameLogic';
 import { Calendar, Sparkles } from 'lucide-react';
 
@@ -58,7 +59,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
   };
 
   if (dailyQuestions.length === 0) {
-    return <div className="text-center py-12 text-slate-400">載入每日題目中...</div>;
+    return <LoadingState label="載入每日題目中..." />;
   }
 
   const currentQ = dailyQuestions[currentIndex];

@@ -1,10 +1,12 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { GameMode, Question } from './types/game';
 import { INITIAL_QUESTIONS } from './data/questions';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { SplashLoader } from './components/SplashLoader';
 import { StartCover } from './components/StartCover';
+import { LoadingState } from './components/LoadingState';
 import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
 
 // Each mode is its own chunk — only the one the player actually picks gets
@@ -108,76 +110,98 @@ export function App() {
   // Combine default questions with custom questions
   const allAvailableQuestions = [...customQuestions, ...INITIAL_QUESTIONS];
 
-  // 1. Initial Splash Loader (0% -> 100% 充能過場)
-  if (showSplash) {
-    return <SplashLoader onComplete={() => setShowSplash(false)} />;
-  }
-
-  // 2. Start Cover Screen with START button
-  if (!hasStarted) {
-    return <StartCover onStartGame={handlePressStart} />;
-  }
-
-  // 3. Main Game Screen
+  // Splash -> start cover -> game shell are three entirely different
+  // component subtrees, not one component whose props change — so without an
+  // AnimatePresence wrapping the switch itself, React just unmounts one and
+  // mounts the next in the same tick, and any `exit` animation declared
+  // inside the outgoing component (e.g. SplashLoader's own fade-out) never
+  // gets a chance to run: by the time framer-motion would animate it out,
+  // its whole tree is already gone. Keying each stage and wrapping the
+  // switch itself in AnimatePresence is what actually lets that exit play.
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20">
+    <AnimatePresence mode="wait">
+      {showSplash && <SplashLoader key="splash" onComplete={() => setShowSplash(false)} />}
 
-      {/* Top Header Navbar */}
-      <Navbar
-        currentMode={currentMode}
-        onSelectMode={handleSelectMode}
-        soundOn={soundOn}
-        setSoundOn={setSoundOn}
-      />
+      {!showSplash && !hasStarted && <StartCover key="cover" onStartGame={handlePressStart} />}
 
-      {/* Main Game Container */}
-      <main className="flex-1 max-w-md w-full mx-auto px-4 py-3 flex flex-col items-center justify-center">
-        <Suspense fallback={<div className="text-center py-12 text-slate-400">載入中...</div>}>
-          {currentMode === 'single_5' && (
-            <SinglePlayerGame
-              key={`${activeCategory}_${gameSessionId}`}
-              allQuestions={allAvailableQuestions}
-              questionCount={5}
-              gameModeName={activeCategory === 'custom' ? '自訂題庫試玩' : '經典速刷'}
-              initialCategory={activeCategory}
-            />
-          )}
+      {!showSplash && hasStarted && (
+        <motion.div
+          key="shell"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950 pb-20"
+        >
+          {/* Top Header Navbar */}
+          <Navbar
+            currentMode={currentMode}
+            onSelectMode={handleSelectMode}
+            soundOn={soundOn}
+            setSoundOn={setSoundOn}
+          />
 
-          {currentMode === 'mutual_pk' && (
-            <MutualPkGame onGoToSinglePlayer={() => handleSelectMode('single_5')} />
-          )}
+          {/* Main Game Container */}
+          <main className="flex-1 max-w-md w-full mx-auto px-4 py-3 flex flex-col items-center justify-center">
+            <Suspense fallback={<LoadingState />}>
+              {/* Keyed by mode so switching tabs always fades the new mode's
+                  content in, instead of it just snapping into place —
+                  matters most for a mode whose chunk is already cached (no
+                  Suspense fallback shown at all otherwise). */}
+              <motion.div
+                key={currentMode}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="w-full flex flex-col items-center"
+              >
+                {currentMode === 'single_5' && (
+                  <SinglePlayerGame
+                    key={`${activeCategory}_${gameSessionId}`}
+                    allQuestions={allAvailableQuestions}
+                    questionCount={5}
+                    gameModeName={activeCategory === 'custom' ? '自訂題庫試玩' : '經典速刷'}
+                    initialCategory={activeCategory}
+                  />
+                )}
 
-          {currentMode === 'party' && (
-            <PartyModeGame allQuestions={allAvailableQuestions} />
-          )}
+                {currentMode === 'mutual_pk' && (
+                  <MutualPkGame onGoToSinglePlayer={() => handleSelectMode('single_5')} />
+                )}
 
-          {currentMode === 'custom' && (
-            <CustomCreator
-              customQuestions={customQuestions}
-              onAddQuestion={handleAddCustomQuestion}
-              onDeleteQuestion={handleDeleteCustomQuestion}
-              onImportDeck={handleImportCustomDeck}
-              onPlayCustom={handlePlayCustomDeck}
-            />
-          )}
-        </Suspense>
-      </main>
+                {currentMode === 'party' && (
+                  <PartyModeGame allQuestions={allAvailableQuestions} />
+                )}
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 mb-12">
-        <p className="font-semibold text-slate-400">猜電量 Guess the Battery — 萬物皆有電量，你猜得準嗎？</p>
-        <p className="mt-1 text-slate-500 flex flex-wrap items-center justify-center gap-2">
-          <span>無卡牌 · 無機制 · 只有荒謬直覺與爆笑揭曉</span>
-          <span className="hidden sm:inline">|</span>
-          <span className="bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
-            遊戲作者：<strong className="text-emerald-400 font-bold">冷月仙</strong>
-          </span>
-        </p>
-      </footer>
+                {currentMode === 'custom' && (
+                  <CustomCreator
+                    customQuestions={customQuestions}
+                    onAddQuestion={handleAddCustomQuestion}
+                    onDeleteQuestion={handleDeleteCustomQuestion}
+                    onImportDeck={handleImportCustomDeck}
+                    onPlayCustom={handlePlayCustomDeck}
+                  />
+                )}
+              </motion.div>
+            </Suspense>
+          </main>
 
-      {/* Fixed Bottom Navigation Bar matching design mockup */}
-      <BottomNav currentMode={currentMode} onSelectMode={handleSelectMode} />
-    </div>
+          {/* Footer */}
+          <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 mb-12">
+            <p className="font-semibold text-slate-400">猜電量 Guess the Battery — 萬物皆有電量，你猜得準嗎？</p>
+            <p className="mt-1 text-slate-500 flex flex-wrap items-center justify-center gap-2">
+              <span>無卡牌 · 無機制 · 只有荒謬直覺與爆笑揭曉</span>
+              <span className="hidden sm:inline">|</span>
+              <span className="bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                遊戲作者：<strong className="text-emerald-400 font-bold">冷月仙</strong>
+              </span>
+            </p>
+          </footer>
+
+          {/* Fixed Bottom Navigation Bar matching design mockup */}
+          <BottomNav currentMode={currentMode} onSelectMode={handleSelectMode} />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
