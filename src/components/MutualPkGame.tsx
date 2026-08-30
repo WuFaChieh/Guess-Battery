@@ -5,6 +5,8 @@ import { Question } from '../types/game';
 import { HUMAN_BOT_QUESTIONS } from '../utils/humanAiDeck';
 import { getBotGuess, BotDifficulty, PlayerProfile } from '../utils/aiBots';
 import { startMatchmaking, MatchRoomData } from '../utils/matchmaking';
+import { joinPkRoom, PkRoomConnection, PkRoomEvent } from '../utils/pkRoomChannel';
+import { PK_OPPONENT_QUESTION_TIMEOUT_MS, PK_OPPONENT_GUESS_TIMEOUT_MS } from '../constants/gameConfig';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
 import { calculateScore } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
@@ -13,7 +15,19 @@ import { playChargingSound, playTickSound, playMatchFoundSound, playQuestionSubm
 import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
 
-type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing_opponent_q' | 'opponent_guessing' | 'revealing' | 'revealed';
+type PkStage =
+  | 'lobby'
+  | 'matching'
+  | 'matched'
+  | 'creating'
+  // Real match only: player confirmed their own question but the opponent's
+  // hasn't arrived over Realtime yet (see pkRoomChannel.ts). Bot matches skip
+  // this — their question is already known the moment they're matched.
+  | 'awaiting_opponent_question'
+  | 'guessing_opponent_q'
+  | 'opponent_guessing'
+  | 'revealing'
+  | 'revealed';
 
 interface MutualPkGameProps {
   onGoToSinglePlayer?: () => void;
@@ -73,6 +87,30 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   // timer + Realtime subscription). Null once a match has been found.
   const matchCancelRef = useRef<(() => void) | null>(null);
 
+  // Live Realtime connection to the matched room, once a *real* (non-bot)
+  // opponent is found — see utils/pkRoomChannel.ts. Null for bot matches,
+  // which have no real second party to sync with.
+  const pkRoomRef = useRef<PkRoomConnection | null>(null);
+
+  // The opponent's actual guess at the question *we* wrote, received over
+  // Realtime for a real match. Null until it arrives (or until the timeout
+  // fallback in handleSubmitPlayerGuess synthesizes one).
+  const [opponentActualGuess, setOpponentActualGuess] = useState<number | null>(null);
+
+  // "Has the real thing actually arrived yet" flags for the two Realtime
+  // timeout fallbacks below. Refs, not derived from the question/guess state
+  // itself, so the fallback timeouts (scheduled once, read once) always see
+  // the latest answer instead of a value captured in a stale closure.
+  const opponentQuestionArrivedRef = useRef(false);
+  const opponentGuessArrivedRef = useRef(false);
+
+  // What we've already sent over the room channel, so a late `ready` from the
+  // opponent (see pkRoomChannel.ts) can trigger a resend — closing the race
+  // where we sent before they'd finished joining the channel and therefore
+  // never received it in the first place.
+  const sentQuestionRef = useRef<{ title: string; officialBattery: number } | null>(null);
+  const sentGuessRef = useRef<number | null>(null);
+
   // Parallel 7-second timer tracking
   const actionStartTimeRef = useRef<number>(0);
 
@@ -111,6 +149,14 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     };
   }, []);
 
+  // Leave the room's Realtime channel on unmount, same reasoning.
+  useEffect(() => {
+    return () => {
+      pkRoomRef.current?.leave();
+      pkRoomRef.current = null;
+    };
+  }, []);
+
   // Player's Question for Opponent
   const [playerTitle, setPlayerTitle] = useState('');
   const [playerOfficialBattery, setPlayerOfficialBattery] = useState(50);
@@ -145,9 +191,29 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     });
   }, []);
 
+  // Fills in a fallback opponent question from the human-style bot deck —
+  // used both for actual bot matches, and as the real-match timeout fallback
+  // when the real opponent never sends their question (they closed the tab,
+  // lost connection, etc.). Keeps the "a match always resolves" guarantee
+  // matchmaking.ts already gives the search phase itself.
+  const fabricateOpponentQuestion = (avatar: string) => {
+    opponentQuestionArrivedRef.current = true; // treat "resolved" as final — see the real-event guard below
+    const qTemplate = HUMAN_BOT_QUESTIONS[Math.floor(Math.random() * HUMAN_BOT_QUESTIONS.length)];
+    setOpponentQuestion({
+      id: `opp_q_${Date.now()}`,
+      title: qTemplate.title,
+      officialBattery: qTemplate.battery,
+      explanation: qTemplate.exp,
+      category: 'custom',
+      emoji: avatar
+    });
+    setOpponentReady(true);
+  };
+
   // Called once startMatchmaking() resolves — either a real player found via
   // Supabase Realtime, or the local bot fallback after the 8s timeout.
   const handleMatched = (roomData: MatchRoomData) => {
+    console.debug('[MutualPkGame] matched, roomId=', roomData.roomId, 'isBot=', roomData.isBot, 'selfGuestId=', guestIdRef.current);
     matchCancelRef.current = null; // the search is over — nothing left to cancel
 
     setOpponent({
@@ -156,20 +222,50 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       botDifficulty: roomData.botDifficulty
     });
 
-    // Select the question the opponent challenges the player with. Real
-    // human matches don't exchange a live question over Realtime yet (that's
-    // a separate sync protocol on top of matchmaking.ts's opponent
-    // discovery), so both bot and human matches currently draw from the same
-    // human-style question deck.
-    const qTemplate = HUMAN_BOT_QUESTIONS[Math.floor(Math.random() * HUMAN_BOT_QUESTIONS.length)];
-    setOpponentQuestion({
-      id: `opp_q_${Date.now()}`,
-      title: qTemplate.title,
-      officialBattery: qTemplate.battery,
-      explanation: qTemplate.exp,
-      category: 'custom',
-      emoji: roomData.opponent.avatar
-    });
+    opponentQuestionArrivedRef.current = false;
+    opponentGuessArrivedRef.current = false;
+
+    if (roomData.isBot) {
+      // Bots have no real question to send — fabricate one immediately.
+      fabricateOpponentQuestion(roomData.opponent.avatar);
+    } else {
+      // Real opponent: join the shared room channel and wait for their
+      // *actual* question/guess to arrive over Realtime (see
+      // utils/pkRoomChannel.ts) instead of fabricating both sides locally.
+      pkRoomRef.current?.leave();
+      pkRoomRef.current = joinPkRoom(roomData.roomId, guestIdRef.current, (event: PkRoomEvent) => {
+        if (event.type === 'question') {
+          // Ignore a late arrival if the timeout fallback already fabricated
+          // one and the player may already be answering it — swapping the
+          // question out from under them would be worse than the fallback.
+          if (opponentQuestionArrivedRef.current) return;
+          opponentQuestionArrivedRef.current = true;
+          setOpponentQuestion({
+            id: `opp_q_${Date.now()}`,
+            title: event.title,
+            officialBattery: event.officialBattery,
+            explanation: '由對手即時出題，一起揭曉才知道答案！',
+            category: 'custom',
+            emoji: roomData.opponent.avatar
+          });
+          setOpponentReady(true);
+        } else if (event.type === 'guess') {
+          if (opponentGuessArrivedRef.current) return; // same reasoning as above
+          opponentGuessArrivedRef.current = true;
+          setOpponentActualGuess(event.guess);
+        } else if (event.type === 'ready') {
+          // The opponent just (re)joined the channel — resend anything we'd
+          // already sent, in case they joined after our first send and
+          // missed it (plain broadcast has no history for late joiners).
+          if (sentQuestionRef.current) {
+            pkRoomRef.current?.send({ type: 'question', fromUserId: guestIdRef.current, ...sentQuestionRef.current });
+          }
+          if (sentGuessRef.current !== null) {
+            pkRoomRef.current?.send({ type: 'guess', fromUserId: guestIdRef.current, guess: sentGuessRef.current });
+          }
+        }
+      });
+    }
 
     setStage('matched');
     playMatchFoundSound(); // ⚔️ Aggressive high-energy match sound!
@@ -179,10 +275,21 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       setStage('creating');
       actionStartTimeRef.current = Date.now(); // Record start time for parallel 7s timer
 
-      // Opponent completes question in ~7 seconds
-      scheduleTimeout(() => {
-        setOpponentReady(true);
-      }, 7000);
+      if (roomData.isBot) {
+        // Bot "completes" its question after ~7s of simulated thinking.
+        scheduleTimeout(() => {
+          setOpponentReady(true);
+        }, 7000);
+      } else {
+        // Real opponent: give up waiting for their question after a much more
+        // generous timeout (they're actually typing) and fabricate one so the
+        // match doesn't hang forever if they've disappeared.
+        scheduleTimeout(() => {
+          if (!opponentQuestionArrivedRef.current) {
+            fabricateOpponentQuestion(roomData.opponent.avatar);
+          }
+        }, PK_OPPONENT_QUESTION_TIMEOUT_MS);
+      }
     }, 1500);
   };
 
@@ -190,6 +297,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   // opponent via Realtime, automatically falling back to a bot if nobody
   // shows up in time (see utils/matchmaking.ts).
   const handleStartMatchmaking = () => {
+    console.debug('[MutualPkGame] starting matchmaking as', guestIdRef.current, guestNameRef.current);
     setStage('matching');
     setOpponentReady(false);
     setIsChargingFinished(false);
@@ -206,8 +314,27 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       return;
     }
     playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
-    setStage('guessing_opponent_q');
+
+    if (opponent && !opponent.isBot) {
+      const payload = { title: playerTitle.trim(), officialBattery: playerOfficialBattery };
+      sentQuestionRef.current = payload; // so a late-arriving `ready` can trigger a resend
+      pkRoomRef.current?.send({ type: 'question', fromUserId: guestIdRef.current, ...payload });
+      // The opponent's own question may or may not have arrived yet — if it
+      // has, skip straight ahead; otherwise wait for it (see the
+      // 'awaiting_opponent_question' stage below and its effect).
+      setStage(opponentQuestion ? 'guessing_opponent_q' : 'awaiting_opponent_question');
+    } else {
+      setStage('guessing_opponent_q');
+    }
   };
+
+  // Real match only: once the opponent's question arrives while we're
+  // waiting on it, move on automatically.
+  useEffect(() => {
+    if (stage === 'awaiting_opponent_question' && opponentQuestion) {
+      setStage('guessing_opponent_q');
+    }
+  }, [stage, opponentQuestion]);
 
   // Run Simultaneous Side-by-Side Charging Ceremony. Memoized (and defined
   // before handleSubmitPlayerGuess, which composes it below) so its identity
@@ -222,10 +349,14 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setPlayerGap(pGap);
     setPlayerScore(pScore);
 
-    // Real matched-human gameplay sync isn't implemented yet (see
-    // handleMatched above), so both bot and human opponents currently share
-    // this simulated guess; bots use their assigned difficulty's error margin.
-    const oGuess = getBotGuess(playerOfficialBattery, opponent.botDifficulty ?? 'medium');
+    // Bots use a simulated guess with their assigned difficulty's error
+    // margin. Real opponents' guesses arrive over Realtime (see
+    // pkRoomChannel.ts) — opponentActualGuess should already be set by the
+    // time this runs (handleSubmitPlayerGuess only calls this once it has
+    // one, real or timeout-synthesized), but fall back defensively.
+    const oGuess = opponent.isBot
+      ? getBotGuess(playerOfficialBattery, opponent.botDifficulty ?? 'medium')
+      : opponentActualGuess ?? getBotGuess(playerOfficialBattery, 'medium');
     const oGap = Math.abs(oGuess - playerOfficialBattery);
     const oScore = calculateScore(oGuess, playerOfficialBattery).score;
     setOpponentGuess(oGuess);
@@ -280,24 +411,45 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
       }
     }, 35);
     intervalRef.current = interval;
-  }, [opponentQuestion, opponent, playerGuess, playerOfficialBattery, scheduleTimeout]);
+  }, [opponentQuestion, opponent, playerGuess, playerOfficialBattery, opponentActualGuess, scheduleTimeout]);
 
-  // Submit Player's Guess & trigger parallel 7-second suspense. Memoized so
+  // Submit Player's Guess & trigger parallel suspense. Memoized so
   // SliderInput's onSubmit prop stays referentially stable across re-renders
   // that don't actually change what this needs to do.
   const handleSubmitPlayerGuess = useCallback(() => {
     playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
     setStage('opponent_guessing');
 
-    // Ensure parallel total time reaches at least ~7 seconds
-    const elapsed = Date.now() - actionStartTimeRef.current;
-    const remainingDelay = Math.max(1500, 7000 - (elapsed % 7000));
+    if (opponent && !opponent.isBot) {
+      sentGuessRef.current = playerGuess; // so a late-arriving `ready` can trigger a resend
+      pkRoomRef.current?.send({ type: 'guess', fromUserId: guestIdRef.current, guess: playerGuess });
+      // Wait for the real reveal-triggering effect below; only schedule a
+      // fallback in case the opponent never actually guesses (disconnected).
+      scheduleTimeout(() => {
+        if (!opponentGuessArrivedRef.current) {
+          opponentGuessArrivedRef.current = true;
+          setOpponentActualGuess((prev) => prev ?? getBotGuess(playerOfficialBattery, 'medium'));
+        }
+      }, PK_OPPONENT_GUESS_TIMEOUT_MS);
+    } else {
+      // Bot match: keep the original fixed ~7s parallel-suspense pacing.
+      const elapsed = Date.now() - actionStartTimeRef.current;
+      const remainingDelay = Math.max(1500, 7000 - (elapsed % 7000));
+      scheduleTimeout(() => {
+        setStage('revealing');
+        runSimultaneousChargingCeremony();
+      }, remainingDelay);
+    }
+  }, [opponent, playerGuess, playerOfficialBattery, scheduleTimeout, runSimultaneousChargingCeremony]);
 
-    scheduleTimeout(() => {
+  // Real match only: once the opponent's actual (or timeout-synthesized)
+  // guess is in hand, kick off the reveal ceremony.
+  useEffect(() => {
+    if (stage === 'opponent_guessing' && opponent && !opponent.isBot && opponentActualGuess !== null) {
       setStage('revealing');
       runSimultaneousChargingCeremony();
-    }, remainingDelay);
-  }, [scheduleTimeout, runSimultaneousChargingCeremony]);
+    }
+  }, [stage, opponent, opponentActualGuess, runSimultaneousChargingCeremony]);
 
   const resetGame = () => {
     matchCancelRef.current?.();
@@ -308,10 +460,17 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setPlayerGuess(50);
     setOpponent(null);
     setOpponentQuestion(null);
+    setOpponentActualGuess(null);
     setAnimatedPlayerBattery(0);
     setAnimatedOpponentBattery(0);
     setIsChargingFinished(false);
     setOpponentReady(false);
+    opponentQuestionArrivedRef.current = false;
+    opponentGuessArrivedRef.current = false;
+    sentQuestionRef.current = null;
+    sentGuessRef.current = null;
+    pkRoomRef.current?.leave();
+    pkRoomRef.current = null;
   };
 
   const isPlayerWinner = playerScore >= opponentScore;
@@ -523,6 +682,25 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               <span>出題完畢！開始猜對手電量</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* STAGE 4.2: WAITING ON THE OPPONENT'S REAL QUESTION (real match only —
+          bot matches always have a question ready the moment they're matched) */}
+      {stage === 'awaiting_opponent_question' && opponent && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-5 w-full py-6">
+          <div className="w-full p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 flex items-center gap-2.5 text-left">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span className="text-xs font-bold text-emerald-400">你的題目已送出，等待 {opponent.name} 出題...</span>
+          </div>
+
+          <div className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+              <span>{opponent.name} 正在認真思考並撰寫題目中...</span>
+            </div>
+            <p className="text-[11px] text-slate-500">題目一到就馬上讓你猜！</p>
           </div>
         </motion.div>
       )}

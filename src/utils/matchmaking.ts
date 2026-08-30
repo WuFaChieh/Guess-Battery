@@ -167,21 +167,47 @@ export function startMatchmaking(
       if (cancelled) return;
       const opponentRow = candidates?.[0];
 
-      if (opponentRow) {
-        // Found someone waiting already — claim them both immediately.
+      // Only the side whose own row is the *newer* of the pair ever attempts
+      // to claim — the older side always falls through to listen-and-wait
+      // instead, below. Without this, two players calling startMatchmaking()
+      // within the same instant can each independently query and see the
+      // *other* as their available candidate (both SELECTs can land before
+      // either has claimed anything), and each would generate their own
+      // room_id for the pair — claiming the *other's* row, not the same row,
+      // so a same-row `.eq('status','searching')` guard alone can't catch
+      // it: both claims target different rows and so both can succeed,
+      // leaving the two sides matched into two different, mutually
+      // unreachable rooms. `created_at` is a real, server-assigned
+      // timestamp both sides already have (from their own insert and from
+      // this query) and agree on, so exactly one side of any pair ever sees
+      // itself as "newer" — that side claims; the other only ever listens.
+      if (opponentRow && opponentRow.created_at < inserted.created_at) {
         const roomId = generateRoomId();
-        const claimSelf: QueueMatchUpdate = { status: 'matched', matched_with: opponentRow.id, room_id: roomId };
         const claimOpponent: QueueMatchUpdate = { status: 'matched', matched_with: queueEntryId, room_id: roomId };
-        await client.from(QUEUE_TABLE).update(claimSelf).eq('id', queueEntryId);
-        await client.from(QUEUE_TABLE).update(claimOpponent).eq('id', opponentRow.id);
+        const { data: claimedOpponent } = await client
+          .from(QUEUE_TABLE)
+          .update(claimOpponent)
+          .eq('id', opponentRow.id)
+          .eq('status', 'searching' satisfies QueueStatus)
+          .select<'id', Pick<QueueRow, 'id'>>('id');
 
-        finish({
-          roomId,
-          isBot: false,
-          opponent: { id: opponentRow.user_id, name: opponentRow.player_name, avatar: DEFAULT_PLAYER_AVATAR },
-          queueEntryId: queueEntryId ?? undefined
-        });
-        return;
+        if (cancelled) return;
+
+        if (claimedOpponent && claimedOpponent.length > 0) {
+          const claimSelf: QueueMatchUpdate = { status: 'matched', matched_with: opponentRow.id, room_id: roomId };
+          await client.from(QUEUE_TABLE).update(claimSelf).eq('id', queueEntryId).eq('status', 'searching' satisfies QueueStatus);
+
+          finish({
+            roomId,
+            isBot: false,
+            opponent: { id: opponentRow.user_id, name: opponentRow.player_name, avatar: DEFAULT_PLAYER_AVATAR },
+            queueEntryId: queueEntryId ?? undefined
+          });
+          return;
+        }
+        // A third, even-newer player claimed opponentRow first (or beat us
+        // to it for some other reason) — fall through to listen-and-wait;
+        // our own row is untouched and still 'searching'.
       }
 
       // 3. Nobody waiting yet — listen for a later player matching *with us*.

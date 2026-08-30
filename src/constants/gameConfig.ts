@@ -18,3 +18,12 @@ export const BOT_DIFFICULTY_ERROR_RANGE: Record<BotDifficulty, { min: number; ma
   medium: { min: 15, max: 20 },
   hard: { min: 8, max: 15 }
 };
+
+// How long a real (non-bot) PK match waits for the *actual* opponent's
+// question / guess to arrive over Realtime (see utils/pkRoomChannel.ts)
+// before giving up on them and synthesizing a fallback, so a match can never
+// hang forever just because the other player closed their tab mid-match.
+// Generous on purpose — writing a question or dragging a slider takes a real
+// human longer than a bot's simulated thinking time.
+export const PK_OPPONENT_QUESTION_TIMEOUT_MS = 20000;
+export const PK_OPPONENT_GUESS_TIMEOUT_MS = 25000;
