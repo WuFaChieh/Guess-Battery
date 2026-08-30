@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Question, AnswerRecord } from '../types/game';
 import { QuestionCard } from './QuestionCard';
 import { BatteryGauge } from './BatteryGauge';
@@ -32,43 +32,63 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   // Check if custom questions exist
   const hasCustomQuestions = allQuestions.some((q) => q.category === 'custom' || q.id.startsWith('custom_'));
 
-  // Initialize randomized questions pool
-  const initGame = (catFilter = selectedCategory) => {
+  // Latest-value ref for allQuestions. App.tsx rebuilds `allAvailableQuestions`
+  // as a fresh array on every one of its renders (even when nothing in it
+  // actually changed), so depending on `allQuestions` by reference — directly
+  // or via a useCallback dep — would make `initGame` a new function (and
+  // trigger a re-shuffle) on every unrelated parent re-render. Reading through
+  // a ref instead lets `initGame` stay stable across those, while still always
+  // seeing the current pool when it actually runs. (Assigning during render is
+  // safe here — it's idempotent and only ever read later, from effects/handlers.)
+  const allQuestionsRef = useRef(allQuestions);
+  allQuestionsRef.current = allQuestions;
+
+  // Initialize randomized questions pool. Depends only on `questionCount`, so
+  // its identity — and the init effect below that depends on it — only
+  // changes when the question count actually changes.
+  const initGame = useCallback((catFilter: string) => {
+    const source = allQuestionsRef.current;
     let pool: Question[];
 
     if (catFilter === 'custom') {
-      pool = allQuestions.filter((q) => q.category === 'custom' || q.id.startsWith('custom_'));
+      pool = source.filter((q) => q.category === 'custom' || q.id.startsWith('custom_'));
       if (pool.length === 0) {
-        pool = allQuestions;
+        pool = source;
       }
     } else if (catFilter !== 'all') {
-      pool = allQuestions.filter((q) => q.category === catFilter && !q.id.startsWith('custom_'));
+      pool = source.filter((q) => q.category === catFilter && !q.id.startsWith('custom_'));
       if (pool.length === 0) {
-        pool = allQuestions;
+        pool = source;
       }
     } else {
-      pool = allQuestions;
+      pool = source;
     }
 
     const finalQuestions = shuffleArray(pool).slice(0, Math.min(questionCount, pool.length));
-    
+
     setQuestions(finalQuestions);
     setCurrentIndex(0);
     setCurrentGuess(50);
     setAnswers([]);
     setGameState('answering');
-  };
+  }, [questionCount]);
 
+  // Single init effect covering every re-init trigger — a new initialCategory
+  // from the parent, the in-component category filter changing
+  // selectedCategory, questionCount changing, or the question pool's size
+  // changing (questions added/removed) — so mounting only ever shuffles the
+  // question pool once. Previously this was two separate effects that both
+  // fired on mount, double-initializing (and double-shuffling) every game
+  // session. `allQuestions.length` is included purely to trigger a re-init
+  // when the pool size changes; `initGame` reads the current pool via the ref
+  // above rather than this effect passing it along.
   useEffect(() => {
-    if (initialCategory) {
-      setSelectedCategory(initialCategory);
-      initGame(initialCategory);
+    const catFilter = initialCategory || selectedCategory;
+    if (catFilter !== selectedCategory) {
+      setSelectedCategory(catFilter);
     }
-  }, [initialCategory]);
-
-  useEffect(() => {
-    initGame(selectedCategory);
-  }, [selectedCategory, questionCount, allQuestions.length]);
+    initGame(catFilter);
+  }, [initialCategory, selectedCategory, initGame, allQuestions.length]);
 
   // Memoized so SliderInput's onSubmit prop stays referentially stable across
   // re-renders that don't touch the question/guess state this actually reads.

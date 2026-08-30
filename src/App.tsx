@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { GameMode, Question } from './types/game';
 import { INITIAL_QUESTIONS } from './data/questions';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
-import { SinglePlayerGame } from './components/SinglePlayerGame';
-import { PartyModeGame } from './components/PartyModeGame';
-import { MutualPkGame } from './components/MutualPkGame';
-import { CustomCreator } from './components/CustomCreator';
 import { SplashLoader } from './components/SplashLoader';
 import { StartCover } from './components/StartCover';
 import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
+
+// Each mode is its own chunk — only the one the player actually picks gets
+// downloaded. This keeps heavy, mode-specific dependencies (Supabase
+// Realtime + matchmaking for PK, framer-motion for Party/PK) out of the
+// initial bundle for players who only ever touch single-player.
+const SinglePlayerGame = lazy(() => import('./components/SinglePlayerGame').then((m) => ({ default: m.SinglePlayerGame })));
+const PartyModeGame = lazy(() => import('./components/PartyModeGame').then((m) => ({ default: m.PartyModeGame })));
+const MutualPkGame = lazy(() => import('./components/MutualPkGame').then((m) => ({ default: m.MutualPkGame })));
+const CustomCreator = lazy(() => import('./components/CustomCreator').then((m) => ({ default: m.CustomCreator })));
 
 export function App() {
   const [showSplash, setShowSplash] = useState<boolean>(true);
@@ -127,33 +132,35 @@ export function App() {
 
       {/* Main Game Container */}
       <main className="flex-1 max-w-md w-full mx-auto px-4 py-3 flex flex-col items-center justify-center">
-        {currentMode === 'single_5' && (
-          <SinglePlayerGame
-            key={`${activeCategory}_${gameSessionId}`}
-            allQuestions={allAvailableQuestions}
-            questionCount={5}
-            gameModeName={activeCategory === 'custom' ? '自訂題庫試玩' : '經典速刷'}
-            initialCategory={activeCategory}
-          />
-        )}
+        <Suspense fallback={<div className="text-center py-12 text-slate-400">載入中...</div>}>
+          {currentMode === 'single_5' && (
+            <SinglePlayerGame
+              key={`${activeCategory}_${gameSessionId}`}
+              allQuestions={allAvailableQuestions}
+              questionCount={5}
+              gameModeName={activeCategory === 'custom' ? '自訂題庫試玩' : '經典速刷'}
+              initialCategory={activeCategory}
+            />
+          )}
 
-        {currentMode === 'mutual_pk' && (
-          <MutualPkGame onGoToSinglePlayer={() => handleSelectMode('single_5')} />
-        )}
+          {currentMode === 'mutual_pk' && (
+            <MutualPkGame onGoToSinglePlayer={() => handleSelectMode('single_5')} />
+          )}
 
-        {currentMode === 'party' && (
-          <PartyModeGame allQuestions={allAvailableQuestions} />
-        )}
+          {currentMode === 'party' && (
+            <PartyModeGame allQuestions={allAvailableQuestions} />
+          )}
 
-        {currentMode === 'custom' && (
-          <CustomCreator
-            customQuestions={customQuestions}
-            onAddQuestion={handleAddCustomQuestion}
-            onDeleteQuestion={handleDeleteCustomQuestion}
-            onImportDeck={handleImportCustomDeck}
-            onPlayCustom={handlePlayCustomDeck}
-          />
-        )}
+          {currentMode === 'custom' && (
+            <CustomCreator
+              customQuestions={customQuestions}
+              onAddQuestion={handleAddCustomQuestion}
+              onDeleteQuestion={handleDeleteCustomQuestion}
+              onImportDeck={handleImportCustomDeck}
+              onPlayCustom={handlePlayCustomDeck}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* Footer */}

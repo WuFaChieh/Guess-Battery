@@ -199,6 +199,22 @@ export function stopBgm(): void {
   }
 }
 
+// Pause the BGM loop while the tab is hidden (backgrounded/minimized/locked)
+// and resume it on return, instead of leaving the setInterval + oscillator
+// scheduling spinning in a tab nobody can hear — pure wasted CPU/battery.
+// Wired up once at module load since there's only ever one BGM loop.
+if (typeof document !== 'undefined') {
+  let wasBgmPlayingBeforeHide = false;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      wasBgmPlayingBeforeHide = bgmInterval !== null;
+      stopBgm();
+    } else if (wasBgmPlayingBeforeHide && soundEnabled) {
+      startBgm();
+    }
+  });
+}
+
 // ---------------------------------------------------------------------
 // 🔊 Game Sound Effects
 // ---------------------------------------------------------------------
