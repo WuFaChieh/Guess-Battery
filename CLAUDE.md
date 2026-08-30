@@ -5,18 +5,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev       # Vite dev server
-npm run build     # tsc (type-check, no emit) then vite build -> dist/
-npm run lint      # eslint .
-npm run preview   # serve the production build locally
-npx tsc --noEmit  # type-check only, without building
+npm run dev          # Vite dev server
+npm run build        # tsc (type-check, no emit) then vite build -> dist/
+npm run lint         # eslint .
+npm run preview      # serve the production build locally
+npx tsc --noEmit     # type-check only, without building
+npm run cap:sync     # build + `cap sync` -> refreshes ios/ from dist/ and native deps
+npm run cap:open:ios # open the Xcode project (needs a Mac; see iOS section below)
 ```
 
 There is no test suite/framework configured in this project (no `test` script, no test runner in `package.json`).
 
 ## Architecture
 
-**Stack**: React 18 + TypeScript + Vite, Tailwind for styling, Framer Motion for animation, `@supabase/supabase-js` for realtime PK matchmaking, `canvas-confetti` for celebration effects, `lucide-react` for icons. No router — the whole app is a single page with client-side mode switching. Deployed to Vercel (`vercel.json` rewrites everything to `index.html` for SPA routing).
+**Stack**: React 18 + TypeScript + Vite, Tailwind for styling, Framer Motion for animation, `@supabase/supabase-js` for realtime PK matchmaking, `canvas-confetti` for celebration effects, `lucide-react` for icons, `@capacitor/*` for the native iOS shell. No router — the whole app is a single page with client-side mode switching.
+
+### Dual target: website + native iOS app, developed in parallel
+
+This is one React codebase shipped two ways, and **both are actively maintained — neither is a fallback for the other**:
+
+- **Web**: deployed to Vercel (`vercel.json` rewrites everything to `index.html` for SPA routing).
+- **iOS**: the same `dist/` build wrapped by Capacitor (`capacitor.config.ts`) into the native project under `ios/App`. `npm run cap:sync` rebuilds `dist/` and copies it into the native shell.
+
+The dev machine for this project is Windows, which cannot open or build the Xcode project at all — there is no local way to verify the iOS side. Two things exist specifically to cover that gap:
+
+- `.github/workflows/ios-build.yml` builds the iOS app (unsigned, for the Simulator) on a macOS GitHub Actions runner on every push/PR — this is the only build verification the iOS target gets short of an actual Mac.
+- `scripts/fix-capacitor-spm-paths.mjs` (wired as `postcap:sync`) fixes `ios/App/CapApp-SPM/Package.swift`: `cap sync` writes local Swift package paths using the host OS's separator, and Windows backslashes there are not valid path separators for Swift Package Manager on macOS/Linux — every `cap sync` run on this machine would otherwise silently reintroduce a path Xcode/CI can't resolve.
+
+**Keeping the two targets in parity**: don't branch app logic on platform by hand. The existing pattern (`src/utils/deviceBattery.ts`, `src/utils/share.ts`) is to call a `@capacitor/*` plugin unconditionally — each one detects the platform itself and either bridges to the real native API (iOS) or wraps the closest web equivalent, with a further graceful fallback (e.g. clipboard copy) when neither exists. Follow that shape for any new native-feeling feature instead of adding `Capacitor.isNativePlatform()` checks throughout feature code — it's what keeps the web build's behavior unchanged while the iOS build gets the real native API for free.
+
+`capacitor.config.ts`'s `appId` (`com.guessbattery.app`) is a placeholder and must be replaced with a real reverse-DNS identifier before any App Store Connect record is created — it's effectively permanent once submitted.
 
 ### App shell and mode switching (`src/App.tsx`)
 

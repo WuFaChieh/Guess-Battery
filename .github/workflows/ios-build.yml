@@ -1,0 +1,42 @@
+name: iOS Build
+
+# The dev machine is Windows, which can't build or open the Xcode project at
+# all. This workflow is the only place the iOS app actually gets compiled
+# before a real Mac is involved — it catches breakage (e.g. bad Swift
+# Package Manager paths from `cap sync`, missing native deps) on every push.
+# It builds for the Simulator with signing disabled, so no Apple Developer
+# account/certificates are needed just to prove the app builds.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Web build + Capacitor sync
+        run: npm run cap:sync
+
+      - name: Build iOS app (Simulator, unsigned)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build

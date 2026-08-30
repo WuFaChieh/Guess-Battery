@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "cap:sync": "npm run build && cap sync",
+    "postcap:sync": "node scripts/fix-capacitor-spm-paths.mjs",
     "cap:open:ios": "cap open ios"
   },
   "dependencies": {
