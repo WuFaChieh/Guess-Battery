@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "author": "冷月仙",
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
