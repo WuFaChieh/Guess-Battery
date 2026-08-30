@@ -7,7 +7,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        // Manrope first: it has no CJK glyphs, so the browser falls through
+        // to the system stack per-character for Chinese text automatically —
+        // Latin text and numerals (headings, %, scores) get Manrope's more
+        // distinctive geometric shapes, Chinese text is unaffected.
+        sans: ['Manrope', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       colors: {
         battery: {

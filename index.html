@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="冷月仙" />
     <title>猜電量 Guess the Battery | 作者：冷月仙 | 萬物皆有電量，你猜得準嗎？</title>
+    <!-- Manrope covers Latin text and numerals only — it has no CJK glyphs, so
+         Traditional Chinese text falls through to the system sans fallback in
+         tailwind.config.js automatically, per-character. That's deliberate:
+         it's what gives headings/percentages a designed feel without paying
+         for (or shipping) a multi-MB CJK web font. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet" />
     <style>
       /* Hide horizontal scrollbars globally */
       * {

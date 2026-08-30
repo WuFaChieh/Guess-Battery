@@ -145,7 +145,7 @@ const UnifiedBatteryComponent: React.FC<UnifiedBatteryProps> = ({
               <span>{faceExpression}</span>
             </span>
           )}
-          <span className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+          <span className="text-2xl sm:text-4xl font-black text-white tracking-tight tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
             {percentage}%
           </span>
         </div>

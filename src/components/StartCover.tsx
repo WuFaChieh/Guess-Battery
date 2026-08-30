@@ -49,20 +49,16 @@ export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
           </p>
         </div>
 
-        {/* Minimalist Cool START Button (Royal Violet & Indigo Gradient) */}
+        {/* Minimalist Cool START Button (Royal Violet & Indigo Gradient) —
+            glow lives on hover/tap only, not an always-on infinite pulse:
+            a static button that lights up when touched reads as considered,
+            one that never stops pulsing reads as a template default. */}
         <motion.button
           onClick={onStartGame}
-          whileHover={{ scale: 1.04 }}
+          whileHover={{ scale: 1.04, boxShadow: '0 0 28px rgba(147, 51, 234, 0.5)' }}
           whileTap={{ scale: 0.96 }}
-          animate={{
-            boxShadow: [
-              '0 0 0px rgba(147, 51, 234, 0)',
-              '0 0 25px rgba(147, 51, 234, 0.45)',
-              '0 0 0px rgba(147, 51, 234, 0)'
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base sm:text-lg shadow-2xl shadow-purple-950/50 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2.5 mt-2 cursor-pointer border border-violet-400/30"
+          transition={{ duration: 0.2 }}
+          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base sm:text-lg shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2.5 mt-2 cursor-pointer border border-violet-400/30"
         >
           <Play className="w-5 h-5 fill-white text-white" />
           <span>開始遊戲 START</span>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { playTickSound } from '../utils/audio';
-import { Lock, Sparkles, Skull, BatteryWarning, BatteryMedium, Zap, Bomb } from 'lucide-react';
+import { Lock, Sparkles, Skull, BatteryWarning, BatteryMedium, Zap, Bomb, ArrowUp } from 'lucide-react';
 
 interface SliderInputProps {
   value: number;
@@ -15,6 +15,18 @@ interface SliderInputProps {
 // unchanged. Effective only when parents pass stable onChange/onSubmit
 // callbacks (see the useCallback wiring in MutualPkGame/PartyModeGame/
 // SinglePlayerGame).
+// Same charge-level color breakpoints as UnifiedBattery's getColors(), so the
+// slider's filled portion always agrees with the battery gauge sitting right
+// above it, instead of a static rainbow that doesn't track the actual value.
+function getFillColor(val: number): string {
+  if (val >= 80) return '#10b981'; // emerald
+  if (val >= 50) return '#f59e0b'; // amber
+  if (val >= 20) return '#f97316'; // orange
+  return '#f43f5e'; // rose
+}
+
+const TRACK_BG = '#1e293b'; // slate-800, matches the app's card surfaces
+
 const SliderInputComponent: React.FC<SliderInputProps> = ({
   value,
   onChange,
@@ -28,6 +40,11 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
       playTickSound();
       onChange(newVal);
     }
+  };
+
+  const fillColor = getFillColor(value);
+  const trackStyle: React.CSSProperties = {
+    background: `linear-gradient(to right, ${fillColor} 0%, ${fillColor} ${value}%, ${TRACK_BG} ${value}%, ${TRACK_BG} 100%)`
   };
 
   const presets = [
@@ -57,7 +74,8 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
             value={value}
             onChange={handleSliderChange}
             disabled={disabled}
-            className="w-full h-3 bg-gradient-to-r from-rose-600/90 via-amber-500/90 via-emerald-500/90 to-teal-600/90 rounded-full appearance-none cursor-pointer accent-emerald-400 shadow-md touch-action-none z-10"
+            style={trackStyle}
+            className="w-full h-3 rounded-full appearance-none cursor-pointer accent-emerald-400 shadow-md touch-action-none z-10 transition-[background] duration-150"
           />
 
           {/* Ticks under track */}
@@ -87,7 +105,7 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
                   : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
-              <span className={`text-xs ${isSelected ? 'text-emerald-300 font-bold' : 'text-slate-300'}`}>
+              <span className={`text-xs tabular-nums ${isSelected ? 'text-emerald-300 font-bold' : 'text-slate-300'}`}>
                 {p.label}
               </span>
               <p.Icon className={`w-4 h-4 mt-1 ${isSelected ? 'text-emerald-300' : p.iconColor}`} />
@@ -108,9 +126,9 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
           <Sparkles className="w-4 h-4 text-purple-200" />
         </button>
 
-        {/* Doodle caption */}
+        {/* Caption pointing back up at the lock button */}
         <p className="text-xs text-slate-400 font-medium flex items-center gap-1 opacity-80">
-          <span>⤤</span>
+          <ArrowUp className="w-3.5 h-3.5" />
           <span>準備好了就鎖定吧！</span>
         </p>
       </div>
