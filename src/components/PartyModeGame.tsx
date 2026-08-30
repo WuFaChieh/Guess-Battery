@@ -61,9 +61,14 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   // re-renders that don't touch the turn/guess state this actually reads.
   const handleLockTurn = useCallback(() => {
     const q = questions[questionIndex];
-    // Record guess
+    // Record guess. `players[activePlayerIndex]` (and its `.guesses` map) is
+    // rebuilt as a new object here — not mutated in place — so the state
+    // update stays immutable even though the surrounding array is copied.
     const updatedPlayers = [...players];
-    updatedPlayers[activePlayerIndex].guesses[q.id] = currentGuess;
+    updatedPlayers[activePlayerIndex] = {
+      ...updatedPlayers[activePlayerIndex],
+      guesses: { ...updatedPlayers[activePlayerIndex].guesses, [q.id]: currentGuess }
+    };
     setPlayers(updatedPlayers);
 
     if (activePlayerIndex + 1 < players.length) {
@@ -365,7 +370,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           // (silver/bronze), everyone else just gets their placement number.
           let RankIcon: typeof Crown | null = null;
           let rankIconColor = '';
-          let rankText = '';
+          let rankText: string;
           if (isCoChampion) {
             RankIcon = Crown;
             rankIconColor = 'text-slate-950';

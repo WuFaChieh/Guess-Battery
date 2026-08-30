@@ -34,7 +34,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
 
   // Initialize randomized questions pool
   const initGame = (catFilter = selectedCategory) => {
-    let pool: Question[] = [];
+    let pool: Question[];
 
     if (catFilter === 'custom') {
       pool = allQuestions.filter((q) => q.category === 'custom' || q.id.startsWith('custom_'));
