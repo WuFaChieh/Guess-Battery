@@ -7,7 +7,7 @@ import { BottomNav } from './components/BottomNav';
 import { SplashLoader } from './components/SplashLoader';
 import { StartCover } from './components/StartCover';
 import { LoadingState } from './components/LoadingState';
-import { isSoundEnabled, startBgm, unlockAudioContext } from './utils/audio';
+import { getVolume, startBgm, unlockAudioContext } from './utils/audio';
 
 // Each mode is its own chunk — only the one the player actually picks gets
 // downloaded. This keeps heavy, mode-specific dependencies (Supabase
@@ -24,12 +24,12 @@ export function App() {
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [gameSessionId, setGameSessionId] = useState<number>(Date.now());
-  const [soundOn, setSoundOn] = useState<boolean>(true);
+  const [volume, setVolumeState] = useState<number>(1);
   const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
 
   const handlePressStart = () => {
     unlockAudioContext();
-    if (isSoundEnabled()) {
+    if (getVolume() > 0) {
       startBgm();
     }
     setHasStarted(true);
@@ -51,7 +51,7 @@ export function App() {
 
   // Load custom questions & initialize ambient BGM
   useEffect(() => {
-    setSoundOn(isSoundEnabled());
+    setVolumeState(getVolume());
     try {
       const saved = localStorage.getItem('guess_battery_custom_questions');
       if (saved) {
@@ -63,7 +63,7 @@ export function App() {
 
     const handleFirstTouch = () => {
       unlockAudioContext();
-      if (isSoundEnabled()) {
+      if (getVolume() > 0) {
         startBgm();
       }
       window.removeEventListener('pointerdown', handleFirstTouch);
@@ -136,8 +136,8 @@ export function App() {
           <Navbar
             currentMode={currentMode}
             onSelectMode={handleSelectMode}
-            soundOn={soundOn}
-            setSoundOn={setSoundOn}
+            volume={volume}
+            onVolumeChange={setVolumeState}
           />
 
           {/* Main Game Container */}

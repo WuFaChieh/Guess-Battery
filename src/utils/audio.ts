@@ -1,9 +1,26 @@
 // Web Audio API Synthesizer for 100% self-contained retro/party game sound effects & BGM
 
 let audioCtx: AudioContext | null = null;
-let soundEnabled = true;
 let bgmInterval: number | null = null;
 let bgmStep = 0;
+
+// Master volume, 0 (silent) to 1 (full) — replaces the old on/off-only mute
+// toggle so players can actually dial the level instead of just flipping it.
+// 0 doubles as "muted": every effect/BGM note is gated on volume > 0 the same
+// way they used to be gated on the old `soundEnabled` boolean.
+const VOLUME_STORAGE_KEY = 'guess_battery_volume';
+let volume = 1;
+if (typeof window !== 'undefined') {
+  try {
+    const saved = localStorage.getItem(VOLUME_STORAGE_KEY);
+    if (saved !== null) {
+      const parsed = Number(saved);
+      if (!Number.isNaN(parsed)) volume = Math.min(1, Math.max(0, parsed));
+    }
+  } catch {
+    // localStorage unavailable (private browsing, etc.) — default to full volume
+  }
+}
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -27,14 +44,27 @@ export function unlockAudioContext(): void {
 }
 
 export function isSoundEnabled(): boolean {
-  return soundEnabled;
+  return volume > 0;
 }
 
-export function setSoundEnabled(enabled: boolean): void {
-  soundEnabled = enabled;
-  if (!enabled) {
+export function getVolume(): number {
+  return volume;
+}
+
+// Sets the master volume (0 to 1, clamped) and persists it so it survives a
+// reload. Dropping to 0 stops the BGM loop outright rather than leaving it
+// scheduling silent notes; coming back up from 0 resumes it.
+export function setVolume(next: number): void {
+  const wasSilent = volume <= 0;
+  volume = Math.min(1, Math.max(0, next));
+  try {
+    localStorage.setItem(VOLUME_STORAGE_KEY, String(volume));
+  } catch {
+    // ignore — e.g. private browsing / storage disabled
+  }
+  if (volume <= 0) {
     stopBgm();
-  } else {
+  } else if (wasSilent) {
     startBgm();
   }
 }
@@ -52,7 +82,7 @@ export function setSoundEnabled(enabled: boolean): void {
 // Runs `fn` with a live AudioContext, silently no-op'ing when sound is
 // disabled, unsupported, or a node fails to schedule.
 function withAudio(fn: (ctx: AudioContext) => void): void {
-  if (!soundEnabled) return;
+  if (volume <= 0) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -100,12 +130,15 @@ function playTone(ctx: AudioContext, opts: ToneOptions): void {
     }
   }
 
-  gain.gain.setValueAtTime(opts.gainPeak, startTime);
+  // Every gain value is scaled by the master volume here, once, so individual
+  // effect functions below can keep describing their envelope in absolute
+  // terms without each needing to know about the volume setting.
+  gain.gain.setValueAtTime(opts.gainPeak * volume, startTime);
   const gainTargetTime = startTime + opts.gainRampDuration;
   if (opts.gainRampType === 'linear') {
-    gain.gain.linearRampToValueAtTime(opts.gainFloor ?? 0.01, gainTargetTime);
+    gain.gain.linearRampToValueAtTime((opts.gainFloor ?? 0.01) * volume, gainTargetTime);
   } else {
-    gain.gain.exponentialRampToValueAtTime(opts.gainFloor ?? 0.001, gainTargetTime);
+    gain.gain.exponentialRampToValueAtTime((opts.gainFloor ?? 0.001) * volume, gainTargetTime);
   }
 
   osc.connect(gain);
@@ -156,7 +189,7 @@ const BGM_CHORDS = [
 ];
 
 export function startBgm(): void {
-  if (!soundEnabled || bgmInterval !== null) return;
+  if (volume <= 0 || bgmInterval !== null) return;
 
   const ctx = getAudioContext();
   if (!ctx) return;
@@ -164,7 +197,7 @@ export function startBgm(): void {
   bgmStep = 0;
 
   const playBgmStep = () => {
-    if (!soundEnabled) {
+    if (volume <= 0) {
       stopBgm();
       return;
     }
@@ -209,7 +242,7 @@ if (typeof document !== 'undefined') {
     if (document.hidden) {
       wasBgmPlayingBeforeHide = bgmInterval !== null;
       stopBgm();
-    } else if (wasBgmPlayingBeforeHide && soundEnabled) {
+    } else if (wasBgmPlayingBeforeHide && volume > 0) {
       startBgm();
     }
   });
