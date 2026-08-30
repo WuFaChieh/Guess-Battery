@@ -7,8 +7,9 @@ import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
 import { calculateScore, shuffleArray } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound, playVictoryFanfareSound } from '../utils/audio';
+import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
-import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles, Rocket, Medal, BarChart3 } from 'lucide-react';
+import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles, Rocket, Medal, BarChart3, Share2, Check } from 'lucide-react';
 
 interface PartyModeGameProps {
   allQuestions: Question[];
@@ -36,6 +37,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   const [currentGuess, setCurrentGuess] = useState<number>(50);
   const [secretLocked, setSecretLocked] = useState<boolean>(false);
   const [gameState, setGameState] = useState<'turn' | 'reveal' | 'finished'>('turn');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
 
   const startPartyGame = () => {
     const activePlayers: Player[] = Array.from({ length: playerCount }).map((_, i) => ({
@@ -106,6 +108,15 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       confetti({ particleCount: 160, spread: 90, origin: { y: 0.4 } });
       setGameState('finished');
     }
+  };
+
+  const handleShareChampion = async (champions: Player[], maxScore: number, isTie: boolean) => {
+    const names = champions.map((c) => `${c.avatar} ${c.name}`).join('、');
+    const shareText = `🎉【猜電量 Guess the Battery】同螢幕派對模式\n${isTie ? `並列冠軍：${names}` : `冠軍：${names}`}！最高總得分 ${maxScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快找朋友一起來挑戰直覺！`;
+    const outcome = await shareResult(shareText);
+    if (outcome === 'unavailable') return;
+    setShareState(outcome);
+    setTimeout(() => setShareState('idle'), 2500);
   };
 
   // Render Setup Screen
@@ -423,13 +434,23 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         })}
       </div>
 
-      <button
-        onClick={() => setSetupStep(true)}
-        className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-base shadow-xl shadow-cyan-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border border-cyan-400/30"
-      >
-        <RotateCcw className="w-5 h-5" />
-        <span>重新開一局派對</span>
-      </button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          onClick={() => handleShareChampion(champions, maxScore, isTie)}
+          className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
+        >
+          {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
+          <span>{shareState === 'copied' ? '已複製到剪貼簿！' : shareState === 'shared' ? '已開啟分享！' : '分享冠軍戰績'}</span>
+        </button>
+
+        <button
+          onClick={() => setSetupStep(true)}
+          className="py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-black text-base shadow-xl shadow-cyan-500/20 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer border border-cyan-400/30"
+        >
+          <RotateCcw className="w-5 h-5" />
+          <span>重新開一局派對</span>
+        </button>
+      </div>
     </motion.div>
   );
 };

@@ -4,6 +4,7 @@ import { AnswerRecord } from '../types/game';
 import { getBadgeForScore } from '../utils/gameLogic';
 import { playChargingSound, playScoreSound } from '../utils/audio';
 import { UnifiedBattery } from './UnifiedBattery';
+import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
 import { RotateCcw, Share2, Check, Sparkles, Zap, Plug, ClipboardList } from 'lucide-react';
 
@@ -18,7 +19,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   onRestart,
   gameModeName = '經典速刷'
 }) => {
-  const [copied, setCopied] = useState(false);
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
   const [chargingProgress, setChargingProgress] = useState(0);
   const [isCharging, setIsCharging] = useState(true);
 
@@ -74,11 +75,12 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
     return () => clearInterval(timer);
   }, [avgScore]);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const shareText = `🔋【猜電量 Guess the Battery】\n我在《${gameModeName}》中獲得了 ${totalScore} 分（平均精準度 ${avgScore}%）！\n獲得榮譽稱號：${badge.title} ${badge.emoji}\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！`;
-    navigator.clipboard.writeText(shareText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    const outcome = await shareResult(shareText);
+    if (outcome === 'unavailable') return;
+    setShareState(outcome);
+    setTimeout(() => setShareState('idle'), 2500);
   };
 
   return (
@@ -186,8 +188,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
               onClick={handleShare}
               className="py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-slate-700"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
-              <span>{copied ? '成績已複製到剪貼簿！' : '分享成績戰報'}</span>
+              {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
+              <span>{shareState === 'copied' ? '成績已複製到剪貼簿！' : shareState === 'shared' ? '已開啟分享！' : '分享成績戰報'}</span>
             </button>
 
             <button

@@ -27,3 +27,12 @@ dist-isolation
 *.njsproj
 *.sln
 *.sw?
+
+# iOS native project (Capacitor) — the Xcode project itself is committed,
+# but these are per-machine/per-user build artifacts, not source.
+ios/App/Pods
+ios/App/build
+ios/App/DerivedData
+ios/**/xcuserdata
+ios/**/*.xcuserstate
+ios/App/App/public

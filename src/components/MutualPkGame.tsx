@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame, Crown, Globe } from 'lucide-react';
+import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame, Crown, Globe, Share2, Check } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_QUESTIONS } from '../utils/humanAiDeck';
 import { getBotGuess, BotDifficulty, PlayerProfile } from '../utils/aiBots';
@@ -10,6 +10,7 @@ import { calculateScore } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
 import { playChargingSound, playTickSound, playMatchFoundSound, playQuestionSubmitSound, playVictoryFanfareSound, playDefeatSound } from '../utils/audio';
+import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
 
 type PkStage = 'lobby' | 'matching' | 'matched' | 'creating' | 'guessing_opponent_q' | 'opponent_guessing' | 'revealing' | 'revealed';
@@ -132,6 +133,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [animatedPlayerBattery, setAnimatedPlayerBattery] = useState(0);
   const [animatedOpponentBattery, setAnimatedOpponentBattery] = useState(0);
   const [isChargingFinished, setIsChargingFinished] = useState(false);
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
 
   // Fetch real device battery
   useEffect(() => {
@@ -313,6 +315,15 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   };
 
   const isPlayerWinner = playerScore >= opponentScore;
+
+  const handleShareResult = async () => {
+    if (!opponent) return;
+    const shareText = `⚔️【猜電量 Guess the Battery】1v1 PK 對決\n我${isPlayerWinner ? '獲勝了' : '惜敗了'}！得分 ${playerScore} 分（差距 ${playerGap}%）vs 對手 ${opponent.name} ${opponentScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！`;
+    const outcome = await shareResult(shareText);
+    if (outcome === 'unavailable') return;
+    setShareState(outcome);
+    setTimeout(() => setShareState('idle'), 2500);
+  };
 
   return (
     <div className="w-full max-w-lg mx-auto bg-slate-900/95 p-5 sm:p-7 rounded-3xl border border-rose-500/30 shadow-2xl flex flex-col items-center text-center gap-5 relative overflow-hidden my-2 select-none">
@@ -674,15 +685,25 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             </motion.div>
           </div>
 
-          {/* Action Button */}
+          {/* Action Buttons */}
           {stage === 'revealed' && (
-            <button
-              onClick={resetGame}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30 relative z-20"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>再配對對決一局！</span>
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full relative z-20">
+              <button
+                onClick={handleShareResult}
+                className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
+              >
+                {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
+                <span>{shareState === 'copied' ? '已複製到剪貼簿！' : shareState === 'shared' ? '已開啟分享！' : '分享對戰結果'}</span>
+              </button>
+
+              <button
+                onClick={resetGame}
+                className="py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>再配對對決一局！</span>
+              </button>
+            </div>
           )}
         </motion.div>
       )}
