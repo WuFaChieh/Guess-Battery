@@ -4,6 +4,8 @@
 // read/write wraps around, so the actual streak math is unit-testable without
 // mocking storage.
 
+import { getLocalDateString } from './date';
+
 export interface DailyStreakState {
   lastCompletedDate: string | null; // YYYY-MM-DD
   currentStreak: number;
@@ -47,7 +49,7 @@ export function getDailyStreak(): DailyStreakState {
 
 // Call once when the player finishes today's Daily Challenge. Safe to call
 // more than once on the same day (e.g. replaying) — see computeNextStreak.
-export function recordDailyCompletion(todayStr: string = new Date().toISOString().slice(0, 10)): DailyStreakState {
+export function recordDailyCompletion(todayStr: string = getLocalDateString()): DailyStreakState {
   const next = computeNextStreak(getDailyStreak(), todayStr);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -57,6 +59,6 @@ export function recordDailyCompletion(todayStr: string = new Date().toISOString(
   return next;
 }
 
-export function hasPlayedToday(todayStr: string = new Date().toISOString().slice(0, 10)): boolean {
+export function hasPlayedToday(todayStr: string = getLocalDateString()): boolean {
   return getDailyStreak().lastCompletedDate === todayStr;
 }

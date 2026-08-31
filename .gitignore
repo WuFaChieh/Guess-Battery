@@ -12,11 +12,6 @@ dist
 dist-isolation
 *.local
 
-# Standalone Node 22 runtime (unzipped, not installed) used as a local
-# workaround for the Node-24-vs-Rollup-native-addon build crash on this
-# Windows dev machine — see CLAUDE.md Known issues. Per-machine, not source.
-.tools/
-
 # Environment variables — contains Supabase keys / webhook URLs, never commit
 .env
 .env.*
