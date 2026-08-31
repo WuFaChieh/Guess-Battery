@@ -60,6 +60,20 @@ function generateRoomId(): string {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// Is `self` the newer of the two rows? Used to decide which side of a pair
+// attempts the claim below — see the comment there. Two rows landing with
+// the *identical* created_at (confirmed to happen in practice: Postgres's
+// now() resolution can tie for requests that arrive close enough together)
+// would make a plain `<` comparison false on both sides, so neither side
+// ever claims and both sit waiting until the timeout. `id` (a uuid, unique
+// per row) breaks the tie the same way on both sides — whichever side's own
+// id compares greater considers itself newer — since both sides are
+// comparing the same two ids, exactly one of them wins.
+function isNewer(self: Pick<QueueRow, 'id' | 'created_at'>, other: Pick<QueueRow, 'id' | 'created_at'>): boolean {
+  if (self.created_at !== other.created_at) return self.created_at > other.created_at;
+  return self.id > other.id;
+}
+
 /**
  * Creates a local bot opponent + room. Used both as the matchmaking timeout
  * fallback and as the immediate fallback when Supabase isn't reachable.
@@ -177,11 +191,12 @@ export function startMatchmaking(
       // so a same-row `.eq('status','searching')` guard alone can't catch
       // it: both claims target different rows and so both can succeed,
       // leaving the two sides matched into two different, mutually
-      // unreachable rooms. `created_at` is a real, server-assigned
-      // timestamp both sides already have (from their own insert and from
-      // this query) and agree on, so exactly one side of any pair ever sees
-      // itself as "newer" — that side claims; the other only ever listens.
-      if (opponentRow && opponentRow.created_at < inserted.created_at) {
+      // unreachable rooms. `created_at`/`id` are real, server-assigned
+      // values both sides already have (from their own insert and from this
+      // query) and agree on, so exactly one side of any pair ever sees
+      // itself as "newer" (see isNewer's tie-break) — that side claims; the
+      // other only ever listens.
+      if (opponentRow && isNewer(inserted, opponentRow)) {
         const roomId = generateRoomId();
         const claimOpponent: QueueMatchUpdate = { status: 'matched', matched_with: queueEntryId, room_id: roomId };
         const { data: claimedOpponent } = await client
