@@ -1,7 +1,9 @@
 // Fallback AI bot used when PK matchmaking can't find a real opponent in time.
-// See utils/matchmaking.ts for where this plugs in (spawnBotMatch), and
-// utils/humanAiDeck.ts for the separate "looks like a real player" bot deck
-// used inside an already-started 1v1 match.
+// See utils/matchmaking.ts for where this plugs in (spawnBotMatch). This file
+// owns bot *identity* (name/avatar, getBotProfile) and *guessing* behavior
+// (getBotGuess) for the whole PK flow; utils/humanAiDeck.ts only supplies the
+// fallback opponent *question* content used inside an already-started match —
+// it does not have its own identity/guessing logic.
 
 import {
   BotDifficulty,

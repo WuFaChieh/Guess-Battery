@@ -1,18 +1,10 @@
-export interface HumanBotProfile {
-  name: string;
-  avatar: string;
-  accuracyTier: 'accurate' | 'balanced' | 'wild';
-}
-
-export const HUMAN_BOT_PROFILES: HumanBotProfile[] = [
-  { name: '小哲', avatar: '👦', accuracyTier: 'balanced' },
-  { name: '咪咪', avatar: '👧', accuracyTier: 'accurate' },
-  { name: '阿傑', avatar: '👨', accuracyTier: 'balanced' },
-  { name: '圓圓', avatar: '👩', accuracyTier: 'wild' },
-  { name: '亮亮', avatar: '🧑', accuracyTier: 'accurate' },
-  { name: '小羽', avatar: '👧', accuracyTier: 'wild' }
-];
-
+// Fallback question deck for PK mode's "opponent question" — used both for
+// an actual bot match and as the real-match opponent-question timeout (see
+// MutualPkGame.tsx's fabricateOpponentQuestion). Deliberately just question
+// content: bot *identity* (name/avatar) comes from aiBots.ts's
+// getBotProfile(), and the opponent's *guess* is always synthesized by
+// aiBots.ts's getBotGuess() — this file has no say in either, so there is
+// exactly one bot-identity/guessing system (aiBots.ts), not two.
 export const HUMAN_BOT_QUESTIONS = [
   { title: '猜猜我剛打完 2 小時傳說對決手機剩幾 % 電？', battery: 32, exp: '打了四局大戰，電量狂掉！' },
   { title: '剛吃完大份滿漢大餐牛肉麵的滿意電量？', battery: 94, exp: '湯頭濃郁肉超大塊，滿意度爆表！' },
@@ -27,16 +19,3 @@ export const HUMAN_BOT_QUESTIONS = [
   { title: '考試前 1 分鐘發現答案卡劃錯一格的絕望電量？', battery: 0, exp: '系統崩潰歸零！' },
   { title: '吹著冷氣蓋厚棉被睡覺的無敵幸福電量？', battery: 100, exp: '極致舒適被窩溫感！' }
 ];
-
-// Generate bot guess with realistic human-like variance
-export function generateHumanBotGuess(targetBattery: number, tier: 'accurate' | 'balanced' | 'wild'): number {
-  let maxError = 12;
-  if (tier === 'accurate') maxError = 6;
-  if (tier === 'wild') maxError = 22;
-
-  const error = Math.floor(Math.random() * maxError);
-  const sign = Math.random() > 0.5 ? 1 : -1;
-  const guess = targetBattery + sign * error;
-
-  return Math.min(100, Math.max(0, guess));
-}

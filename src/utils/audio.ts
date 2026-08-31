@@ -361,6 +361,24 @@ export function playPerfectFanfare(): void {
   });
 }
 
+// Quick bright square-wave sting layered after playScoreSound when a combo
+// bonus lands (single_5/daily only — see getComboBonus in gameLogic.ts).
+// Deliberately its own timbre/shape rather than reusing playMatchFoundSound
+// (that one's sawtooth "match found" sting is PK-matchmaking-specific), so a
+// combo doesn't borrow PK mode's sound identity.
+export function playComboSound(): void {
+  withAudio((ctx) => {
+    playNoteSequence(ctx, {
+      type: 'square',
+      notes: [659.25, 987.77], // E5, B5 — quick rising two-note sting
+      noteSpacing: 0.07,
+      gainPeak: 0.14,
+      gainRampDuration: 0.15,
+      stopDuration: 0.18
+    });
+  });
+}
+
 // ---------------------------------------------------------------------
 // ⚔️ Dedicated 1v1 PK Sound Effects
 // ---------------------------------------------------------------------
