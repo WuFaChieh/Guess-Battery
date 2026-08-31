@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Question, AnswerRecord } from '../types/game';
 import { getDailyQuestions, calculateScore, getCurrentCombo, getDailyShareText } from '../utils/gameLogic';
 import { getDailyStreak, recordDailyCompletion, type DailyStreakState } from '../utils/dailyStreak';
+import { getLocalDateString } from '../utils/date';
 import { QuestionCard } from './QuestionCard';
 import { BatteryGauge } from './BatteryGauge';
 import { SliderInput } from './SliderInput';
@@ -16,7 +17,7 @@ interface DailyGameProps {
 }
 
 export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalDateString();
   const [dailyQuestions, setDailyQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [currentGuess, setCurrentGuess] = useState<number>(50);

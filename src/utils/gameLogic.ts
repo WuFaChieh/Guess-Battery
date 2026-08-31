@@ -1,5 +1,6 @@
 import { LucideIcon, Trophy, Zap, BatteryCharging, Target, ThumbsUp, HelpCircle, BatteryWarning, Bomb } from 'lucide-react';
 import { TitleBadge, Question, AnswerRecord } from '../types/game';
+import { getLocalDateString } from './date';
 
 export function calculateScore(userGuess: number, officialBattery: number): { distance: number; score: number } {
   const distance = Math.abs(userGuess - officialBattery);
@@ -163,7 +164,7 @@ export function shuffleArray<T>(array: T[], random: () => number = Math.random):
 
 // Seeded pseudorandom string hash for Daily Challenge consistency
 export function getDailySeed(dateStr?: string): number {
-  const d = dateStr || new Date().toISOString().slice(0, 10);
+  const d = dateStr || getLocalDateString();
   let hash = 0;
   for (let i = 0; i < d.length; i++) {
     const char = d.charCodeAt(i);
