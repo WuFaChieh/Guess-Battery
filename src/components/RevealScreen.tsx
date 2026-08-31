@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Question } from '../types/game';
 import { BatteryGauge } from './BatteryGauge';
 import { calculateScore, getCommentary, getCommentaryIcon, getComboBonus } from '../utils/gameLogic';
-import { playRevealSound, playScoreSound, playMatchFoundSound } from '../utils/audio';
+import { playRevealSound, playScoreSound, playComboSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { ArrowRight, Trophy, Lightbulb, Flame } from 'lucide-react';
 
@@ -36,7 +36,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
         // A dedicated sting for the combo bonus itself, layered after the
         // regular score sound, so a combo reads as its own little event
         // instead of blending into the normal reveal.
-        playMatchFoundSound();
+        playComboSound();
       }
       if (score >= 90) {
         confetti({
