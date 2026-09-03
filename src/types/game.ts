@@ -1,4 +1,4 @@
-export type QuestionCategory = 'absurd' | 'math' | 'custom';
+export type QuestionCategory = 'calculus' | 'geometry' | 'algebra' | 'mechanics' | 'economics' | 'finance' | 'custom';
 
 export interface Question {
   id: string;
@@ -7,6 +7,13 @@ export interface Question {
   explanation: string;
   category: QuestionCategory;
   emoji: string;
+  // English translations of title/explanation — present on every built-in
+  // question (src/data/questions.ts), absent on user-authored custom
+  // questions (there's no way to auto-translate what a player typed, so an
+  // English session just falls back to showing their original text — see
+  // getLocalizedQuestionText() in utils/gameLogic.ts).
+  titleEn?: string;
+  explanationEn?: string;
 }
 
 export type GameMode = 'single_5' | 'mutual_pk' | 'party' | 'custom' | 'daily';
@@ -41,6 +48,9 @@ export interface PartyRoundResult {
 }
 
 export interface TitleBadge {
+  /** Stable key for looking up this badge's localized title/description —
+   * see badge_<id>_title / badge_<id>_desc in src/i18n/translations.ts. */
+  id: string;
   title: string;
   minAvgScore: number;
   emoji: string;

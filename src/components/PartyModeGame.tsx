@@ -5,11 +5,12 @@ import { QuestionCard } from './QuestionCard';
 import { BatteryGauge } from './BatteryGauge';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
-import { calculateScore, shuffleArray } from '../utils/gameLogic';
+import { calculateScore, shuffleArray, getLocalizedQuestionText } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound, playVictoryFanfareSound } from '../utils/audio';
 import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
 import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles, Rocket, Medal, BarChart3, Share2, Check } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface PartyModeGameProps {
   allQuestions: Question[];
@@ -25,9 +26,12 @@ const PLAYER_COLORS = [
 const PLAYER_AVATARS = ['🐱', '🐶', '🦊', '🐼'];
 
 export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) => {
+  const { lang, t } = useLanguage();
   const [setupStep, setSetupStep] = useState<boolean>(true);
   const [playerCount, setPlayerCount] = useState<number>(3);
-  const [playerNames, setPlayerNames] = useState<string[]>(['玩家 A', '玩家 B', '玩家 C', '玩家 D']);
+  const [playerNames, setPlayerNames] = useState<string[]>(() =>
+    [1, 2, 3, 4].map((n) => t('party_player_name_default', { n }))
+  );
 
   // Game state
   const [players, setPlayers] = useState<Player[]>([]);
@@ -42,7 +46,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   const startPartyGame = () => {
     const activePlayers: Player[] = Array.from({ length: playerCount }).map((_, i) => ({
       id: `p_${i}`,
-      name: playerNames[i] || `玩家 ${i + 1}`,
+      name: playerNames[i] || t('party_player_name_default', { n: i + 1 }),
       avatar: PLAYER_AVATARS[i % PLAYER_AVATARS.length],
       color: PLAYER_COLORS[i % PLAYER_COLORS.length],
       totalScore: 0,
@@ -111,8 +115,9 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   };
 
   const handleShareChampion = async (champions: Player[], maxScore: number, isTie: boolean) => {
-    const names = champions.map((c) => `${c.avatar} ${c.name}`).join('、');
-    const shareText = `🎉【猜電量 Guess the Battery】同螢幕派對模式\n${isTie ? `並列冠軍：${names}` : `冠軍：${names}`}！最高總得分 ${maxScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快找朋友一起來挑戰直覺！`;
+    const names = champions.map((c) => `${c.avatar} ${c.name}`).join(lang === 'en' ? ', ' : '、');
+    const result = isTie ? t('share_party_tie', { names }) : t('share_party_champions', { names });
+    const shareText = t('share_party_text', { result, maxScore });
     const outcome = await shareResult(shareText);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
@@ -127,14 +132,14 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           <div className="inline-flex p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 text-cyan-400 mb-2">
             <Users className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-black text-white">同螢幕派對模式</h2>
-          <p className="text-xs text-slate-400 mt-1">2 ~ 4 人共用同一台手機/電腦秘密輪流猜電量！</p>
+          <h2 className="text-2xl font-black text-white">{t('party_setup_title')}</h2>
+          <p className="text-xs text-slate-400 mt-1">{t('party_setup_subtitle')}</p>
         </div>
 
         {/* Player Count Picker */}
         <div>
           <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-            選擇玩家人數
+            {t('party_choose_count')}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[2, 3, 4].map((count) => (
@@ -147,7 +152,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
-                {count} 人對決
+                {t('party_count_option', { n: count })}
               </button>
             ))}
           </div>
@@ -156,7 +161,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         {/* Custom Player Names */}
         <div className="flex flex-col gap-3">
           <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-            輸入玩家暱稱
+            {t('party_enter_names')}
           </label>
           {Array.from({ length: playerCount }).map((_, idx) => (
             <div key={idx} className="flex items-center gap-2">
@@ -169,7 +174,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
                   updated[idx] = e.target.value;
                   setPlayerNames(updated);
                 }}
-                placeholder={`玩家 ${idx + 1}`}
+                placeholder={t('party_player_name_default', { n: idx + 1 })}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
@@ -181,7 +186,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-lg shadow-lg shadow-purple-950/50 hover:brightness-110 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer border border-violet-400/30"
         >
           <Rocket className="w-5 h-5" />
-          <span>開始派對對決</span>
+          <span>{t('party_start_button')}</span>
         </button>
       </div>
     );
@@ -203,7 +208,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         {!secretLocked ? (
           <div className="w-full max-w-lg bg-slate-900/90 p-6 rounded-3xl border border-slate-800 text-center flex flex-col items-center gap-4 my-2">
             <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 inline-flex items-center gap-1">
-              <Users className="w-3.5 h-3.5" /> 輪到玩家下注
+              <Users className="w-3.5 h-3.5" /> {t('party_turn_badge')}
             </span>
 
             <div className="flex items-center gap-3 my-1">
@@ -212,7 +217,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
             </div>
 
             <p className="text-xs text-slate-400">
-              請把螢幕遞給 <strong className="text-cyan-300">{activeP.name}</strong>！請其他玩家不要偷看喔！
+              {t('party_pass_device', { name: activeP.name })}
             </p>
 
             <button
@@ -220,24 +225,24 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
               className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-base transition-all flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 cursor-pointer"
             >
               <EyeOff className="w-5 h-5" />
-              <span>我準備好了，秘密輸入電量</span>
+              <span>{t('party_ready_button')}</span>
             </button>
           </div>
         ) : (
           <div className="w-full flex flex-col items-center">
             <div className="text-center mb-2">
               <span className="text-xs font-bold text-cyan-400">
-                正在秘密輸入中：{activeP.avatar} {activeP.name}
+                {t('party_entering_secretly', { avatar: activeP.avatar, name: activeP.name })}
               </span>
             </div>
 
-            <BatteryGauge value={currentGuess} label={`${activeP.name} 的猜測`} size="lg" />
+            <BatteryGauge value={currentGuess} label={t('party_guess_label', { name: activeP.name })} size="lg" />
 
             <SliderInput
               value={currentGuess}
               onChange={setCurrentGuess}
               onSubmit={handleLockTurn}
-              submitLabel={`鎖定 ${activeP.name} 的答案`}
+              submitLabel={t('party_lock_button', { name: activeP.name })}
             />
           </div>
         )}
@@ -247,6 +252,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
   // Render Round Reveal
   if (gameState === 'reveal') {
+    const { title: currentQTitle, explanation: currentQExplanation } = getLocalizedQuestionText(currentQ, lang);
     const sortedRoundResults = [...players]
       .map((p) => {
         const guess = p.guesses[currentQ.id];
@@ -259,15 +265,15 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
       <div className="w-full max-w-2xl mx-auto bg-slate-900/95 p-6 md:p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col gap-6 text-center select-none">
         <div>
           <span className="text-xs font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20 inline-flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" /> 本題公開揭曉
+            <Sparkles className="w-3.5 h-3.5" /> {t('party_reveal_badge')}
           </span>
-          <h3 className="text-xl font-black text-white mt-2">{currentQ.title}</h3>
+          <h3 className="text-xl font-black text-white mt-2">{currentQTitle}</h3>
         </div>
 
         {/* Official Answer Banner */}
         <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col items-center">
-          <BatteryGauge value={currentQ.officialBattery} label="官方正確答案" size="md" />
-          <p className="text-xs text-slate-300 mt-1 max-w-md">{currentQ.explanation}</p>
+          <BatteryGauge value={currentQ.officialBattery} label={t('party_official_answer_label')} size="md" />
+          <p className="text-xs text-slate-300 mt-1 max-w-md">{currentQExplanation}</p>
         </div>
 
         {/* Players Guess Grid */}
@@ -287,12 +293,12 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
                 <div>
                   <h4 className="font-bold text-sm text-white">{res.player.name}</h4>
                   <span className="text-xs text-slate-400">
-                    猜 <strong className="text-white">{res.guess}%</strong> (差 {res.distance}%)
+                    {t('party_guess_distance', { guess: res.guess, distance: res.distance })}
                   </span>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-xs text-slate-500 block">本題得分</span>
+                <span className="text-xs text-slate-500 block">{t('party_round_score')}</span>
                 <span className="font-black text-emerald-400 text-lg">+{res.score}</span>
               </div>
             </div>
@@ -304,7 +310,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           onClick={handleNextRound}
           className="w-full py-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-lg shadow-lg shadow-purple-950/50 hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
         >
-          <span>{questionIndex === questions.length - 1 ? '派對總冠軍統計' : '進入下一題'}</span>
+          <span>{questionIndex === questions.length - 1 ? t('party_final_stats_button') : t('party_next_round_button')}</span>
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>
@@ -329,12 +335,12 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
 
       <div>
         <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-widest inline-flex items-center gap-1">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> 同螢幕派對總決算
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {t('party_final_badge')}
         </span>
         <h2 className="text-3xl font-black text-white tracking-tight mt-2">
-          {isTie ? '勢均力敵 · 並列總冠軍！' : '派對電量總冠軍登場！'}
+          {isTie ? t('party_tie_title') : t('party_champion_title')}
         </h2>
-        <p className="text-xs text-slate-400 mt-1">經歷了 5 題極致荒謬電量考驗</p>
+        <p className="text-xs text-slate-400 mt-1">{t('party_final_subtitle')}</p>
       </div>
 
       {/* Champion Podium Card (Supports Single Champion or Parallel Co-Champions) */}
@@ -363,15 +369,15 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
         </div>
 
         <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-amber-500/30 mt-1">
-          <span className="text-xs text-slate-400">{isTie ? '並列最高總得分：' : '總得分：'}</span>
-          <strong className="text-xl font-black text-emerald-400 ml-1">{maxScore} 分</strong>
+          <span className="text-xs text-slate-400">{isTie ? t('party_tied_top_score') : t('party_top_score')}</span>
+          <strong className="text-xl font-black text-emerald-400 ml-1">{t('party_score_points', { n: maxScore })}</strong>
         </div>
       </motion.div>
 
       {/* Full Leaderboard List */}
       <div className="flex flex-col gap-2.5">
         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-left pl-1 flex items-center gap-1">
-          <BarChart3 className="w-3.5 h-3.5" /> 派對玩家總排名 (Leaderboard)
+          <BarChart3 className="w-3.5 h-3.5" /> {t('party_leaderboard_heading')}
         </h4>
 
         {sortedFinalPlayers.map((p, idx) => {
@@ -385,7 +391,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           if (isCoChampion) {
             RankIcon = Crown;
             rankIconColor = 'text-slate-950';
-            rankText = '並列冠軍';
+            rankText = t('party_rank_co_champion');
           } else {
             // Find rank among non-champions
             const championCount = champions.length;
@@ -393,11 +399,11 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
             if (nonChampRank === 2) {
               RankIcon = Medal;
               rankIconColor = 'text-slate-300';
-              rankText = '亞軍';
+              rankText = t('party_rank_runner_up');
             } else if (nonChampRank === 3) {
               RankIcon = Medal;
               rankIconColor = 'text-amber-700';
-              rankText = '季軍';
+              rankText = t('party_rank_third');
             } else {
               rankText = `#${idx + 1}`;
             }
@@ -422,12 +428,12 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
                 <span className="text-2xl">{p.avatar}</span>
                 <div className="text-left">
                   <span className="font-bold text-sm text-white block">{p.name}</span>
-                  <span className="text-[11px] text-slate-400">平均精準度 {avgScore}%</span>
+                  <span className="text-[11px] text-slate-400">{t('party_avg_accuracy', { n: avgScore })}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="font-black text-emerald-400 text-base min-w-[55px] text-right">{p.totalScore} 分</span>
+                <span className="font-black text-emerald-400 text-base min-w-[55px] text-right">{t('party_score_points', { n: p.totalScore })}</span>
               </div>
             </div>
           );
@@ -440,7 +446,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
         >
           {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
-          <span>{shareState === 'copied' ? '已複製到剪貼簿！' : shareState === 'shared' ? '已開啟分享！' : '分享冠軍戰績'}</span>
+          <span>{shareState === 'copied' ? t('share_copied') : shareState === 'shared' ? t('share_shared') : t('party_share_button')}</span>
         </button>
 
         <button
@@ -448,7 +454,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           className="py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base shadow-xl shadow-purple-950/50 hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
         >
           <RotateCcw className="w-5 h-5" />
-          <span>重新開一局派對</span>
+          <span>{t('party_restart_button')}</span>
         </button>
       </div>
     </motion.div>

@@ -8,12 +8,13 @@ import { startMatchmaking, MatchRoomData } from '../utils/matchmaking';
 import { joinPkRoom, PkRoomConnection, PkRoomEvent } from '../utils/pkRoomChannel';
 import { PK_OPPONENT_QUESTION_TIMEOUT_MS, PK_OPPONENT_GUESS_TIMEOUT_MS } from '../constants/gameConfig';
 import { getDeviceBattery, DeviceBatteryInfo } from '../utils/deviceBattery';
-import { calculateScore } from '../utils/gameLogic';
+import { calculateScore, getLocalizedQuestionText } from '../utils/gameLogic';
 import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
 import { playChargingSound, playTickSound, playMatchFoundSound, playQuestionSubmitSound, playVictoryFanfareSound, playDefeatSound } from '../utils/audio';
 import { shareResult } from '../utils/share';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../i18n/LanguageContext';
 
 type PkStage =
   | 'lobby'
@@ -68,6 +69,7 @@ function getOrCreateGuestName(): string {
 }
 
 export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
+  const { lang, t } = useLanguage();
   const [stage, setStage] = useState<PkStage>('lobby');
 
   // Player Profile
@@ -202,8 +204,10 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
     setOpponentQuestion({
       id: `opp_q_${Date.now()}`,
       title: qTemplate.title,
+      titleEn: qTemplate.titleEn,
       officialBattery: qTemplate.battery,
       explanation: qTemplate.exp,
+      explanationEn: qTemplate.expEn,
       category: 'custom',
       emoji: avatar
     });
@@ -245,6 +249,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             title: event.title,
             officialBattery: event.officialBattery,
             explanation: '由對手即時出題，一起揭曉才知道答案！',
+            explanationEn: t('pk_real_opponent_explanation'),
             category: 'custom',
             emoji: roomData.opponent.avatar
           });
@@ -304,13 +309,13 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
     // Guard against a stray double-invocation leaving two searches running.
     matchCancelRef.current?.();
-    matchCancelRef.current = startMatchmaking(guestIdRef.current, guestNameRef.current, handleMatched);
+    matchCancelRef.current = startMatchmaking(guestIdRef.current, guestNameRef.current, handleMatched, lang);
   };
 
   // Confirm Player's Question & proceed to guess opponent's question
   const handleConfirmQuestion = () => {
     if (!playerTitle.trim()) {
-      alert('請輸入考對手的題目名稱！');
+      alert(t('pk_alert_no_title'));
       return;
     }
     playQuestionSubmitSound(); // 🚀 Satisfying pitch-sweep whoosh sound!
@@ -477,7 +482,13 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
   const handleShareResult = async () => {
     if (!opponent) return;
-    const shareText = `⚔️【猜電量 Guess the Battery】1v1 PK 對決\n我${isPlayerWinner ? '獲勝了' : '惜敗了'}！得分 ${playerScore} 分（差距 ${playerGap}%）vs 對手 ${opponent.name} ${opponentScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！`;
+    const shareText = t('share_pk_text', {
+      result: isPlayerWinner ? t('share_pk_win') : t('share_pk_lose'),
+      score: playerScore,
+      gap: playerGap,
+      opponentName: opponent.name,
+      opponentScore
+    });
     const outcome = await shareResult(shareText);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
@@ -498,13 +509,13 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
           <div>
             <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20 uppercase tracking-widest inline-flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5" /> 即時連線一戰定勝負
+              <Zap className="w-3.5 h-3.5" /> {t('pk_lobby_badge')}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight">
-              1v1 互相出題 PK 戰
+              {t('pk_lobby_title')}
             </h2>
             <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-              即時搜尋線上玩家對決！雙方互相編寫一道題目考對方，儀式感揭曉一戰定勝負！
+              {t('pk_lobby_subtitle')}
             </p>
           </div>
 
@@ -513,7 +524,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base sm:text-lg shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30 mt-2"
           >
             <Swords className="w-5 h-5" />
-            <span>開始配對 PK (MATCH)</span>
+            <span>{t('pk_start_matchmaking')}</span>
           </button>
         </div>
       )}
@@ -528,9 +539,9 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             </div>
           </div>
           <div>
-            <h3 className="text-xl font-black text-white">正在尋找線上玩家...</h3>
+            <h3 className="text-xl font-black text-white">{t('pk_matching_title')}</h3>
             <p className="text-xs text-slate-400 mt-1 animate-pulse">
-              大腦波段匹配中，準備即時連線對決...
+              {t('pk_matching_subtitle')}
             </p>
           </div>
         </div>
@@ -553,7 +564,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             className="text-xs font-black text-rose-300 bg-rose-950/90 px-4 py-1.5 rounded-full border border-rose-500/50 uppercase tracking-widest inline-flex items-center gap-1.5 shadow-[0_0_20px_rgba(244,63,94,0.6)] z-10"
           >
             <Flame className="w-4 h-4 text-rose-400 animate-bounce" />
-            <span>電量生死對決 · 即時配對成功！</span>
+            <span>{t('pk_matched_badge')}</span>
           </motion.span>
 
           {/* Crossed Blades Metallic Slash Animation */}
@@ -575,7 +586,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               className="flex flex-col items-center gap-1.5 p-3 bg-slate-950/80 rounded-2xl border border-slate-800 shadow-xl min-w-[90px]"
             >
               <span className="text-4xl filter drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]">{playerAvatar}</span>
-              <span className="text-xs font-black text-white">你</span>
+              <span className="text-xs font-black text-white">{t('pk_you')}</span>
             </motion.div>
 
             <motion.span
@@ -598,12 +609,12 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                   is used elsewhere for internal pacing/difficulty only and
                   should never surface a "this is a bot" tell in the UI. */}
               <span className="text-[9px] font-bold text-emerald-400 flex items-center gap-1">
-                <Globe className="w-2.5 h-2.5" /> 配對成功
+                <Globe className="w-2.5 h-2.5" /> {t('pk_matched_success')}
               </span>
             </motion.div>
           </div>
 
-          <p className="text-xs text-slate-400 font-bold animate-pulse z-10">準備進入互相出題對決...</p>
+          <p className="text-xs text-slate-400 font-bold animate-pulse z-10">{t('pk_matched_ready')}</p>
         </motion.div>
       )}
 
@@ -615,16 +626,16 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             <div className="flex items-center gap-2.5">
               <span className="text-2xl">{opponent.avatar}</span>
               <div>
-                <h4 className="text-xs font-bold text-white">對手：{opponent.name}</h4>
+                <h4 className="text-xs font-bold text-white">{t('pk_opponent_label', { name: opponent.name })}</h4>
                 {!opponentReady ? (
                   <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1.5 mt-0.5">
                     <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                    對手正在認真思考並撰寫題目中...
+                    {t('pk_opponent_writing')}
                   </span>
                 ) : (
                   <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    對手已完成題目輸入！
+                    {t('pk_opponent_written')}
                   </span>
                 )}
               </div>
@@ -633,16 +644,16 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
           <div className="bg-slate-950 p-4 rounded-2xl border border-rose-500/30 flex flex-col gap-3">
             <h3 className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1">
-              <Send className="w-4 h-4" /> 第一步：請寫下考倒 {opponent.name} 的題目
+              <Send className="w-4 h-4" /> {t('pk_step1_heading', { name: opponent.name })}
             </h3>
 
             <div>
-              <label className="text-xs font-bold text-slate-400 block mb-1">題目名稱</label>
+              <label className="text-xs font-bold text-slate-400 block mb-1">{t('pk_question_title_label')}</label>
               <input
                 type="text"
                 value={playerTitle}
                 onChange={(e) => setPlayerTitle(e.target.value)}
-                placeholder="例如：猜猜我手機剛打完遊戲剩幾 % 電？"
+                placeholder={t('pk_question_title_placeholder')}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
               />
             </div>
@@ -650,7 +661,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             {/* Slider for Question Answer */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-bold text-slate-400">題目官方答案電量</label>
+                <label className="text-xs font-bold text-slate-400">{t('pk_question_battery_label')}</label>
                 <span className="text-xs font-black text-rose-400">{playerOfficialBattery}%</span>
               </div>
               <input
@@ -670,7 +681,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                   onClick={() => setPlayerOfficialBattery(deviceBattery)}
                   className="text-[10px] text-emerald-400 font-bold mt-1 flex items-center gap-1 hover:underline"
                 >
-                  <Smartphone className="w-3 h-3" /> 使用當前實體手機真實電量 ({deviceBattery}%)
+                  <Smartphone className="w-3 h-3" /> {t('pk_use_real_battery', { n: deviceBattery })}
                 </button>
               )}
             </div>
@@ -679,7 +690,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               onClick={handleConfirmQuestion}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-xs shadow-lg hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>出題完畢！開始猜對手電量</span>
+              <span>{t('pk_confirm_question')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -692,15 +703,15 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-5 w-full py-6">
           <div className="w-full p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 flex items-center gap-2.5 text-left">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <span className="text-xs font-bold text-emerald-400">你的題目已送出，等待 {opponent.name} 出題...</span>
+            <span className="text-xs font-bold text-emerald-400">{t('pk_question_sent', { name: opponent.name })}</span>
           </div>
 
           <div className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-              <span>{opponent.name} 正在認真思考並撰寫題目中...</span>
+              <span>{t('pk_opponent_writing_named', { name: opponent.name })}</span>
             </div>
-            <p className="text-[11px] text-slate-500">題目一到就馬上讓你猜！</p>
+            <p className="text-[11px] text-slate-500">{t('pk_question_incoming')}</p>
           </div>
         </motion.div>
       )}
@@ -712,13 +723,13 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">{opponent.avatar}</span>
               <span className="text-xs font-bold text-rose-400 uppercase tracking-widest">
-                第二步：請猜 {opponent.name} 出的題目電量 %
+                {t('pk_step2_heading', { name: opponent.name })}
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-black text-white">{opponentQuestion.title}</h3>
+            <h3 className="text-base sm:text-lg font-black text-white">{getLocalizedQuestionText(opponentQuestion, lang).title}</h3>
           </div>
 
-          <UnifiedBattery value={playerGuess} size="lg" label="你估算的對手電量" />
+          <UnifiedBattery value={playerGuess} size="lg" label={t('pk_your_estimate_opponent')} />
 
           <SliderInput
             value={playerGuess}
@@ -735,21 +746,21 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">{opponent.avatar}</span>
               <span className="text-xs font-bold text-rose-400 uppercase tracking-widest">
-                {opponent.name} 出的題目：
+                {t('pk_opponent_question_label', { name: opponent.name })}
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-black text-white">{opponentQuestion.title}</h3>
+            <h3 className="text-base sm:text-lg font-black text-white">{getLocalizedQuestionText(opponentQuestion, lang).title}</h3>
           </div>
 
-          <UnifiedBattery value={playerGuess} size="lg" label="你估算的答案電量" />
+          <UnifiedBattery value={playerGuess} size="lg" label={t('pk_your_estimate_answer')} />
 
           <div className="w-full p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-              <span>{opponent.name} 正在連線計算題目電量中...</span>
+              <span>{t('pk_opponent_calculating', { name: opponent.name })}</span>
             </div>
             <p className="text-[11px] text-slate-500">
-              雙方估算完成，即將一同累計揭曉對決成績！
+              {t('pk_both_estimated')}
             </p>
           </div>
         </motion.div>
@@ -764,7 +775,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             {!isChargingFinished ? (
               <p className="text-xs font-bold text-amber-400 animate-pulse flex items-center justify-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                雙方電池一同電量累計中...
+                {t('pk_charging_both')}
               </p>
             ) : (
               <>
@@ -772,11 +783,11 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                   {isPlayerWinner ? <Crown className="w-8 h-8 text-amber-400" /> : <Zap className="w-8 h-8 text-slate-500" />}
                 </div>
                 <h3 className="text-2xl font-black text-white">
-                  {isPlayerWinner ? '一戰成名 · 猜電量獲勝！' : '一戰結束 · 殘念惜敗！'}
+                  {isPlayerWinner ? t('pk_win_title') : t('pk_lose_title')}
                 </h3>
                 <p className="text-xs text-amber-400 font-bold mt-1 flex items-center justify-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  差距最小者勝出！
+                  {t('pk_smallest_gap_wins')}
                 </p>
               </>
             )}
@@ -803,11 +814,11 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
             >
               <div className="flex items-center gap-1.5 font-black text-xs">
                 <span className="text-xl">{playerAvatar}</span>
-                <span className="text-white">你</span>
+                <span className="text-white">{t('pk_you')}</span>
                 {isChargingFinished && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-0.5 ${isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
                     {isPlayerWinner && <Crown className="w-2.5 h-2.5" />}
-                    {isPlayerWinner ? '獲勝' : '敗北'}
+                    {isPlayerWinner ? t('pk_win_badge') : t('pk_lose_badge')}
                   </span>
                 )}
               </div>
@@ -818,8 +829,8 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               />
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                <span>得分：<strong className="text-emerald-400 text-sm">{playerScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">你猜 <strong className="text-white">{playerGuess}%</strong> (差距 {playerGap}%)</span>
+                <span>{t('pk_score_points', { n: playerScore })}</span>
+                <span className="text-slate-400 text-[10px]">{t('pk_your_guess_gap', { guess: playerGuess, gap: playerGap })}</span>
               </div>
             </motion.div>
 
@@ -846,7 +857,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 {isChargingFinished && (
                   <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-0.5 ${!isPlayerWinner ? 'bg-amber-400 text-slate-950 font-black shadow-md' : 'bg-slate-800 text-slate-400'}`}>
                     {!isPlayerWinner && <Crown className="w-2.5 h-2.5" />}
-                    {!isPlayerWinner ? '獲勝' : '敗北'}
+                    {!isPlayerWinner ? t('pk_win_badge') : t('pk_lose_badge')}
                   </span>
                 )}
               </div>
@@ -857,8 +868,8 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
               />
 
               <div className="text-[11px] font-bold text-slate-300 flex flex-col gap-0.5 text-center">
-                <span>得分：<strong className="text-rose-400 text-sm">{opponentScore}</strong> 分</span>
-                <span className="text-slate-400 text-[10px]">對手猜 <strong className="text-white">{opponentGuess}%</strong> (差距 {opponentGap}%)</span>
+                <span>{t('pk_score_points', { n: opponentScore })}</span>
+                <span className="text-slate-400 text-[10px]">{t('pk_opponent_guess_gap', { guess: opponentGuess, gap: opponentGap })}</span>
               </div>
             </motion.div>
           </div>
@@ -871,7 +882,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
               >
                 {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
-                <span>{shareState === 'copied' ? '已複製到剪貼簿！' : shareState === 'shared' ? '已開啟分享！' : '分享對戰結果'}</span>
+                <span>{shareState === 'copied' ? t('share_copied') : shareState === 'shared' ? t('share_shared') : t('pk_share_button')}</span>
               </button>
 
               <button
@@ -879,7 +890,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 className="py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-sm shadow-xl shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-violet-400/30"
               >
                 <RotateCcw className="w-4 h-4" />
-                <span>再配對對決一局！</span>
+                <span>{t('pk_restart_button')}</span>
               </button>
             </div>
           )}

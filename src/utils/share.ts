@@ -13,12 +13,12 @@ import { Share } from '@capacitor/share';
 
 export type ShareOutcome = 'shared' | 'copied' | 'unavailable';
 
-export async function shareResult(text: string, opts?: { title?: string }): Promise<ShareOutcome> {
+export async function shareResult(text: string, opts?: { title?: string; dialogTitle?: string }): Promise<ShareOutcome> {
   try {
     await Share.share({
       title: opts?.title ?? '猜電量 Guess the Battery',
       text,
-      dialogTitle: '分享你的戰績'
+      dialogTitle: opts?.dialogTitle ?? '分享你的戰績'
     });
     return 'shared';
   } catch (e) {

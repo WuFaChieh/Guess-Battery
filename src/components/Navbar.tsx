@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GameMode } from '../types/game';
-import { Volume2, Volume1, VolumeX, Menu, Zap, Users, PlusCircle, Swords, X, Lock, Calendar, Flame } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Menu, Zap, Users, PlusCircle, Swords, X, Lock, Calendar, Flame, Languages } from 'lucide-react';
 import { setVolume, playTickSound } from '../utils/audio';
 import { getDailyStreak } from '../utils/dailyStreak';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface NavbarProps {
   currentMode: GameMode;
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [volumePopoverOpen, setVolumePopoverOpen] = useState(false);
   const [dailyStreakDays, setDailyStreakDays] = useState(0);
+  const { lang, toggleLang, t } = useLanguage();
 
   // Remembers the last non-zero volume so the mute button can restore it
   // instead of just snapping back to 100%.
@@ -40,11 +42,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const VolumeIcon = volume <= 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   const navItems: { mode: GameMode; label: string; icon: React.ReactNode; isComingSoon?: boolean }[] = [
-    { mode: 'single_5', label: '經典速刷', icon: <Zap className="w-4 h-4 text-emerald-400" /> },
-    { mode: 'daily', label: '每日挑戰', icon: <Calendar className="w-4 h-4 text-purple-400" /> },
-    { mode: 'party', label: '同屏派對', icon: <Users className="w-4 h-4 text-cyan-400" /> },
-    { mode: 'custom', label: '自訂題庫', icon: <PlusCircle className="w-4 h-4 text-blue-400" /> },
-    { mode: 'mutual_pk', label: '1v1 互考 PK', icon: <Swords className="w-4 h-4 text-rose-400" /> }
+    { mode: 'single_5', label: t('mode_single_5'), icon: <Zap className="w-4 h-4 text-emerald-400" /> },
+    { mode: 'daily', label: t('mode_daily'), icon: <Calendar className="w-4 h-4 text-purple-400" /> },
+    { mode: 'party', label: t('mode_party'), icon: <Users className="w-4 h-4 text-cyan-400" /> },
+    { mode: 'custom', label: t('mode_custom'), icon: <PlusCircle className="w-4 h-4 text-blue-400" /> },
+    { mode: 'mutual_pk', label: t('mode_mutual_pk'), icon: <Swords className="w-4 h-4 text-rose-400" /> }
   ];
 
   return (
@@ -71,8 +73,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Right: Circular Volume & Menu Action Buttons */}
+        {/* Right: Language Toggle, Circular Volume & Menu Action Buttons */}
         <div className="flex items-center gap-2.5">
+          {/* Language Toggle — switches the whole UI + built-in question text
+              between Traditional Chinese and English. See src/i18n/. */}
+          <button
+            onClick={() => {
+              toggleLang();
+              setMenuOpen(false);
+              setVolumePopoverOpen(false);
+            }}
+            className="h-10 px-2.5 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95"
+            title={lang === 'zh' ? 'Switch to English' : '切換成中文'}
+            aria-label={lang === 'zh' ? 'Switch to English' : '切換成中文'}
+          >
+            <Languages className="w-4 h-4 text-emerald-400" />
+            <span className="text-[11px] font-bold">{lang === 'zh' ? 'EN' : '中'}</span>
+          </button>
+
           {/* Volume Button — opens a popover with a real slider instead of
               only toggling mute/on, so players can actually dial the level. */}
           <div className="relative">
@@ -82,8 +100,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setMenuOpen(false);
               }}
               className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
-              title="音量設定"
-              aria-label="音量設定"
+              title={t('nav_volume_settings')}
+              aria-label={t('nav_volume_settings')}
               aria-expanded={volumePopoverOpen}
             >
               <VolumeIcon className={`w-5 h-5 ${volume > 0 ? 'text-emerald-400' : 'text-slate-500'}`} />
@@ -96,8 +114,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={toggleMute}
                   className="shrink-0 text-slate-300 hover:text-emerald-400 transition-colors"
-                  title={volume > 0 ? '靜音' : '取消靜音'}
-                  aria-label={volume > 0 ? '靜音' : '取消靜音'}
+                  title={volume > 0 ? t('nav_mute') : t('nav_unmute')}
+                  aria-label={volume > 0 ? t('nav_mute') : t('nav_unmute')}
                 >
                   <VolumeIcon className={`w-4 h-4 ${volume > 0 ? 'text-emerald-400' : 'text-slate-500'}`} />
                 </button>
@@ -110,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onChange={(e) => applyVolume(Number(e.target.value) / 100)}
                   onMouseUp={playTickSound}
                   onTouchEnd={playTickSound}
-                  aria-label="音量"
+                  aria-label={t('nav_volume')}
                   aria-valuetext={`${Math.round(volume * 100)}%`}
                   className="flex-1 h-2 rounded-full appearance-none cursor-pointer accent-emerald-400"
                 />
@@ -135,8 +153,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               setVolumePopoverOpen(false);
             }}
             className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 flex items-center justify-center transition-all shadow-sm active:scale-95"
-            title="選單"
-            aria-label="選單"
+            title={t('nav_menu')}
+            aria-label={t('nav_menu')}
             aria-expanded={menuOpen}
           >
             {menuOpen ? <X className="w-5 h-5 text-rose-400" /> : <Menu className="w-5 h-5 text-slate-300" />}
@@ -148,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {menuOpen && (
         <div className="max-w-md mx-auto mt-3 p-3 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl flex flex-col gap-1.5 animate-in slide-in-from-top duration-200">
           <span className="text-[11px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">
-            選擇遊戲模式
+            {t('nav_select_mode')}
           </span>
           {navItems.map((item) => {
             const isActive = currentMode === item.mode;
@@ -171,12 +189,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 {item.mode === 'daily' && dailyStreakDays > 0 && (
                   <span className="text-[10px] px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-300 font-bold border border-orange-500/30 inline-flex items-center gap-0.5">
-                    <Flame className="w-2.5 h-2.5" /> {dailyStreakDays} 天
+                    <Flame className="w-2.5 h-2.5" /> {t('nav_streak_days', { n: dailyStreakDays })}
                   </span>
                 )}
                 {item.isComingSoon && (
                   <span className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 inline-flex items-center gap-0.5">
-                    <Lock className="w-2.5 h-2.5" /> 待更新
+                    <Lock className="w-2.5 h-2.5" /> {t('nav_coming_soon')}
                   </span>
                 )}
               </button>

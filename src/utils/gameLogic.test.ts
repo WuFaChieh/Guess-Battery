@@ -130,7 +130,7 @@ describe('getDailyQuestions', () => {
     title: `Question ${i}`,
     officialBattery: i * 5,
     explanation: '',
-    category: 'absurd',
+    category: 'calculus',
     emoji: '🔋'
   }));
 
@@ -229,7 +229,7 @@ describe('getResultEmoji', () => {
 
 describe('getDailyShareText', () => {
   const makeAnswer = (distance: number, score: number): AnswerRecord => ({
-    question: { id: 'q', title: 't', officialBattery: 50, explanation: '', category: 'absurd', emoji: '🔋' },
+    question: { id: 'q', title: 't', officialBattery: 50, explanation: '', category: 'calculus', emoji: '🔋' },
     userGuess: 50 - distance,
     officialBattery: 50,
     distance,

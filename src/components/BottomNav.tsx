@@ -1,6 +1,7 @@
 import React from 'react';
 import { GameMode } from '../types/game';
 import { Zap, Trophy, Bookmark, Smile } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface BottomNavProps {
   currentMode: GameMode;
@@ -8,9 +9,11 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode }) => {
+  const { t } = useLanguage();
+
   return (
     <nav
-      aria-label="遊戲模式導覽"
+      aria-label={t('bottomnav_aria_label')}
       className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-lg border-t border-slate-900 px-4 pt-2 shadow-xl"
       style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
     >
@@ -26,7 +29,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
           }`}
         >
           <Zap className={`w-5 h-5 mb-0.5 ${currentMode === 'single_5' ? 'text-emerald-400' : 'text-slate-500'}`} />
-          <span className="text-[11px]">猜電量</span>
+          <span className="text-[11px]">{t('bottomnav_single')}</span>
         </button>
 
         {/* Tab 2: 1v1 對決 / 排行榜 */}
@@ -40,7 +43,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
           }`}
         >
           <Trophy className={`w-5 h-5 mb-0.5 ${currentMode === 'mutual_pk' ? 'text-emerald-400' : 'text-slate-500'}`} />
-          <span className="text-[11px]">1v1對決</span>
+          <span className="text-[11px]">{t('bottomnav_pk')}</span>
         </button>
 
         {/* Tab 3: 同屏派對 */}
@@ -54,7 +57,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
           }`}
         >
           <Bookmark className={`w-5 h-5 mb-0.5 ${currentMode === 'party' ? 'text-emerald-400' : 'text-slate-500'}`} />
-          <span className="text-[11px]">同屏派對</span>
+          <span className="text-[11px]">{t('bottomnav_party')}</span>
         </button>
 
         {/* Tab 4: 自訂題庫 / 更多 */}
@@ -68,7 +71,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentMode, onSelectMode 
           }`}
         >
           <Smile className={`w-5 h-5 mb-0.5 ${currentMode === 'custom' ? 'text-emerald-400' : 'text-slate-500'}`} />
-          <span className="text-[11px]">自訂題庫</span>
+          <span className="text-[11px]">{t('bottomnav_custom')}</span>
         </button>
       </div>
     </nav>

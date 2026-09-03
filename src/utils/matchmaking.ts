@@ -8,6 +8,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { getBotProfile, PlayerProfile, BotDifficulty } from './aiBots';
 import { MATCHMAKING_TIMEOUT_MS } from '../constants/gameConfig';
+import { Language, translate } from '../i18n/translations';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 const QUEUE_TABLE = 'matchmaking_queue';
@@ -78,8 +79,8 @@ function isNewer(self: Pick<QueueRow, 'id' | 'created_at'>, other: Pick<QueueRow
  * Creates a local bot opponent + room. Used both as the matchmaking timeout
  * fallback and as the immediate fallback when Supabase isn't reachable.
  */
-export function spawnBotMatch(difficulty: BotDifficulty = 'medium'): MatchRoomData {
-  const bot = getBotProfile();
+export function spawnBotMatch(difficulty: BotDifficulty = 'medium', lang: Language = 'zh'): MatchRoomData {
+  const bot = getBotProfile(lang);
   return {
     roomId: `bot_${generateRoomId()}`,
     isBot: true,
@@ -101,7 +102,8 @@ export function spawnBotMatch(difficulty: BotDifficulty = 'medium'): MatchRoomDa
 export function startMatchmaking(
   userId: string,
   playerName: string,
-  onMatched: (roomData: MatchRoomData) => void
+  onMatched: (roomData: MatchRoomData) => void,
+  lang: Language = 'zh'
 ): () => void {
   let settled = false;
   let cancelled = false;
@@ -138,7 +140,7 @@ export function startMatchmaking(
         console.debug('[matchmaking] cleanup error:', e);
       }
     }
-    finish(spawnBotMatch());
+    finish(spawnBotMatch('medium', lang));
   };
 
   const cancel = () => {
@@ -149,7 +151,7 @@ export function startMatchmaking(
   if (!isSupabaseConfigured || !supabase) {
     // No backend configured — skip straight to a bot instead of burning the
     // full timeout on a connection that can never succeed.
-    finish(spawnBotMatch());
+    finish(spawnBotMatch('medium', lang));
     return cancel;
   }
 
@@ -235,7 +237,7 @@ export function startMatchmaking(
             const row = payload.new;
             if (row.status !== 'matched' || !row.room_id || !row.matched_with) return;
 
-            let opponentName = '神秘對手';
+            let opponentName = translate(lang, 'pk_mystery_opponent');
             try {
               const { data: opponentRow } = await client
                 .from(QUEUE_TABLE)
@@ -261,7 +263,7 @@ export function startMatchmaking(
       timeoutId = setTimeout(fallbackToBot, MATCHMAKING_TIMEOUT_MS);
     } catch (e) {
       console.debug('[matchmaking] error, falling back to bot:', e);
-      finish(spawnBotMatch());
+      finish(spawnBotMatch('medium', lang));
     }
   })();
 

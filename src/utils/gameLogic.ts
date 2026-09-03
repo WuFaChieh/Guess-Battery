@@ -1,6 +1,7 @@
 import { LucideIcon, Trophy, Zap, BatteryCharging, Target, ThumbsUp, HelpCircle, BatteryWarning, Bomb } from 'lucide-react';
 import { TitleBadge, Question, AnswerRecord } from '../types/game';
 import { getLocalDateString } from './date';
+import { Language, TranslationKey, translate } from '../i18n/translations';
 
 export function calculateScore(userGuess: number, officialBattery: number): { distance: number; score: number } {
   const distance = Math.abs(userGuess - officialBattery);
@@ -8,24 +9,42 @@ export function calculateScore(userGuess: number, officialBattery: number): { di
   return { distance, score };
 }
 
-export function getCommentary(distance: number): string {
+// `lang` defaults to 'zh' so every existing call site (and gameLogic.test.ts,
+// which only asserts these are non-empty, not their exact content) keeps
+// working unchanged — English is opt-in via an explicit second argument.
+export function getCommentary(distance: number, lang: Language = 'zh'): string {
   if (distance === 0) {
-    return '完美命中！你是不是偷看了出題者的腦袋？！';
+    return translate(lang, 'commentary_0');
   } else if (distance <= 3) {
-    return '神級直覺！幾乎與官方答案完全重合！';
+    return translate(lang, 'commentary_3');
   } else if (distance <= 8) {
-    return '超級精準！你對這個荒謬世界洞察力極高！';
+    return translate(lang, 'commentary_8');
   } else if (distance <= 15) {
-    return '非常接近！直覺相當可靠喔！';
+    return translate(lang, 'commentary_15');
   } else if (distance <= 25) {
-    return '還算靠譜！雖然有點差距但方向是對的。';
+    return translate(lang, 'commentary_25');
   } else if (distance <= 40) {
-    return '稍微偏了！你的世界觀可能跟出題者不大一樣？';
+    return translate(lang, 'commentary_40');
   } else if (distance <= 60) {
-    return '離譜落差！這已經是另一個平行宇宙的電量了！';
+    return translate(lang, 'commentary_60');
   } else {
-    return '荒謬至極！馬鈴薯看了都搖頭的超遙遠答案！';
+    return translate(lang, 'commentary_far');
   }
+}
+
+// Picks a built-in question's English title/explanation when available and
+// the session is in English — falls back to the original (Chinese) text for
+// user-authored custom questions, which have no titleEn/explanationEn.
+export function getLocalizedQuestionText(question: Question, lang: Language): { title: string; explanation: string } {
+  // Picked independently per field — a PK match's real (human-authored)
+  // opponent question has no titleEn (nobody can auto-translate what someone
+  // just typed) but does get a localized explanationEn (our own boilerplate
+  // "you'll both find out at reveal" note, not opponent-authored) — see
+  // MutualPkGame.tsx's handleMatched.
+  return {
+    title: lang === 'en' && question.titleEn ? question.titleEn : question.title,
+    explanation: lang === 'en' && question.explanationEn ? question.explanationEn : question.explanation
+  };
 }
 
 /** Icon paired with getCommentary()'s text, one per distance tier — rendered
@@ -94,49 +113,55 @@ export function getResultEmoji(distance: number): string {
 // of how each answer landed, the average score, and the current streak —
 // the same shape as a Wordle share (a spoiler-free result grid plus a
 // one-line brag), handed to utils/share.ts's shareResult().
-export function getDailyShareText(answers: AnswerRecord[], streakDays: number, dateStr: string): string {
+export function getDailyShareText(answers: AnswerRecord[], streakDays: number, dateStr: string, lang: Language = 'zh'): string {
   const grid = answers.map((a) => getResultEmoji(a.distance)).join('');
   const avgScore = answers.length > 0 ? Math.round(answers.reduce((acc, a) => acc + a.score, 0) / answers.length) : 0;
-  const streakLine = streakDays > 1 ? `\n🔥 連續挑戰 ${streakDays} 天！` : '';
-  return `🔋猜電量 每日挑戰 ${dateStr}\n${grid}  平均 ${avgScore}%${streakLine}\n萬物皆有電量，你猜得準嗎？快來試試！`;
+  const streakLine = streakDays > 1 ? translate(lang, 'share_daily_streak_line', { days: streakDays }) : '';
+  return translate(lang, 'share_daily_text', { date: dateStr, grid, avg: avgScore, streakLine });
 }
 
 export const TITLE_BADGES: TitleBadge[] = [
   {
+    id: 'psychic',
     title: '電量靈媒 (Battery Psychic)',
     minAvgScore: 95,
     emoji: '🧙‍♂️',
     description: '你的直覺已經超越人類極限，萬物的電量在你眼裡一覽無遺！'
   },
   {
+    id: 'oracle',
     title: '滿格神算 (Battery Oracle)',
     minAvgScore: 85,
     emoji: '🔮',
-    description: '抓得超級準！無論多荒謬的題目都難不倒你的直覺！'
+    description: '抓得超級準！無論多硬核的題目都難不倒你的直覺！'
   },
   {
+    id: 'charger',
     title: '直覺充沛 (Intuitive Charger)',
     minAvgScore: 75,
     emoji: '⚡',
     description: '電量感知能力極強，玩派對遊戲的絕對主力！'
   },
   {
+    id: 'balanced',
     title: '穩定中規中矩 (Balanced User)',
     minAvgScore: 60,
     emoji: '⚖️',
     description: '猜得四規八矩，偶爾神來一筆，偶爾大翻車！'
   },
   {
+    id: 'leaky',
     title: '嚴重漏電 (Leaky Battery)',
     minAvgScore: 40,
     emoji: '🪫',
     description: '你的電量直覺似乎有點受潮，建議重新開機！'
   },
   {
+    id: 'potato',
     title: '馬鈴薯同路人 (Potato Soulmate)',
     minAvgScore: 0,
     emoji: '🥔',
-    description: '完全無法用常人邏輯思考！但這樣的荒謬正是派對的核心樂趣！'
+    description: '完全無法用常人邏輯思考！但這樣的反差正是遊戲的核心樂趣！'
   }
 ];
 
@@ -147,6 +172,17 @@ export function getBadgeForScore(avgScore: number): TitleBadge {
     }
   }
   return TITLE_BADGES[TITLE_BADGES.length - 1];
+}
+
+// TITLE_BADGES itself stays Chinese-only (its `title`/`description` are what
+// getBadgeForScore's tests compare for identity) — these two pick the
+// localized display text by the badge's stable `id` instead.
+export function getBadgeTitle(badge: TitleBadge, lang: Language): string {
+  return translate(lang, `badge_${badge.id}_title` as TranslationKey);
+}
+
+export function getBadgeDescription(badge: TitleBadge, lang: Language): string {
+  return translate(lang, `badge_${badge.id}_desc` as TranslationKey);
 }
 
 // Unbiased Fisher-Yates shuffle. Accepts an optional random source (must

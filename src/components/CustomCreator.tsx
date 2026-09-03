@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Question } from '../types/game';
 import { BatteryGauge } from './BatteryGauge';
 import { PlusCircle, Trash2, Play, Download, Upload, Check, Send, Sparkles, Package } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
+import { CATEGORY_LABELS } from '../data/questions';
 
 interface CustomCreatorProps {
   customQuestions: Question[];
@@ -18,12 +20,13 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
   onImportDeck,
   onPlayCustom
 }) => {
+  const { lang, t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [officialBattery, setOfficialBattery] = useState(50);
   const [explanation, setExplanation] = useState('');
   const [emoji, setEmoji] = useState('🔋');
-  const [targetCategory, setTargetCategory] = useState<'absurd' | 'math'>('absurd');
+  const [targetCategory, setTargetCategory] = useState<'economics' | 'calculus'>('calculus');
   const [importJson, setImportJson] = useState('');
   const [copied, setCopied] = useState(false);
   
@@ -47,7 +50,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       id: `custom_${Date.now()}`,
       title: title.trim(),
       officialBattery,
-      explanation: explanation.trim() || '出題者的直覺答案！',
+      explanation: explanation.trim() || t('custom_default_explanation'),
       category: 'custom',
       emoji: emoji || '🔋'
     };
@@ -72,12 +75,12 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       if (Array.isArray(parsed) && parsed.length > 0) {
         onImportDeck(parsed);
         setImportJson('');
-        alert(`成功匯入 ${parsed.length} 道自訂題目！`);
+        alert(t('custom_alert_import_success', { n: parsed.length }));
       } else {
-        alert('無效的 JSON 題庫格式！');
+        alert(t('custom_alert_import_invalid'));
       }
     } catch {
-      alert('解析 JSON 失敗，請檢查格式！');
+      alert(t('custom_alert_import_parse_fail'));
     }
   };
 
@@ -88,7 +91,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
     // into shipped client JS defeats the point of keeping it in an env var
     // (see the .env leak this app already had). Fail loudly instead.
     if (!googleSheetsScriptUrl) {
-      alert('題目投稿功能尚未設定雲端資料庫連結，請聯絡開發者！');
+      alert(t('custom_alert_no_webhook'));
       return;
     }
 
@@ -116,9 +119,9 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       const nextSubmitted = [...submittedIds, q.id];
       setSubmittedIds(nextSubmitted);
       localStorage.setItem('guess_battery_submitted_ids', JSON.stringify(nextSubmitted));
-      alert(`題目「${q.title}」投稿成功！已提交至官方審核資料庫，通過後將加入題庫！`);
+      alert(t('custom_alert_submit_success', { title: q.title }));
     } catch {
-      alert(`題目「${q.title}」投稿失敗，請檢查網路連線後再試一次！`);
+      alert(t('custom_alert_submit_fail', { title: q.title }));
     } finally {
       setSubmittingId(null);
     }
@@ -131,10 +134,10 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
         <div>
           <h2 className="text-xl font-black text-white flex items-center gap-2">
             <PlusCircle className="w-6 h-6 text-emerald-400" />
-            <span>自訂題目與社區投稿</span>
+            <span>{t('custom_header_title')}</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            出題考朋友！亦可投稿至雲端資料庫，讓冷月仙納入官方題庫！
+            {t('custom_header_subtitle')}
           </p>
         </div>
 
@@ -145,7 +148,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
               className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-950/40 hover:scale-[1.02] transition-all flex items-center gap-1.5"
             >
               <Play className="w-3.5 h-3.5 fill-slate-950" />
-              <span>開玩自訂題 ({customQuestions.length})</span>
+              <span>{t('custom_play_button', { n: customQuestions.length })}</span>
             </button>
           )}
 
@@ -154,7 +157,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
             className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs hover:scale-[1.02] transition-all flex items-center gap-1.5"
           >
             <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />
-            <span>新建題目</span>
+            <span>{t('custom_new_question')}</span>
           </button>
         </div>
       </div>
@@ -162,13 +165,13 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       {/* Questions List */}
       <div>
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-          <span>目前已建立的題目 ({customQuestions.length})</span>
-          <span className="text-[11px] text-emerald-400 font-normal">可一鍵投稿到雲端資料庫</span>
+          <span>{t('custom_list_heading', { n: customQuestions.length })}</span>
+          <span className="text-[11px] text-emerald-400 font-normal">{t('custom_list_hint')}</span>
         </h3>
 
         {customQuestions.length === 0 ? (
           <div className="text-center py-8 bg-slate-950/60 rounded-2xl border border-dashed border-slate-800 text-slate-500 text-xs">
-            還沒有建立任何自訂題目喔！點擊右上角「新建題目」發揮創意！
+            {t('custom_empty_state')}
           </div>
         ) : (
           <div className="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
@@ -186,7 +189,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
                     <div className="truncate">
                       <h4 className="font-bold text-slate-200 truncate">{q.title}</h4>
                       <span className="text-[11px] text-slate-400">
-                        答案：<strong className="text-emerald-400">{q.officialBattery}%</strong>
+                        {t('custom_answer_label')}<strong className="text-emerald-400">{q.officialBattery}%</strong>
                       </span>
                     </div>
                   </div>
@@ -201,17 +204,17 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
                           ? 'bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 opacity-80'
                           : 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300'
                       }`}
-                      title="投稿至官方審核資料庫"
+                      title={t('custom_submit_title_attr')}
                     >
                       {isSubmitted ? (
                         <>
                           <Check className="w-3.5 h-3.5" />
-                          <span>已投稿</span>
+                          <span>{t('custom_submitted')}</span>
                         </>
                       ) : (
                         <>
                           <Send className="w-3.5 h-3.5" />
-                          <span>{isSubmitting ? '投稿中...' : '投稿審核'}</span>
+                          <span>{isSubmitting ? t('custom_submitting') : t('custom_submit_review')}</span>
                         </>
                       )}
                     </button>
@@ -220,7 +223,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
                     <button
                       onClick={() => onDeleteQuestion(q.id)}
                       className="p-1.5 rounded-lg text-slate-500 hover:text-rose-300 hover:bg-rose-950/40 transition-colors border border-transparent hover:border-rose-900/40"
-                      title="刪除題目"
+                      title={t('custom_delete_title_attr')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -235,7 +238,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
       {/* Export / Import Deck Section */}
       <div className="pt-3 border-t border-slate-800 flex flex-col gap-2.5">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-          <Package className="w-3.5 h-3.5" /> 題庫分享與匯入
+          <Package className="w-3.5 h-3.5" /> {t('custom_share_import_heading')}
         </h3>
 
         <div className="flex flex-col sm:flex-row gap-2.5">
@@ -245,13 +248,13 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
             className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 border border-slate-700"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Download className="w-4 h-4" />}
-            <span>{copied ? '題庫 JSON 已複製！' : '匯出自訂題庫 JSON'}</span>
+            <span>{copied ? t('custom_export_copied') : t('custom_export_button')}</span>
           </button>
 
           <div className="flex-1 flex gap-2">
             <input
               type="text"
-              placeholder="貼上題庫 JSON 代碼..."
+              placeholder={t('custom_import_placeholder')}
               value={importJson}
               onChange={(e) => setImportJson(e.target.value)}
               className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
@@ -261,7 +264,7 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
               className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center gap-1 shrink-0"
             >
               <Upload className="w-4 h-4" />
-              <span>匯入</span>
+              <span>{t('custom_import_button')}</span>
             </button>
           </div>
         </div>
@@ -273,59 +276,59 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl flex flex-col gap-4">
             <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-400" />
-              <span>建立新的電量題目</span>
+              <span>{t('custom_modal_title')}</span>
             </h3>
 
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 block mb-1">
-                  題目分類
+                  {t('custom_category_label')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setTargetCategory('absurd')}
+                    onClick={() => setTargetCategory('economics')}
                     className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border ${
-                      targetCategory === 'absurd'
+                      targetCategory === 'economics'
                         ? 'bg-purple-950/60 border-purple-500/60 text-purple-300'
                         : 'bg-slate-950 border-slate-800 text-slate-400'
                     }`}
                   >
-                    <span>🥔 荒謬萬物</span>
+                    <span>{CATEGORY_LABELS.economics.icon} {lang === 'en' ? CATEGORY_LABELS.economics.labelEn : CATEGORY_LABELS.economics.label}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTargetCategory('math')}
+                    onClick={() => setTargetCategory('calculus')}
                     className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border ${
-                      targetCategory === 'math'
+                      targetCategory === 'calculus'
                         ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-300'
                         : 'bg-slate-950 border-slate-800 text-slate-400'
                     }`}
                   >
-                    <span>🤓 硬核數學</span>
+                    <span>{CATEGORY_LABELS.calculus.icon} {lang === 'en' ? CATEGORY_LABELS.calculus.labelEn : CATEGORY_LABELS.calculus.label}</span>
                   </button>
                 </div>
               </div>
 
               <div>
                 <label className="text-xs font-bold text-slate-400 block mb-1">
-                  題目名稱 (例如：「我今天上完五堂課還剩多少電？」)
+                  {t('custom_title_label')}
                 </label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="輸入題目..."
+                  placeholder={t('custom_title_placeholder')}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
                 <label className="text-xs font-bold text-slate-400 block mb-1">
-                  設定正確答案電量 (0% ~ 100%)
+                  {t('custom_battery_label')}
                 </label>
-                <BatteryGauge value={officialBattery} label="答案電量" size="sm" />
+                <BatteryGauge value={officialBattery} label={t('custom_battery_gauge_label')} size="sm" />
                 <input
                   type="range"
                   min="0"
@@ -338,20 +341,20 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
 
               <div>
                 <label className="text-xs font-bold text-slate-400 block mb-1">
-                  官方解說 (說明理由)
+                  {t('custom_explanation_label')}
                 </label>
                 <textarea
                   rows={2}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="說明為什麼是這個數字..."
+                  placeholder={t('custom_explanation_placeholder')}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
                 <label className="text-xs font-bold text-slate-400 block mb-1">
-                  代表圖示 Emoji
+                  {t('custom_emoji_label')}
                 </label>
                 <input
                   type="text"
@@ -367,13 +370,13 @@ export const CustomCreator: React.FC<CustomCreatorProps> = ({
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700"
                 >
-                  取消
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-950/40"
                 >
-                  確認建立
+                  {t('custom_confirm_create')}
                 </button>
               </div>
             </form>

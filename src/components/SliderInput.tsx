@@ -1,6 +1,7 @@
 import React from 'react';
 import { playTickSound } from '../utils/audio';
 import { Lock, Sparkles, Skull, BatteryWarning, BatteryMedium, Zap, Bomb, ArrowUp } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface SliderInputProps {
   value: number;
@@ -32,8 +33,11 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
   onChange,
   onSubmit,
   disabled = false,
-  submitLabel = '鎖定答案並揭曉！'
+  submitLabel
 }) => {
+  const { t } = useLanguage();
+  const resolvedSubmitLabel = submitLabel ?? t('slider_submit_default');
+
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = parseInt(e.target.value, 10);
     if (newVal !== value) {
@@ -75,7 +79,7 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
             onChange={handleSliderChange}
             disabled={disabled}
             style={trackStyle}
-            aria-label="你猜的電量百分比"
+            aria-label={t('slider_aria_label')}
             aria-valuetext={`${value}%`}
             className="w-full h-3 rounded-full appearance-none cursor-pointer accent-emerald-400 shadow-md touch-action-none z-10 transition-[background] duration-150"
           />
@@ -124,14 +128,14 @@ const SliderInputComponent: React.FC<SliderInputProps> = ({
           className="w-full py-3.5 sm:py-4 px-6 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-extrabold text-lg sm:text-xl shadow-xl shadow-indigo-950/70 border border-indigo-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
         >
           <Lock className="w-5 h-5 text-white stroke-[2.5]" />
-          <span>{submitLabel}</span>
+          <span>{resolvedSubmitLabel}</span>
           <Sparkles className="w-4 h-4 text-purple-200" />
         </button>
 
         {/* Caption pointing back up at the lock button */}
         <p className="text-xs text-slate-400 font-medium flex items-center gap-1 opacity-80">
           <ArrowUp className="w-3.5 h-3.5" />
-          <span>準備好了就鎖定吧！</span>
+          <span>{t('slider_ready_caption')}</span>
         </p>
       </div>
     </div>
