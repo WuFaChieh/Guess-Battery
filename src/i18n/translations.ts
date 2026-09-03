@@ -93,6 +93,7 @@ const zh = {
   questioncard_combo: '連擊中 x{n}（+{bonus} 加成）',
   questioncard_subtitle: '憑直覺猜出 0～100% 的電量數字！',
   questioncard_fallback_category: '硬核數學',
+  questioncard_code_label: '程式碼',
 
   // ---------------------------------------------------------------------
   // SliderInput.tsx
@@ -393,6 +394,7 @@ const en: Record<TranslationKey, string> = {
   questioncard_combo: 'Combo x{n} (+{bonus} bonus)',
   questioncard_subtitle: 'Trust your gut — guess a number from 0 to 100%!',
   questioncard_fallback_category: 'Hardcore Math',
+  questioncard_code_label: 'Code',
 
   // ---------------------------------------------------------------------
   // SliderInput.tsx

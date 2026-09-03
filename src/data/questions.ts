@@ -1412,6 +1412,364 @@ export const INITIAL_QUESTIONS: Question[] = [
     category: 'finance',
     emoji: '🧾'
   },
+
+  // 🖥️ 資工／程式 (CS / Programming) - 20 題
+  {
+    id: 'qc_1',
+    title: '執行以下 Python 程式後，x 是多少電量 %？',
+    titleEn: "After running this Python code, what is x, as a battery %?",
+    code: `x = 0
+for i in range(1, 11):
+    x += i
+print(x)`,
+    officialBattery: 55,
+    explanation: '迴圈把 1 累加到 10，x = 1+2+...+10 = 55，直接就是 55% 電量！',
+    explanationEn: "The loop sums 1 through 10: x = 1+2+...+10 = 55 — directly 55% battery!",
+    category: 'cs',
+    emoji: '🖥️'
+  },
+  {
+    id: 'qc_2',
+    title: '執行以下 Python 程式後，x 是多少電量 %？',
+    titleEn: "After running this Python code, what is x, as a battery %?",
+    code: `x = 0
+for i in range(5):
+    for j in range(5):
+        if i == j:
+            x += (i + 1) * 4
+print(x)`,
+    officialBattery: 60,
+    explanation: '只有 i==j（對角線）那 5 次會加總：(1+2+3+4+5)×4 = 15×4 = 60，直接就是 60% 電量！',
+    explanationEn: "Only the 5 diagonal hits (i==j) add anything: (1+2+3+4+5)×4 = 15×4 = 60 — directly 60% battery!",
+    category: 'cs',
+    emoji: '🔁'
+  },
+  {
+    id: 'qc_3',
+    title: '執行以下 Python 遞迴程式後，x 是多少電量 %？',
+    titleEn: "After running this recursive Python code, what is x, as a battery %?",
+    code: `def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+x = fib(9)
+print(x)`,
+    officialBattery: 34,
+    explanation: '費氏數列：0,1,1,2,3,5,8,13,21,34...，fib(9) = 34，直接就是 34% 電量！',
+    explanationEn: "The Fibonacci sequence goes 0,1,1,2,3,5,8,13,21,34... — fib(9) = 34, directly 34% battery!",
+    category: 'cs',
+    emoji: '🌀'
+  },
+  {
+    id: 'qc_4',
+    title: '在 1~100 的已排序陣列上對 target=37 做二元搜尋，執行後 steps 是多少電量 %？',
+    titleEn: "Binary-searching a sorted 1–100 array for target=37 — after running, what is steps, as a battery %?",
+    code: `arr = list(range(1, 101))
+lo, hi, steps = 0, len(arr) - 1, 0
+target = 37
+while lo <= hi:
+    steps += 1
+    mid = (lo + hi) // 2
+    if arr[mid] == target:
+        break
+    elif arr[mid] < target:
+        lo = mid + 1
+    else:
+        hi = mid - 1
+print(steps)`,
+    officialBattery: 3,
+    explanation: '第一次 mid=50（太大），第二次 mid=24（太小），第三次 mid=37 命中，steps=3，直接就是 3% 電量！',
+    explanationEn: "First mid=50 (too high), second mid=24 (too low), third mid=37 hits — steps=3, directly 3% battery!",
+    category: 'cs',
+    emoji: '🔍'
+  },
+  {
+    id: 'qc_5',
+    title: '執行以下後序表達式求值程式後，x 是多少電量 %？',
+    titleEn: "After evaluating this postfix expression with a stack, what is x, as a battery %?",
+    code: `tokens = ['3', '4', '+', '2', '*', '7', '-']
+stack = []
+for t in tokens:
+    if t.isdigit():
+        stack.append(int(t))
+    else:
+        b, a = stack.pop(), stack.pop()
+        if t == '+': stack.append(a + b)
+        elif t == '-': stack.append(a - b)
+        elif t == '*': stack.append(a * b)
+x = stack.pop()
+print(x)`,
+    officialBattery: 7,
+    explanation: '堆疊逐步運算：(3+4)=7，7×2=14，14-7=7，x=7，直接就是 7% 電量！',
+    explanationEn: "Working the stack: (3+4)=7, 7×2=14, 14-7=7 — x=7, directly 7% battery!",
+    category: 'cs',
+    emoji: '📚'
+  },
+  {
+    id: 'qc_6',
+    title: '對以下樹做 BFS（廣度優先）走訪，執行後 visited 的節點值總和是多少電量 %？',
+    titleEn: "Running BFS on this tree — after it finishes, what is the sum of visited node values, as a battery %?",
+    code: `from collections import deque
+tree = {1: [2, 3], 2: [4, 5], 3: [6], 4: [], 5: [], 6: []}
+q = deque([1])
+visited = 0
+while q:
+    node = q.popleft()
+    visited += node
+    for child in tree[node]:
+        q.append(child)
+print(visited)`,
+    officialBattery: 21,
+    explanation: 'BFS 依序拜訪節點 1,2,3,4,5,6，總和 = 1+2+3+4+5+6 = 21，直接就是 21% 電量！',
+    explanationEn: "BFS visits nodes in order 1,2,3,4,5,6, summing to 1+2+3+4+5+6 = 21 — directly 21% battery!",
+    category: 'cs',
+    emoji: '🌳'
+  },
+  {
+    id: 'qc_7',
+    title: '對陣列 [5,3,8,4,2] 做氣泡排序，執行後 swaps 是多少電量 %？',
+    titleEn: "Bubble-sorting the array [5,3,8,4,2] — after it finishes, what is swaps, as a battery %?",
+    code: `arr = [5, 3, 8, 4, 2]
+swaps = 0
+for i in range(len(arr)):
+    for j in range(len(arr) - 1 - i):
+        if arr[j] > arr[j + 1]:
+            arr[j], arr[j + 1] = arr[j + 1], arr[j]
+            swaps += 1
+print(swaps)`,
+    officialBattery: 7,
+    explanation: '逐輪追蹤交換次數：[5,3,8,4,2] 排序成 [2,3,4,5,8] 總共需要 7 次相鄰交換，直接就是 7% 電量！',
+    explanationEn: "Tracking every adjacent swap as [5,3,8,4,2] sorts into [2,3,4,5,8] takes 7 swaps total — directly 7% battery!",
+    category: 'cs',
+    emoji: '🫧'
+  },
+  {
+    id: 'qc_8',
+    title: '對已排序陣列用雙指標找 target=14 的配對數，執行後 count 是多少電量 %？',
+    titleEn: "Two-pointer counting pairs summing to target=14 in a sorted array — after running, what is count, as a battery %?",
+    code: `arr = [1, 2, 3, 4, 6, 8, 9, 11, 13, 15]
+target = 14
+lo, hi, count = 0, len(arr) - 1, 0
+while lo < hi:
+    s = arr[lo] + arr[hi]
+    if s == target:
+        count += 1
+        lo += 1
+        hi -= 1
+    elif s < target:
+        lo += 1
+    else:
+        hi -= 1
+print(count)`,
+    officialBattery: 3,
+    explanation: '找到的配對是 (1,13)、(3,11)、(6,8)，count=3，直接就是 3% 電量！',
+    explanationEn: "The matching pairs found are (1,13), (3,11), (6,8) — count=3, directly 3% battery!",
+    category: 'cs',
+    emoji: '👉'
+  },
+  {
+    id: 'qc_9',
+    title: '執行以下位元運算程式後，x 是多少電量 %？',
+    titleEn: "After running this bit-manipulation code, what is x, as a battery %?",
+    code: `x = sum(bin(i).count('1') for i in range(1, 21))
+print(x)`,
+    officialBattery: 42,
+    explanation: '把 1~20 每個數字轉成二進位後數 1 的個數再全部加總，結果是 42，直接就是 42% 電量！',
+    explanationEn: "Converting 1 through 20 to binary and summing every set bit gives 42 — directly 42% battery!",
+    category: 'cs',
+    emoji: '🔢'
+  },
+  {
+    id: 'qc_10',
+    title: '執行以下字串詞頻統計程式後，x 是多少電量 %？',
+    titleEn: "After running this character-frequency count, what is x, as a battery %?",
+    code: `from collections import Counter
+s = "abracadabra"
+c = Counter(s)
+x = max(c.values()) * 10
+print(x)`,
+    officialBattery: 50,
+    explanation: '"abracadabra" 中 "a" 出現最多次，共 5 次，5×10 = 50，直接就是 50% 電量！',
+    explanationEn: '"a" is the most frequent character in "abracadabra", appearing 5 times: 5×10 = 50 — directly 50% battery!',
+    category: 'cs',
+    emoji: '🔤'
+  },
+  {
+    id: 'qc_11',
+    title: '執行以下串列生成式程式後，x 是多少電量 %？',
+    titleEn: "After running this list comprehension, what is x, as a battery %?",
+    code: `x = sum(i * i for i in range(1, 8)) % 100
+print(x)`,
+    officialBattery: 40,
+    explanation: '1²+2²+...+7² = 140，140 % 100 = 40，直接就是 40% 電量！',
+    explanationEn: "1²+2²+...+7² = 140, and 140 % 100 = 40 — directly 40% battery!",
+    category: 'cs',
+    emoji: '🧮'
+  },
+  {
+    id: 'qc_12',
+    title: '執行以下河內塔遞迴程式後，x（6 個盤子的最少移動步數）是多少電量 %？',
+    titleEn: "After running this Tower of Hanoi recursion, what is x (minimum moves for 6 disks), as a battery %?",
+    code: `def hanoi(n):
+    if n == 0:
+        return 0
+    return 2 * hanoi(n - 1) + 1
+
+x = hanoi(6)
+print(x)`,
+    officialBattery: 63,
+    explanation: 'n 個盤子的河內塔最少步數是 2ⁿ-1，2⁶-1 = 63，直接就是 63% 電量！',
+    explanationEn: "The minimum moves for n disks is 2ⁿ-1; 2⁶-1 = 63 — directly 63% battery!",
+    category: 'cs',
+    emoji: '🗼'
+  },
+  {
+    id: 'qc_13',
+    title: '執行以下動態規劃走格子程式後，x（5×5 網格的路徑數）是多少電量 %？',
+    titleEn: "After running this dynamic-programming grid-path code, what is x (paths across a 5×5 grid), as a battery %?",
+    code: `rows, cols = 5, 5
+dp = [[1] * cols for _ in range(rows)]
+for i in range(1, rows):
+    for j in range(1, cols):
+        dp[i][j] = dp[i - 1][j] + dp[i][j - 1]
+x = dp[rows - 1][cols - 1]
+print(x)`,
+    officialBattery: 70,
+    explanation: '只能往右或往下走的路徑數是組合數 C(8,4) = 70，直接就是 70% 電量！',
+    explanationEn: "The number of right/down-only paths is the combination C(8,4) = 70 — directly 70% battery!",
+    category: 'cs',
+    emoji: '🧩'
+  },
+  {
+    id: 'qc_14',
+    title: '在以下圖上找出 2 步以內可達的節點數，執行後 count 是多少電量 %？',
+    titleEn: "Counting nodes reachable within 2 hops on this graph — after running, what is count, as a battery %?",
+    code: `from collections import deque
+graph = {1: [2, 3], 2: [4], 3: [4, 5], 4: [6], 5: [6], 6: []}
+q = deque([(1, 0)])
+seen = {1}
+count = 0
+while q:
+    node, d = q.popleft()
+    if d > 0:
+        count += 1
+    if d < 2:
+        for nb in graph[node]:
+            if nb not in seen:
+                seen.add(nb)
+                q.append((nb, d + 1))
+print(count)`,
+    officialBattery: 4,
+    explanation: '從節點 1 出發 2 步內可達 2,3（第 1 步）與 4,5（第 2 步），count=4，直接就是 4% 電量！',
+    explanationEn: "From node 1, within 2 hops it reaches 2,3 (hop 1) and 4,5 (hop 2) — count=4, directly 4% battery!",
+    category: 'cs',
+    emoji: '🕸️'
+  },
+  {
+    id: 'qc_15',
+    title: '對陣列 [9,4,7,1,3,6] 做選擇排序，執行後 comparisons 是多少電量 %？',
+    titleEn: "Selection-sorting the array [9,4,7,1,3,6] — after it finishes, what is comparisons, as a battery %?",
+    code: `arr = [9, 4, 7, 1, 3, 6]
+comparisons = 0
+n = len(arr)
+for i in range(n):
+    min_idx = i
+    for j in range(i + 1, n):
+        comparisons += 1
+        if arr[j] < arr[min_idx]:
+            min_idx = j
+    arr[i], arr[min_idx] = arr[min_idx], arr[i]
+print(comparisons)`,
+    officialBattery: 15,
+    explanation: '每一輪內圈比較次數是 5+4+3+2+1 = 15（選擇排序的比較次數只看陣列長度，跟數值無關），直接就是 15% 電量！',
+    explanationEn: "The inner-loop comparisons per pass add up to 5+4+3+2+1 = 15 (selection sort's comparison count depends only on array length) — directly 15% battery!",
+    category: 'cs',
+    emoji: '📊'
+  },
+  {
+    id: 'qc_16',
+    title: '執行以下埃拉托斯特尼篩法程式後，x（100 以內質數個數）是多少電量 %？',
+    titleEn: "After running this Sieve of Eratosthenes, what is x (primes under 100), as a battery %?",
+    code: `N = 100
+sieve = [True] * (N + 1)
+sieve[0] = sieve[1] = False
+for i in range(2, int(N ** 0.5) + 1):
+    if sieve[i]:
+        for j in range(i * i, N + 1, i):
+            sieve[j] = False
+x = sum(sieve)
+print(x)`,
+    officialBattery: 25,
+    explanation: '100 以內（含 100）的質數共有 25 個，直接就是 25% 電量！',
+    explanationEn: "There are 25 primes at or below 100 — directly 25% battery!",
+    category: 'cs',
+    emoji: '🎯'
+  },
+  {
+    id: 'qc_17',
+    title: '執行以下輾轉相除法（歐幾里得演算法）程式後，x 是多少電量 %？',
+    titleEn: "After running this Euclidean algorithm, what is x, as a battery %?",
+    code: `def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+x = gcd(1071, 462)
+print(x)`,
+    officialBattery: 21,
+    explanation: '1071 和 462 的最大公因數是 21，直接就是 21% 電量！',
+    explanationEn: "The greatest common divisor of 1071 and 462 is 21 — directly 21% battery!",
+    category: 'cs',
+    emoji: '➗'
+  },
+  {
+    id: 'qc_18',
+    title: '走訪以下用字典模擬的鏈結串列，執行後 total 是多少電量 %？',
+    titleEn: "Traversing this dict-simulated linked list — after running, what is total, as a battery %?",
+    code: `nodes = {1: (10, 2), 2: (20, 3), 3: (30, 4), 4: (40, None)}
+cur, total = 1, 0
+while cur is not None:
+    val, nxt = nodes[cur]
+    total += val
+    cur = nxt
+print(total)`,
+    officialBattery: 100,
+    explanation: '依序走訪節點值 10,20,30,40，total = 10+20+30+40 = 100，剛好是 100% 滿格電量！',
+    explanationEn: "Walking the node values 10,20,30,40 in order: total = 10+20+30+40 = 100 — a full 100% battery!",
+    category: 'cs',
+    emoji: '🔗'
+  },
+  {
+    id: 'qc_19',
+    title: '執行以下矩陣主對角線加總程式後，x 是多少電量 %？',
+    titleEn: "After summing this matrix's main diagonal, what is x, as a battery %?",
+    code: `matrix = [[i * 5 + j + 1 for j in range(5)] for i in range(5)]
+x = sum(matrix[i][i] for i in range(5))
+print(x)`,
+    officialBattery: 65,
+    explanation: '5×5 矩陣的主對角線元素是 1,7,13,19,25，總和 = 65，直接就是 65% 電量！',
+    explanationEn: "The main diagonal of the 5×5 matrix is 1,7,13,19,25, summing to 65 — directly 65% battery!",
+    category: 'cs',
+    emoji: '🔲'
+  },
+  {
+    id: 'qc_20',
+    title: '用貪婪演算法為 63 元找零（硬幣：25,10,5,1），執行後 count（最少硬幣數）是多少電量 %？',
+    titleEn: "Greedily making change for 63 with coins [25,10,5,1] — after running, what is count (fewest coins), as a battery %?",
+    code: `coins = [25, 10, 5, 1]
+amount = 63
+count = 0
+for c in coins:
+    count += amount // c
+    amount %= c
+print(count)`,
+    officialBattery: 6,
+    explanation: '63 = 2×25 + 1×10 + 0×5 + 3×1，共用了 2+1+0+3 = 6 枚硬幣，直接就是 6% 電量！',
+    explanationEn: "63 = 2×25 + 1×10 + 0×5 + 3×1, using 2+1+0+3 = 6 coins total — directly 6% battery!",
+    category: 'cs',
+    emoji: '🪙'
+  },
 ];
 
 export const CATEGORY_LABELS: Record<string, { label: string; labelEn: string; icon: string }> = {
@@ -1422,5 +1780,6 @@ export const CATEGORY_LABELS: Record<string, { label: string; labelEn: string; i
   mechanics: { label: '五大力學', labelEn: 'Mechanics', icon: '⚙️' },
   economics: { label: '經濟學', labelEn: 'Economics', icon: '📊' },
   finance: { label: '財務數學', labelEn: 'Finance', icon: '💰' },
+  cs: { label: '資工／程式', labelEn: 'CS / Code', icon: '🖥️' },
   custom: { label: '自訂題庫', labelEn: 'Custom', icon: '✏️' }
 };
