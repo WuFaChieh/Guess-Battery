@@ -77,22 +77,31 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
     setGameState('answering');
   }, [questionCount]);
 
-  // Single init effect covering every re-init trigger — a new initialCategory
-  // from the parent, the in-component category filter changing
-  // selectedCategory, questionCount changing, or the question pool's size
-  // changing (questions added/removed) — so mounting only ever shuffles the
-  // question pool once. Previously this was two separate effects that both
-  // fired on mount, double-initializing (and double-shuffling) every game
-  // session. `allQuestions.length` is included purely to trigger a re-init
-  // when the pool size changes; `initGame` reads the current pool via the ref
-  // above rather than this effect passing it along.
+  // Single init effect covering every re-init trigger — the in-component
+  // category filter changing (selectedCategory, e.g. clicking a pill),
+  // questionCount changing, or the question pool's size changing (questions
+  // added/removed) — so mounting only ever shuffles the question pool once.
+  // Previously this was two separate effects that both fired on mount,
+  // double-initializing (and double-shuffling) every game session.
+  // `allQuestions.length` is included purely to trigger a re-init when the
+  // pool size changes; `initGame` reads the current pool via the ref above
+  // rather than this effect passing it along.
+  //
+  // Deliberately does NOT depend on/re-derive from `initialCategory`: a new
+  // `initialCategory` from the parent (App.tsx) always arrives bundled with
+  // a `key` change on this component (`key={\`${activeCategory}_${gameSessionId}\`}`),
+  // which forces a full remount — so within one mount's lifetime,
+  // `initialCategory` never actually changes; only `selectedCategory`'s own
+  // useState seed reads it (see above). Reconciling `catFilter` back to
+  // `initialCategory` here on every effect run — as this used to do via
+  // `initialCategory || selectedCategory` — silently stomped every category
+  // pill click: clicking a pill sets `selectedCategory`, which re-triggers
+  // this effect, which then overwrote `selectedCategory` right back to
+  // `initialCategory` (always truthy, e.g. 'all') before `initGame` ever saw
+  // the click.
   useEffect(() => {
-    const catFilter = initialCategory || selectedCategory;
-    if (catFilter !== selectedCategory) {
-      setSelectedCategory(catFilter);
-    }
-    initGame(catFilter);
-  }, [initialCategory, selectedCategory, initGame, allQuestions.length]);
+    initGame(selectedCategory);
+  }, [selectedCategory, initGame, allQuestions.length]);
 
   // Memoized so SliderInput's onSubmit prop stays referentially stable across
   // re-renders that don't touch the question/guess state this actually reads.
