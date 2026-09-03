@@ -111,6 +111,22 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           </div>
         </div>
 
+        {/* Code Block — cs-category questions carry a Python snippet to trace.
+            Rendered separately from the title (left-aligned, monospace, real
+            newlines/indentation preserved) since the title heading below is
+            centered prose text and would mangle Python's whitespace-sensitive
+            syntax if the code were embedded directly in it. */}
+        {question.code && (
+          <div className="mb-3 text-left overflow-x-auto rounded-xl bg-slate-950 border border-slate-800">
+            <div className="px-3 pt-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              {t('questioncard_code_label')}
+            </div>
+            <pre className="px-3 pb-3 pt-1 text-xs sm:text-sm font-mono text-emerald-300 whitespace-pre">
+              {question.code}
+            </pre>
+          </div>
+        )}
+
         {/* Question Title */}
         <h2 className="text-xl sm:text-2xl font-black text-slate-100 leading-snug tracking-tight my-3 px-2">
           {formatTitle(title)}

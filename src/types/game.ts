@@ -1,4 +1,4 @@
-export type QuestionCategory = 'calculus' | 'geometry' | 'algebra' | 'mechanics' | 'economics' | 'finance' | 'custom';
+export type QuestionCategory = 'calculus' | 'geometry' | 'algebra' | 'mechanics' | 'economics' | 'finance' | 'cs' | 'custom';
 
 export interface Question {
   id: string;
@@ -14,6 +14,11 @@ export interface Question {
   // getLocalizedQuestionText() in utils/gameLogic.ts).
   titleEn?: string;
   explanationEn?: string;
+  // A trace-the-code snippet (category: 'cs' questions only) rendered as a
+  // monospace block in QuestionCard, above the (language-specific) title
+  // text. Code itself isn't translated — Python syntax reads the same in
+  // either UI language, so there's no codeEn counterpart.
+  code?: string;
 }
 
 export type GameMode = 'single_5' | 'mutual_pk' | 'party' | 'custom' | 'daily';
