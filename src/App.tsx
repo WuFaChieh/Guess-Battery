@@ -9,6 +9,7 @@ import { StartCover } from './components/StartCover';
 import { LoadingState } from './components/LoadingState';
 import { DailyChallengeBanner } from './components/DailyChallengeBanner';
 import { getVolume, startBgm, unlockAudioContext } from './utils/audio';
+import { useLanguage } from './i18n/LanguageContext';
 
 // Each mode is its own chunk — only the one the player actually picks gets
 // downloaded. This keeps heavy, mode-specific dependencies (Supabase
@@ -21,6 +22,7 @@ const CustomCreator = lazy(() => import('./components/CustomCreator').then((m) =
 const DailyGame = lazy(() => import('./components/DailyGame').then((m) => ({ default: m.DailyGame })));
 
 export function App() {
+  const { t } = useLanguage();
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [currentMode, setCurrentMode] = useState<GameMode>('single_5');
@@ -167,7 +169,7 @@ export function App() {
                     key={`${activeCategory}_${gameSessionId}`}
                     allQuestions={allAvailableQuestions}
                     questionCount={5}
-                    gameModeName={activeCategory === 'custom' ? '自訂題庫試玩' : '經典速刷'}
+                    gameModeName={activeCategory === 'custom' ? t('custom_deck_trial') : t('mode_single_5')}
                     initialCategory={activeCategory}
                   />
                 )}
@@ -199,12 +201,12 @@ export function App() {
 
           {/* Footer */}
           <footer className="border-t border-slate-900 py-4 px-4 text-center text-xs text-slate-500 mb-12">
-            <p className="font-semibold text-slate-400">猜電量 Guess the Battery — 萬物皆有電量，你猜得準嗎？</p>
+            <p className="font-semibold text-slate-400">{t('app_footer_tagline')}</p>
             <p className="mt-1 text-slate-500 flex flex-wrap items-center justify-center gap-2">
-              <span>無卡牌 · 無機制 · 只有荒謬直覺與爆笑揭曉</span>
+              <span>{t('app_footer_no_cards')}</span>
               <span className="hidden sm:inline">|</span>
               <span className="bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
-                遊戲作者：<strong className="text-emerald-400 font-bold">冷月仙</strong>
+                {t('app_footer_author_label')}<strong className="text-emerald-400 font-bold">冷月仙</strong>
               </span>
             </p>
           </footer>

@@ -2,12 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Play, Sparkles } from 'lucide-react';
 import { UnifiedBattery } from './UnifiedBattery';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface StartCoverProps {
   onStartGame: () => void;
 }
 
 export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
+  const { t } = useLanguage();
+
   return (
     <div
       className="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-between p-6 select-none overflow-hidden"
@@ -23,7 +26,7 @@ export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
       <div className="pt-6 z-10">
         <span className="px-3.5 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-bold text-slate-400 flex items-center gap-2 shadow-md backdrop-blur-md">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>遊戲作者：<strong className="text-emerald-400">冷月仙</strong></span>
+          <span>{t('startcover_author_prefix')}<strong className="text-emerald-400">冷月仙</strong></span>
         </span>
       </div>
 
@@ -38,7 +41,7 @@ export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
           <UnifiedBattery
             value={100}
             size="lg"
-            faceExpression="( ✧ω✧ 電量滿載！ )"
+            faceExpression={t('startcover_mascot_face')}
           />
         </motion.div>
 
@@ -51,7 +54,7 @@ export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
             Guess the Battery
           </p>
           <p className="text-xs text-slate-400 font-medium mt-2">
-            萬物皆有電量，你猜得準嗎？
+            {t('slogan_tagline')}
           </p>
         </div>
 
@@ -73,7 +76,7 @@ export const StartCover: React.FC<StartCoverProps> = ({ onStartGame }) => {
 
       {/* Footer copyright */}
       <div className="pb-4 text-center text-[11px] text-slate-600 font-semibold z-10">
-        © 2026 猜電量 Guess the Battery · 作者：冷月仙
+        © 2026 猜電量 Guess the Battery {t('startcover_footer_author')}
       </div>
     </div>
   );

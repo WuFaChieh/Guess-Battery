@@ -1,6 +1,7 @@
 import React from 'react';
 import { Flame, Calendar, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { getDailyStreak, hasPlayedToday } from '../utils/dailyStreak';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface DailyChallengeBannerProps {
   onOpen: () => void;
@@ -13,6 +14,7 @@ interface DailyChallengeBannerProps {
 export const DailyChallengeBanner: React.FC<DailyChallengeBannerProps> = ({ onOpen }) => {
   const streak = getDailyStreak();
   const playedToday = hasPlayedToday();
+  const { t } = useLanguage();
 
   return (
     <button
@@ -29,15 +31,15 @@ export const DailyChallengeBanner: React.FC<DailyChallengeBannerProps> = ({ onOp
         </div>
         <div className="min-w-0">
           <p className={`text-xs sm:text-sm font-bold truncate ${playedToday ? 'text-slate-300' : 'text-purple-200'}`}>
-            {playedToday ? '今日挑戰已完成！' : '今日挑戰尚未完成'}
+            {playedToday ? t('dailybanner_done') : t('dailybanner_not_done')}
           </p>
           <p className="text-[11px] text-slate-500 flex items-center gap-1">
             {streak.currentStreak > 0 && (
               <span className="inline-flex items-center gap-0.5 text-orange-400 font-bold">
-                <Flame className="w-3 h-3" /> 連續 {streak.currentStreak} 天
+                <Flame className="w-3 h-3" /> {t('dailybanner_streak', { n: streak.currentStreak })}
               </span>
             )}
-            <span>{playedToday ? '明天再回來延續紀錄！' : '每天 5 題，固定題目全球同題！'}</span>
+            <span>{playedToday ? t('dailybanner_come_back') : t('dailybanner_daily_info')}</span>
           </p>
         </div>
       </div>

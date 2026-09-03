@@ -11,6 +11,7 @@ import {
   BOT_THINKING_TIME_MIN_MS,
   BOT_THINKING_TIME_MAX_MS
 } from '../constants/gameConfig';
+import { Language } from '../i18n/translations';
 
 // Re-exported so existing `import { BotDifficulty } from '../utils/aiBots'`
 // call sites keep working — the type itself now lives in gameConfig.ts
@@ -27,15 +28,18 @@ export interface PlayerProfile {
 /** A bot's profile is just a PlayerProfile drawn from the bot roster. */
 export type BotProfile = PlayerProfile;
 
-const BOT_NAMES = ['菜菜', '阿柴', '阿特', '小仙', '歐拉', '極限', '阿龍', '小柯'];
+const BOT_NAMES: Record<Language, string[]> = {
+  zh: ['菜菜', '阿柴', '阿特', '小仙', '歐拉', '極限', '阿龍', '小柯'],
+  en: ['Rookie', 'Shiba', 'Atlas', 'Sage', 'Euler', 'Limit', 'Drake', 'Cole']
+};
 const BOT_AVATARS = ['🌱', '🐕', '💻', '🔮', '🤓', '🎯', '🐉', '🐱'];
 
 /** Returns a random bot nickname + avatar for a fallback PK opponent. */
-export function getBotProfile(): BotProfile {
-  const idx = Math.floor(Math.random() * BOT_NAMES.length);
+export function getBotProfile(lang: Language = 'zh'): BotProfile {
+  const idx = Math.floor(Math.random() * BOT_AVATARS.length);
   return {
     id: `bot_${Date.now()}_${idx}`,
-    name: BOT_NAMES[idx],
+    name: BOT_NAMES[lang][idx],
     avatar: BOT_AVATARS[idx]
   };
 }

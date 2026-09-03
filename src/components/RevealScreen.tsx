@@ -2,10 +2,11 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Question } from '../types/game';
 import { BatteryGauge } from './BatteryGauge';
-import { calculateScore, getCommentary, getCommentaryIcon, getComboBonus } from '../utils/gameLogic';
+import { calculateScore, getCommentary, getCommentaryIcon, getComboBonus, getLocalizedQuestionText } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound, playComboSound } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { ArrowRight, Trophy, Lightbulb, Flame } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface RevealScreenProps {
   question: Question;
@@ -23,8 +24,10 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   isLastQuestion = false,
   comboCount = 0
 }) => {
+  const { lang, t } = useLanguage();
+  const { title, explanation } = getLocalizedQuestionText(question, lang);
   const { distance, score } = calculateScore(userGuess, question.officialBattery);
-  const commentary = getCommentary(distance);
+  const commentary = getCommentary(distance, lang);
   const CommentaryIcon = getCommentaryIcon(distance);
   const comboBonus = getComboBonus(comboCount);
 
@@ -55,10 +58,10 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
       {/* Title */}
       <div className="text-center px-1">
         <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-          揭曉答案
+          {t('reveal_badge')}
         </span>
         <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white mt-2 leading-snug">
-          {question.title}
+          {title}
         </h3>
       </div>
 
@@ -70,7 +73,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
           transition={{ duration: 0.3 }}
           className="flex flex-col items-center"
         >
-          <BatteryGauge value={userGuess} label="你的猜測" size="md" />
+          <BatteryGauge value={userGuess} label={t('reveal_your_guess')} size="md" />
         </motion.div>
 
         <motion.div
@@ -79,7 +82,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
           transition={{ duration: 0.3, delay: 0.3 }}
           className="flex flex-col items-center"
         >
-          <BatteryGauge value={question.officialBattery} label="官方答案" size="md" />
+          <BatteryGauge value={question.officialBattery} label={t('reveal_official_answer')} size="md" />
         </motion.div>
       </div>
 
@@ -92,11 +95,11 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
       >
         <div className="flex items-center justify-center gap-4 text-xs sm:text-sm">
           <span className="text-slate-400">
-            差距：<strong className="text-amber-400 font-bold">{distance}%</strong>
+            {t('reveal_distance')}<strong className="text-amber-400 font-bold">{distance}%</strong>
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            得分：
+            {t('reveal_score')}
             <strong className={`font-black text-lg sm:text-xl ${score >= 90 ? 'text-emerald-400' : score >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
               +{score}
             </strong>
@@ -112,7 +115,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
             className="px-3.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-300 text-xs sm:text-sm font-bold flex items-center gap-1.5"
           >
             <Flame className="w-4 h-4 text-orange-400" />
-            <span>連擊 x{comboCount}！額外 +{comboBonus} 分！</span>
+            <span>{t('reveal_combo', { n: comboCount, bonus: comboBonus })}</span>
           </motion.div>
         )}
 
@@ -125,9 +128,9 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
         {/* Official Explanation */}
         <div className="mt-1.5 p-3 bg-slate-900 rounded-xl text-xs text-slate-300 border border-slate-800/80 leading-relaxed text-left w-full">
           <span className="font-bold text-amber-400 flex items-center gap-1 mb-0.5">
-            <Lightbulb className="w-3.5 h-3.5" /> 官方電量解說：
+            <Lightbulb className="w-3.5 h-3.5" /> {t('reveal_explanation_label')}
           </span>
-          {question.explanation}
+          {explanation}
         </div>
       </motion.div>
 
@@ -136,7 +139,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
         onClick={onNext}
         className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white font-black text-base sm:text-lg shadow-lg shadow-purple-950/50 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 border border-violet-400/30"
       >
-        <span>{isLastQuestion ? '進入總結算' : '下一題'}</span>
+        <span>{isLastQuestion ? t('reveal_finish') : t('reveal_next')}</span>
         {isLastQuestion ? <Trophy className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
       </button>
     </div>

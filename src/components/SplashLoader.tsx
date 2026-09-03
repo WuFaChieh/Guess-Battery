@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { playChargingSound, playScoreSound } from '../utils/audio';
 import { UnifiedBattery } from './UnifiedBattery';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface SplashLoaderProps {
   onComplete: () => void;
@@ -10,6 +11,7 @@ interface SplashLoaderProps {
 
 export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Organic fluctuating loading steps with distinct noticeable pauses (~1.1s total)
@@ -56,10 +58,10 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onComplete }) => {
 
   // Cute mascot facial expressions based on battery charge %
   const getMascotExpression = (val: number) => {
-    if (val < 30) return { face: '( ｡>﹏<｡ )', label: '開機充能中...' };
-    if (val < 70) return { face: '( ｡• ᵕ •｡ )', label: '熱量與直覺蓄積中...' };
-    if (val < 99) return { face: '( ≧ᗜ≦ )', label: '能量滿載！' };
-    return { face: '( ✧ω✧ )', label: '萬物皆有電量！' };
+    if (val < 30) return { face: '( ｡>﹏<｡ )', label: t('splash_stage_boot') };
+    if (val < 70) return { face: '( ｡• ᵕ •｡ )', label: t('splash_stage_charging') };
+    if (val < 99) return { face: '( ≧ᗜ≦ )', label: t('splash_stage_full') };
+    return { face: '( ✧ω✧ )', label: t('splash_stage_done') };
   };
 
   const mascot = getMascotExpression(progress);

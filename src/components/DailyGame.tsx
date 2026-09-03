@@ -11,12 +11,14 @@ import { GameOverModal } from './GameOverModal';
 import { LoadingState } from './LoadingState';
 import { shareResult } from '../utils/share';
 import { Calendar, Sparkles, Flame, Share2, Check } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface DailyGameProps {
   allQuestions: Question[];
 }
 
 export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
+  const { lang, t } = useLanguage();
   const todayStr = getLocalDateString();
   const [dailyQuestions, setDailyQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -48,7 +50,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
   }, [gameState, todayStr]);
 
   const handleShareDaily = async () => {
-    const shareText = getDailyShareText(answers, streak.currentStreak, todayStr);
+    const shareText = getDailyShareText(answers, streak.currentStreak, todayStr, lang);
     const outcome = await shareResult(shareText);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
@@ -83,7 +85,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
   };
 
   if (dailyQuestions.length === 0) {
-    return <LoadingState label="載入每日題目中..." />;
+    return <LoadingState label={t('loading_daily')} />;
   }
 
   const currentQ = dailyQuestions[currentIndex];
@@ -96,9 +98,9 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
         <div className="w-full max-w-xl mx-auto bg-slate-900/90 p-4 rounded-2xl border border-orange-500/30 shadow-lg flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-orange-300 font-bold text-sm">
             <Flame className="w-5 h-5 text-orange-400" />
-            <span>連續挑戰 {streak.currentStreak} 天！</span>
+            <span>{t('daily_streak_banner', { n: streak.currentStreak })}</span>
             {streak.longestStreak > streak.currentStreak && (
-              <span className="text-[11px] text-slate-500 font-medium">（最佳 {streak.longestStreak} 天）</span>
+              <span className="text-[11px] text-slate-500 font-medium">{t('daily_best_streak', { n: streak.longestStreak })}</span>
             )}
           </div>
           <button
@@ -106,7 +108,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
             className="shrink-0 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700"
           >
             {shareState !== 'idle' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-slate-300" />}
-            <span>{shareState === 'copied' ? '已複製戰績方格！' : shareState === 'shared' ? '已開啟分享！' : '分享今日戰績方格'}</span>
+            <span>{shareState === 'copied' ? t('daily_share_copied') : shareState === 'shared' ? t('share_shared') : t('daily_share_button')}</span>
           </button>
         </div>
 
@@ -118,7 +120,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
             setAnswers([]);
             setGameState('answering');
           }}
-          gameModeName={`每日挑戰 (${todayStr})`}
+          gameModeName={t('daily_mode_name', { date: todayStr })}
         />
       </div>
     );
@@ -129,7 +131,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
       {/* Daily Banner */}
       <div className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 px-4 py-2 rounded-2xl text-purple-300 text-xs font-bold mb-3 shadow-sm">
         <Calendar className="w-4 h-4 text-purple-400" />
-        <span>每日限定題目 (日期：{todayStr})</span>
+        <span>{t('daily_limited_questions', { date: todayStr })}</span>
         <Sparkles className="w-3.5 h-3.5 text-amber-400" />
       </div>
 
@@ -142,7 +144,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
             comboCount={getCurrentCombo(answers)}
           />
 
-          <BatteryGauge value={currentGuess} label="今日猜測" size="lg" />
+          <BatteryGauge value={currentGuess} label={t('daily_guess_label')} size="lg" />
 
           <SliderInput
             value={currentGuess}

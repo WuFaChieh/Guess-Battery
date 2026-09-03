@@ -8,6 +8,7 @@ import { GameOverModal } from './GameOverModal';
 import { LoadingState } from './LoadingState';
 import { calculateScore, shuffleArray, getCurrentCombo } from '../utils/gameLogic';
 import { CATEGORY_LABELS } from '../data/questions';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface SinglePlayerGameProps {
   allQuestions: Question[];
@@ -20,9 +21,11 @@ interface SinglePlayerGameProps {
 export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   allQuestions,
   questionCount = 5,
-  gameModeName = '經典速刷',
+  gameModeName,
   initialCategory = 'all'
 }) => {
+  const { lang, t } = useLanguage();
+  const resolvedModeName = gameModeName ?? t('mode_single_5');
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -121,7 +124,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   };
 
   if (questions.length === 0) {
-    return <LoadingState label="載入題庫中..." />;
+    return <LoadingState label={t('loading_pool')} />;
   }
 
   const currentQuestion = questions[currentIndex];
@@ -131,7 +134,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
       <GameOverModal
         answers={answers}
         onRestart={() => initGame(selectedCategory)}
-        gameModeName={selectedCategory === 'custom' ? '自訂題庫試玩' : gameModeName}
+        gameModeName={selectedCategory === 'custom' ? t('custom_deck_trial') : resolvedModeName}
       />
     );
   }
@@ -139,7 +142,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
   return (
     <div className="w-full flex flex-col items-center">
       {/* Category Filter Selector (Equal-width Grid - 100% Scrollbar Free) */}
-      <div className={`grid ${hasCustomQuestions ? 'grid-cols-4' : 'grid-cols-3'} gap-1 max-w-md w-full p-1 mb-2 bg-slate-900/80 rounded-2xl border border-slate-800 select-none`}>
+      <div className="grid grid-cols-3 gap-1 max-w-md w-full p-1 mb-2 bg-slate-900/80 rounded-2xl border border-slate-800 select-none">
         {Object.entries(CATEGORY_LABELS).map(([key, item]) => {
           // Hide custom filter if user hasn't created custom questions yet
           if (key === 'custom' && !hasCustomQuestions) return null;
@@ -156,7 +159,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
               }`}
             >
               <span className="text-xs">{item.icon}</span>
-              <span>{item.label}</span>
+              <span>{lang === 'en' ? item.labelEn : item.label}</span>
             </button>
           );
         })}
@@ -173,7 +176,7 @@ export const SinglePlayerGame: React.FC<SinglePlayerGameProps> = ({
           />
 
           {/* Real-time Battery Gauge Preview */}
-          <BatteryGauge value={currentGuess} label="你猜的電量" size="lg" />
+          <BatteryGauge value={currentGuess} label={t('battery_guess_label')} size="lg" />
 
           {/* Interactive Slider Input */}
           <SliderInput

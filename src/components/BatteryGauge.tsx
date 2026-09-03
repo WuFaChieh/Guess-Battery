@@ -1,5 +1,6 @@
 import React from 'react';
 import { UnifiedBattery } from './UnifiedBattery';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface BatteryGaugeProps {
   value: number; // 0 to 100
@@ -10,17 +11,20 @@ interface BatteryGaugeProps {
 }
 
 // Memoized: a thin wrapper around UnifiedBattery, itself often re-rendered
-// on high-frequency timer ticks (slider drags, charging ceremonies).
+// on high-frequency timer ticks (slider drags, charging ceremonies). `label`
+// defaults to the localized generic guess label when the caller doesn't pass
+// its own (already localized) label.
 const BatteryGaugeComponent: React.FC<BatteryGaugeProps> = ({
   value,
-  label = '你猜的電量',
+  label,
   size = 'lg',
   animated = true
 }) => {
+  const { t } = useLanguage();
   return (
     <UnifiedBattery
       value={value}
-      label={label}
+      label={label ?? t('battery_guess_label')}
       size={size}
       animated={animated}
     />

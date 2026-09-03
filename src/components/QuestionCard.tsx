@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowDownRight, Flame } from 'lucide-react';
 import { Question } from '../types/game';
 import { CATEGORY_LABELS } from '../data/questions';
-import { getComboBonus } from '../utils/gameLogic';
+import { getComboBonus, getLocalizedQuestionText } from '../utils/gameLogic';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface QuestionCardProps {
   question: Question;
@@ -19,16 +20,21 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   totalQuestions = 5,
   comboCount = 0
 }) => {
-  const catInfo = CATEGORY_LABELS[question.category] || { label: '荒謬萬物', icon: '🥔' };
+  const { lang, t } = useLanguage();
+  const { title } = getLocalizedQuestionText(question, lang);
+  const catInfo = CATEGORY_LABELS[question.category] || { label: t('questioncard_fallback_category'), labelEn: 'Hardcore Math', icon: '🤓' };
+  const catLabel = lang === 'en' ? catInfo.labelEn : catInfo.label;
 
   // Highlight key terms in title with warm amber text (no raw HTML injection —
-  // split into plain-text segments and wrap keyword matches in <span>s directly).
+  // split into plain-text segments and wrap keyword matches in <span>s
+  // directly). Chinese-only: the keyword list is hand-picked from the
+  // built-in Chinese question titles, so an English session just skips
+  // highlighting rather than needing a whole parallel English keyword list.
   const formatTitle = (title: string) => {
+    if (lang === 'en') return <span>{title}</span>;
+
     const keywords = [
-      'Wi-Fi', 'ChatGPT', '馬鈴薯', '牛肉麵', '微分方程', '定積分',
-      '極限', '歐拉公式', '黃金分割率', '矩陣', '台大', '期末考',
-      '上班族', '企鵝', '柴犬', '柯基犬', '橡皮鴨', '蟑螂', '金魚',
-      '西瓜', '爆米花', '烏龍茶', '被褥', '麵包', '綠芽', '熱水'
+      'Wi-Fi', 'ChatGPT', '微分方程', '定積分', '極限', '歐拉公式', '黃金分割率', '矩陣'
     ];
 
     const pattern = new RegExp(`(${keywords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
@@ -54,7 +60,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       {/* Top Progress Pill & Dots */}
       <div className="flex flex-col items-center gap-2">
         <span className="px-3.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-emerald-400 tabular-nums">
-          第 {currentIndex + 1} / {totalQuestions} 題
+          {t('questioncard_progress', { current: currentIndex + 1, total: totalQuestions })}
         </span>
 
         {/* 5 Dots Progress Indicator */}
@@ -83,7 +89,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             className="px-3 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/40 text-orange-300 text-xs font-bold flex items-center gap-1 shadow-sm shadow-orange-950/30"
           >
             <Flame className="w-3.5 h-3.5 text-orange-400" />
-            <span>連擊中 x{comboCount}（+{getComboBonus(comboCount)} 加成）</span>
+            <span>{t('questioncard_combo', { n: comboCount, bonus: getComboBonus(comboCount) })}</span>
           </motion.span>
         )}
       </div>
@@ -94,7 +100,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         <div className="flex justify-start mb-4">
           <span className="px-3 py-1 rounded-full bg-purple-950/40 border border-purple-800/40 text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
             <span>{catInfo.icon}</span>
-            <span>{catInfo.label}</span>
+            <span>{catLabel}</span>
           </span>
         </div>
 
@@ -107,12 +113,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
         {/* Question Title */}
         <h2 className="text-xl sm:text-2xl font-black text-slate-100 leading-snug tracking-tight my-3 px-2">
-          {formatTitle(question.title)}
+          {formatTitle(title)}
         </h2>
 
         {/* Subtitle pointing down at the slider */}
         <p className="text-xs text-slate-400 mt-2 flex items-center justify-center gap-1 opacity-90">
-          <span>憑直覺猜出 0～100% 的電量數字！</span>
+          <span>{t('questioncard_subtitle')}</span>
           <ArrowDownRight className="w-3.5 h-3.5 text-slate-500" />
         </p>
       </div>
