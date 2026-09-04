@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame, Crown, Globe, Share2, Check } from 'lucide-react';
+import { Swords, Smartphone, Send, RotateCcw, Zap, Sparkles, CheckCircle2, ArrowRight, Flame, Crown, Globe, Share2, Check, Download } from 'lucide-react';
 import { Question } from '../types/game';
 import { HUMAN_BOT_QUESTIONS } from '../utils/humanAiDeck';
 import { getBotGuess, BotDifficulty, PlayerProfile } from '../utils/aiBots';
@@ -13,6 +13,8 @@ import { UnifiedBattery } from './UnifiedBattery';
 import { SliderInput } from './SliderInput';
 import { playChargingSound, playTickSound, playMatchFoundSound, playQuestionSubmitSound, playVictoryFanfareSound, playDefeatSound } from '../utils/audio';
 import { shareResult } from '../utils/share';
+import { renderShareCardImage } from '../utils/shareCard';
+import { SITE_URL } from '../constants/site';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -181,7 +183,7 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
   const [animatedPlayerBattery, setAnimatedPlayerBattery] = useState(0);
   const [animatedOpponentBattery, setAnimatedOpponentBattery] = useState(0);
   const [isChargingFinished, setIsChargingFinished] = useState(false);
-  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied' | 'downloaded'>('idle');
 
   // Fetch real device battery
   useEffect(() => {
@@ -482,14 +484,25 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
 
   const handleShareResult = async () => {
     if (!opponent) return;
+    const resultLabel = isPlayerWinner ? t('share_pk_win') : t('share_pk_lose');
     const shareText = t('share_pk_text', {
-      result: isPlayerWinner ? t('share_pk_win') : t('share_pk_lose'),
+      result: resultLabel,
       score: playerScore,
       gap: playerGap,
       opponentName: opponent.name,
-      opponentScore
+      opponentScore,
+      url: SITE_URL
     });
-    const outcome = await shareResult(shareText);
+    const image = renderShareCardImage({
+      kicker: t('mode_mutual_pk'),
+      bigStat: `${playerScore}`,
+      bigStatCaption: t('pk_score_points', { n: playerScore }),
+      headline: `${isPlayerWinner ? '🏆' : '⚔️'} ${resultLabel}`,
+      subtitle: `vs ${opponent.name} ${opponentScore}`,
+      chips: [{ label: 'Δ', value: `${playerGap}%` }],
+      accent: isPlayerWinner ? 'emerald' : 'rose'
+    });
+    const outcome = await shareResult(shareText, undefined, image);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
     setTimeout(() => setShareState('idle'), 2500);
@@ -881,8 +894,22 @@ export const MutualPkGame: React.FC<MutualPkGameProps> = () => {
                 onClick={handleShareResult}
                 className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
               >
-                {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
-                <span>{shareState === 'copied' ? t('share_copied') : shareState === 'shared' ? t('share_shared') : t('pk_share_button')}</span>
+                {shareState === 'downloaded' ? (
+                  <Download className="w-4 h-4 text-emerald-400" />
+                ) : shareState !== 'idle' ? (
+                  <Check className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <Share2 className="w-4 h-4 text-slate-300" />
+                )}
+                <span>
+                  {shareState === 'downloaded'
+                    ? t('share_downloaded')
+                    : shareState === 'copied'
+                    ? t('share_copied')
+                    : shareState === 'shared'
+                    ? t('share_shared')
+                    : t('pk_share_button')}
+                </span>
               </button>
 
               <button

@@ -8,8 +8,10 @@ import { SliderInput } from './SliderInput';
 import { calculateScore, shuffleArray, getLocalizedQuestionText } from '../utils/gameLogic';
 import { playRevealSound, playScoreSound, playVictoryFanfareSound } from '../utils/audio';
 import { shareResult } from '../utils/share';
+import { renderShareCardImage } from '../utils/shareCard';
+import { SITE_URL } from '../constants/site';
 import confetti from 'canvas-confetti';
-import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles, Rocket, Medal, BarChart3, Share2, Check } from 'lucide-react';
+import { Users, Crown, EyeOff, ArrowRight, RotateCcw, Sparkles, Rocket, Medal, BarChart3, Share2, Check, Download } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface PartyModeGameProps {
@@ -41,7 +43,7 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   const [currentGuess, setCurrentGuess] = useState<number>(50);
   const [secretLocked, setSecretLocked] = useState<boolean>(false);
   const [gameState, setGameState] = useState<'turn' | 'reveal' | 'finished'>('turn');
-  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied' | 'downloaded'>('idle');
 
   const startPartyGame = () => {
     const activePlayers: Player[] = Array.from({ length: playerCount }).map((_, i) => ({
@@ -117,8 +119,17 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
   const handleShareChampion = async (champions: Player[], maxScore: number, isTie: boolean) => {
     const names = champions.map((c) => `${c.avatar} ${c.name}`).join(lang === 'en' ? ', ' : '、');
     const result = isTie ? t('share_party_tie', { names }) : t('share_party_champions', { names });
-    const shareText = t('share_party_text', { result, maxScore });
-    const outcome = await shareResult(shareText);
+    const shareText = t('share_party_text', { result, maxScore, url: SITE_URL });
+    const avgScore = Math.min(100, Math.round(maxScore / questions.length));
+    const image = renderShareCardImage({
+      kicker: t('mode_party'),
+      bigStat: `${avgScore}%`,
+      bigStatCaption: t('party_score_points', { n: maxScore }),
+      headline: `🏆 ${names}`,
+      subtitle: isTie ? t('party_tied_top_score') : t('party_top_score'),
+      accent: 'amber'
+    });
+    const outcome = await shareResult(shareText, undefined, image);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
     setTimeout(() => setShareState('idle'), 2500);
@@ -445,8 +456,22 @@ export const PartyModeGame: React.FC<PartyModeGameProps> = ({ allQuestions }) =>
           onClick={() => handleShareChampion(champions, maxScore, isTie)}
           className="py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
         >
-          {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
-          <span>{shareState === 'copied' ? t('share_copied') : shareState === 'shared' ? t('share_shared') : t('party_share_button')}</span>
+          {shareState === 'downloaded' ? (
+            <Download className="w-4 h-4 text-emerald-400" />
+          ) : shareState !== 'idle' ? (
+            <Check className="w-4 h-4 text-emerald-400" />
+          ) : (
+            <Share2 className="w-4 h-4 text-slate-300" />
+          )}
+          <span>
+            {shareState === 'downloaded'
+              ? t('share_downloaded')
+              : shareState === 'copied'
+              ? t('share_copied')
+              : shareState === 'shared'
+              ? t('share_shared')
+              : t('party_share_button')}
+          </span>
         </button>
 
         <button

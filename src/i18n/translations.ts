@@ -29,6 +29,7 @@ const zh = {
   share_idle: '分享成績戰報',
   share_copied: '成績已複製到剪貼簿！',
   share_shared: '已開啟分享！',
+  share_downloaded: '分享圖已下載＋文字已複製！',
   cancel: '取消',
   slogan_tagline: '萬物皆有電量，你猜得準嗎？',
 
@@ -135,7 +136,7 @@ const zh = {
   gameover_breakdown: '每題數據紀錄',
   gameover_guess_vs_answer: '猜 {guess}% / 答 {answer}%',
   gameover_restart: '再玩一局！',
-  share_gameover_text: '🔋【猜電量 Guess the Battery】\n我在《{mode}》中獲得了 {total} 分{comboLine}（平均精準度 {avg}%）！\n獲得榮譽稱號：{badgeTitle} {badgeEmoji}\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！',
+  share_gameover_text: '🔋【猜電量 Guess the Battery】\n我在《{mode}》中獲得了 {total} 分{comboLine}（平均精準度 {avg}%）！\n獲得榮譽稱號：{badgeTitle} {badgeEmoji}\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！\n👉 {url}\n#猜電量 #GuessTheBattery',
   share_gameover_combo_line: '（含連擊加成 +{n}）',
 
   // ---------------------------------------------------------------------
@@ -169,7 +170,7 @@ const zh = {
   // ---------------------------------------------------------------------
   // Daily share text (gameLogic.ts getDailyShareText)
   // ---------------------------------------------------------------------
-  share_daily_text: '🔋猜電量 每日挑戰 {date}\n{grid}  平均 {avg}%{streakLine}\n萬物皆有電量，你猜得準嗎？快來試試！',
+  share_daily_text: '🔋猜電量 每日挑戰 {date}\n{grid}  平均 {avg}%{streakLine}\n萬物皆有電量，你猜得準嗎？快來試試！\n👉 {url}\n#猜電量 #GuessTheBattery #每日挑戰',
   share_daily_streak_line: '\n🔥 連續挑戰 {days} 天！',
 
   // ---------------------------------------------------------------------
@@ -258,7 +259,7 @@ const zh = {
   party_avg_accuracy: '平均精準度 {n}%',
   party_share_button: '分享冠軍戰績',
   party_restart_button: '重新開一局派對',
-  share_party_text: '🎉【猜電量 Guess the Battery】同螢幕派對模式\n{result}！最高總得分 {maxScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快找朋友一起來挑戰直覺！',
+  share_party_text: '🎉【猜電量 Guess the Battery】同螢幕派對模式\n{result}！最高總得分 {maxScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快找朋友一起來挑戰直覺！\n👉 {url}\n#猜電量 #GuessTheBattery',
   share_party_champions: '冠軍：{names}',
   share_party_tie: '並列冠軍：{names}',
 
@@ -308,7 +309,7 @@ const zh = {
   pk_opponent_guess_gap: '對手猜 {guess}% (差距 {gap}%)',
   pk_share_button: '分享對戰結果',
   pk_restart_button: '再配對對決一局！',
-  share_pk_text: '⚔️【猜電量 Guess the Battery】1v1 PK 對決\n我{result}！得分 {score} 分（差距 {gap}%）vs 對手 {opponentName} {opponentScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！',
+  share_pk_text: '⚔️【猜電量 Guess the Battery】1v1 PK 對決\n我{result}！得分 {score} 分（差距 {gap}%）vs 對手 {opponentName} {opponentScore} 分！\n\n「萬物皆有電量，你猜得準嗎？」快來挑戰你的直覺！\n👉 {url}\n#猜電量 #GuessTheBattery',
   share_pk_win: '獲勝了',
   share_pk_lose: '惜敗了'
 } as const;
@@ -330,6 +331,7 @@ const en: Record<TranslationKey, string> = {
   share_idle: 'Share Results',
   share_copied: 'Copied to clipboard!',
   share_shared: 'Share sheet opened!',
+  share_downloaded: 'Image downloaded + text copied!',
   cancel: 'Cancel',
   slogan_tagline: 'Everything has a battery level. Can you guess it?',
 
@@ -436,7 +438,7 @@ const en: Record<TranslationKey, string> = {
   gameover_breakdown: 'Question Breakdown',
   gameover_guess_vs_answer: 'Guessed {guess}% / Answer {answer}%',
   gameover_restart: 'Play Again!',
-  share_gameover_text: '🔋【Guess the Battery】\nI scored {total} points{comboLine} in "{mode}" (avg accuracy {avg}%)!\nTitle earned: {badgeTitle} {badgeEmoji}\n\n"Everything has a battery level. Can you guess it?" Come test your intuition!',
+  share_gameover_text: '🔋【Guess the Battery】\nI scored {total} points{comboLine} in "{mode}" (avg accuracy {avg}%)!\nTitle earned: {badgeTitle} {badgeEmoji}\n\n"Everything has a battery level. Can you guess it?" Come test your intuition!\n👉 {url}\n#GuessTheBattery',
   share_gameover_combo_line: ' (incl. +{n} combo bonus)',
 
   // ---------------------------------------------------------------------
@@ -470,7 +472,7 @@ const en: Record<TranslationKey, string> = {
   // ---------------------------------------------------------------------
   // Daily share text (gameLogic.ts getDailyShareText)
   // ---------------------------------------------------------------------
-  share_daily_text: '🔋Guess the Battery — Daily Challenge {date}\n{grid}  Avg {avg}%{streakLine}\nEverything has a battery level. Can you guess it? Come try it out!',
+  share_daily_text: '🔋Guess the Battery — Daily Challenge {date}\n{grid}  Avg {avg}%{streakLine}\nEverything has a battery level. Can you guess it? Come try it out!\n👉 {url}\n#GuessTheBattery #DailyChallenge',
   share_daily_streak_line: '\n🔥 {days}-day streak!',
 
   // ---------------------------------------------------------------------
@@ -559,7 +561,7 @@ const en: Record<TranslationKey, string> = {
   party_avg_accuracy: 'Avg. accuracy {n}%',
   party_share_button: 'Share Champion Results',
   party_restart_button: 'Start a New Party',
-  share_party_text: '🎉【Guess the Battery】Party Mode\n{result}! Top score: {maxScore} points!\n\n"Everything has a battery level. Can you guess it?" Grab your friends and test your intuition!',
+  share_party_text: '🎉【Guess the Battery】Party Mode\n{result}! Top score: {maxScore} points!\n\n"Everything has a battery level. Can you guess it?" Grab your friends and test your intuition!\n👉 {url}\n#GuessTheBattery',
   share_party_champions: 'Champion: {names}',
   share_party_tie: 'Tied Champions: {names}',
 
@@ -609,7 +611,7 @@ const en: Record<TranslationKey, string> = {
   pk_opponent_guess_gap: 'Opponent guessed {guess}% (off by {gap}%)',
   pk_share_button: 'Share Battle Result',
   pk_restart_button: 'Find a New Match!',
-  share_pk_text: '⚔️【Guess the Battery】1v1 PK Battle\nI {result}! Score {score} pts (gap {gap}%) vs opponent {opponentName} {opponentScore} pts!\n\n"Everything has a battery level. Can you guess it?" Come test your intuition!',
+  share_pk_text: '⚔️【Guess the Battery】1v1 PK Battle\nI {result}! Score {score} pts (gap {gap}%) vs opponent {opponentName} {opponentScore} pts!\n\n"Everything has a battery level. Can you guess it?" Come test your intuition!\n👉 {url}\n#GuessTheBattery',
   share_pk_win: 'won',
   share_pk_lose: 'narrowly lost'
 };
