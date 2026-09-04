@@ -75,14 +75,19 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number,
   const chars = Array.from(text);
   const lines: string[] = [];
   let current = '';
-  for (const ch of chars) {
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
     const next = current + ch;
     if (ctx.measureText(next).width > maxWidth && current) {
       lines.push(current);
       current = ch;
       if (lines.length === maxLines - 1) {
-        // Last line: append the remainder (ellipsized if still too long) and stop.
-        const rest = chars.slice(chars.indexOf(ch)).join('').trimStart();
+        // Last line: append the remainder (ellipsized if still too long) and
+        // stop. Sliced from `i` (the current loop position), NOT
+        // `chars.indexOf(ch)` — a repeated character earlier in the string
+        // would make indexOf resolve to that earlier position instead of
+        // here, re-including already-emitted text in this "last" line.
+        const rest = chars.slice(i).join('').trimStart();
         let last = rest;
         while (ctx.measureText(last + '…').width > maxWidth && last.length > 1) {
           last = last.slice(0, -1);

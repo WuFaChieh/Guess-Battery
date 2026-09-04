@@ -109,12 +109,17 @@ export function startMatchmaking(
   let cancelled = false;
   let channel: RealtimeChannel | null = null;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let pollIntervalId: ReturnType<typeof setInterval> | null = null;
   let queueEntryId: string | null = null;
 
   const teardown = () => {
     if (timeoutId) {
       clearTimeout(timeoutId);
       timeoutId = null;
+    }
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
     }
     if (channel && supabase) {
       supabase.removeChannel(channel);
@@ -135,7 +140,17 @@ export function startMatchmaking(
     // open opponent for players who search after we've already left.
     if (queueEntryId && supabase) {
       try {
-        await supabase.from(QUEUE_TABLE).update({ status: 'cancelled' satisfies QueueStatus }).eq('id', queueEntryId);
+        // Guarded on our row still being 'searching': without this, a side
+        // that times out right after actually being claimed by a real
+        // opponent (status already flipped to 'matched' server-side) would
+        // stomp its own row back to 'cancelled' — harmless to either
+        // player's in-memory session by that point, but it corrupts the
+        // queue table's history of what really happened.
+        await supabase
+          .from(QUEUE_TABLE)
+          .update({ status: 'cancelled' satisfies QueueStatus })
+          .eq('id', queueEntryId)
+          .eq('status', 'searching' satisfies QueueStatus);
       } catch (e) {
         console.debug('[matchmaking] cleanup error:', e);
       }
@@ -228,36 +243,69 @@ export function startMatchmaking(
       }
 
       // 3. Nobody waiting yet — listen for a later player matching *with us*.
+      //
+      // Resolves a row once we know it's been claimed (status==='matched'),
+      // whether we learned that from the Realtime subscription below or from
+      // the polling fallback beside it — shared so both paths report the
+      // same shape to `onMatched` and neither can double-fire (`finish` is
+      // itself idempotent via `settled`).
+      const resolveMatchedRow = async (row: Pick<QueueRow, 'status' | 'room_id' | 'matched_with'>) => {
+        if (row.status !== 'matched' || !row.room_id || !row.matched_with) return;
+
+        let opponentName = translate(lang, 'pk_mystery_opponent');
+        try {
+          const { data: opponentRow } = await client
+            .from(QUEUE_TABLE)
+            .select<'player_name', Pick<QueueRow, 'player_name'>>('player_name')
+            .eq('id', row.matched_with)
+            .single();
+          if (opponentRow) opponentName = opponentRow.player_name;
+        } catch (e) {
+          console.debug('[matchmaking] opponent lookup error:', e);
+        }
+
+        finish({
+          roomId: row.room_id,
+          isBot: false,
+          opponent: { id: row.matched_with, name: opponentName, avatar: DEFAULT_PLAYER_AVATAR },
+          queueEntryId: queueEntryId ?? undefined
+        });
+      };
+
       channel = client
         .channel(`matchmaking-${queueEntryId}`)
         .on<QueueRow>(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: QUEUE_TABLE, filter: `id=eq.${queueEntryId}` },
-          async (payload) => {
-            const row = payload.new;
-            if (row.status !== 'matched' || !row.room_id || !row.matched_with) return;
-
-            let opponentName = translate(lang, 'pk_mystery_opponent');
-            try {
-              const { data: opponentRow } = await client
-                .from(QUEUE_TABLE)
-                .select<'player_name', Pick<QueueRow, 'player_name'>>('player_name')
-                .eq('id', row.matched_with)
-                .single();
-              if (opponentRow) opponentName = opponentRow.player_name;
-            } catch (e) {
-              console.debug('[matchmaking] opponent lookup error:', e);
-            }
-
-            finish({
-              roomId: row.room_id,
-              isBot: false,
-              opponent: { id: row.matched_with, name: opponentName, avatar: DEFAULT_PLAYER_AVATAR },
-              queueEntryId: queueEntryId ?? undefined
-            });
-          }
+          (payload) => resolveMatchedRow(payload.new)
         )
         .subscribe();
+
+      // 3b. Belt-and-suspenders poll of our own row, alongside the Realtime
+      // subscription above rather than instead of it. Confirmed in practice
+      // (see CLAUDE.md's matchmaking known-issue writeup) that the listening
+      // side's `postgres_changes` callback can simply never fire even though
+      // the claiming side's write genuinely lands — a Realtime delivery gap,
+      // not a client-code bug — which otherwise silently burns the full
+      // timeout and hands out a bot despite a real, already-matched opponent
+      // waiting on the other end. Polling our own row directly is a plain
+      // REST read (no Realtime dependency) and only runs while still
+      // waiting, so it costs a handful of extra reads per search, not per
+      // player online.
+      const pollIntervalMs = Math.min(1500, Math.max(500, MATCHMAKING_TIMEOUT_MS / 5));
+      pollIntervalId = setInterval(async () => {
+        if (settled || cancelled || !queueEntryId) return;
+        try {
+          const { data: ownRow } = await client
+            .from(QUEUE_TABLE)
+            .select<'status,room_id,matched_with', Pick<QueueRow, 'status' | 'room_id' | 'matched_with'>>('status,room_id,matched_with')
+            .eq('id', queueEntryId)
+            .single();
+          if (ownRow) await resolveMatchedRow(ownRow);
+        } catch (e) {
+          console.debug('[matchmaking] poll error:', e);
+        }
+      }, pollIntervalMs);
 
       // 4. Give up on a real player after the timeout and fall back to a bot.
       timeoutId = setTimeout(fallbackToBot, MATCHMAKING_TIMEOUT_MS);
