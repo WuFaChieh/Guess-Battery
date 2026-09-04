@@ -5,8 +5,10 @@ import { getBadgeForScore, getBadgeTitle, getBadgeDescription, getComboBonusSeri
 import { playChargingSound, playScoreSound } from '../utils/audio';
 import { UnifiedBattery } from './UnifiedBattery';
 import { shareResult } from '../utils/share';
+import { renderShareCardImage } from '../utils/shareCard';
+import { SITE_URL } from '../constants/site';
 import confetti from 'canvas-confetti';
-import { RotateCcw, Share2, Check, Sparkles, Zap, Plug, ClipboardList, Flame } from 'lucide-react';
+import { RotateCcw, Share2, Check, Download, Sparkles, Zap, Plug, ClipboardList, Flame } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface GameOverModalProps {
@@ -22,7 +24,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 }) => {
   const { lang, t } = useLanguage();
   const resolvedModeName = gameModeName ?? t('mode_single_5');
-  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied' | 'downloaded'>('idle');
   const [chargingProgress, setChargingProgress] = useState(0);
   const [isCharging, setIsCharging] = useState(true);
 
@@ -87,15 +89,28 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
   const handleShare = async () => {
     const comboLine = totalComboBonus > 0 ? t('share_gameover_combo_line', { n: totalComboBonus }) : '';
+    const badgeTitle = getBadgeTitle(badge, lang);
     const shareText = t('share_gameover_text', {
       mode: resolvedModeName,
       total: grandTotal,
       comboLine,
       avg: avgScore,
-      badgeTitle: getBadgeTitle(badge, lang),
-      badgeEmoji: badge.emoji
+      badgeTitle,
+      badgeEmoji: badge.emoji,
+      url: SITE_URL
     });
-    const outcome = await shareResult(shareText);
+    const chips = [{ label: t('gameover_total_score'), value: `${grandTotal}` }];
+    if (totalComboBonus > 0) chips.push({ label: '🔥', value: `+${totalComboBonus}` });
+    const image = renderShareCardImage({
+      kicker: resolvedModeName,
+      bigStat: `${avgScore}%`,
+      bigStatCaption: t('gameover_avg_accuracy'),
+      headline: `${badge.emoji} ${badgeTitle}`,
+      subtitle: getBadgeDescription(badge, lang),
+      chips,
+      accent: 'emerald'
+    });
+    const outcome = await shareResult(shareText, undefined, image);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
     setTimeout(() => setShareState('idle'), 2500);
@@ -219,8 +234,22 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
               onClick={handleShare}
               className="py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border border-slate-700"
             >
-              {shareState !== 'idle' ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4 text-slate-300" />}
-              <span>{shareState === 'copied' ? t('share_copied') : shareState === 'shared' ? t('share_shared') : t('share_idle')}</span>
+              {shareState === 'downloaded' ? (
+                <Download className="w-4 h-4 text-emerald-400" />
+              ) : shareState !== 'idle' ? (
+                <Check className="w-4 h-4 text-emerald-400" />
+              ) : (
+                <Share2 className="w-4 h-4 text-slate-300" />
+              )}
+              <span>
+                {shareState === 'downloaded'
+                  ? t('share_downloaded')
+                  : shareState === 'copied'
+                  ? t('share_copied')
+                  : shareState === 'shared'
+                  ? t('share_shared')
+                  : t('share_idle')}
+              </span>
             </button>
 
             <button

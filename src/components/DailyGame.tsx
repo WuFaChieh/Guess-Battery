@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Question, AnswerRecord } from '../types/game';
-import { getDailyQuestions, calculateScore, getCurrentCombo, getDailyShareText } from '../utils/gameLogic';
+import { getDailyQuestions, calculateScore, getCurrentCombo, getDailyShareText, getResultEmoji } from '../utils/gameLogic';
 import { getDailyStreak, recordDailyCompletion, type DailyStreakState } from '../utils/dailyStreak';
 import { getLocalDateString } from '../utils/date';
 import { QuestionCard } from './QuestionCard';
@@ -10,7 +10,8 @@ import { RevealScreen } from './RevealScreen';
 import { GameOverModal } from './GameOverModal';
 import { LoadingState } from './LoadingState';
 import { shareResult } from '../utils/share';
-import { Calendar, Sparkles, Flame, Share2, Check } from 'lucide-react';
+import { renderShareCardImage } from '../utils/shareCard';
+import { Calendar, Sparkles, Flame, Share2, Check, Download } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface DailyGameProps {
@@ -26,7 +27,7 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
   const [gameState, setGameState] = useState<'answering' | 'revealing' | 'completed'>('answering');
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
   const [streak, setStreak] = useState<DailyStreakState>(() => getDailyStreak());
-  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied' | 'downloaded'>('idle');
   // Guards against re-recording the streak if this component re-renders
   // while already completed (e.g. a parent re-render) — the streak should
   // only advance once per actual finish, not once per render.
@@ -51,7 +52,19 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
 
   const handleShareDaily = async () => {
     const shareText = getDailyShareText(answers, streak.currentStreak, todayStr, lang);
-    const outcome = await shareResult(shareText);
+    const avgScore = answers.length > 0 ? Math.round(answers.reduce((acc, a) => acc + a.score, 0) / answers.length) : 0;
+    const grid = answers.map((a) => getResultEmoji(a.distance)).join(' ');
+    const chips = [{ label: t('gameover_avg_accuracy'), value: `${avgScore}%` }];
+    if (streak.currentStreak > 1) chips.push({ label: '🔥', value: `${streak.currentStreak}` });
+    const image = renderShareCardImage({
+      kicker: t('daily_mode_name', { date: todayStr }),
+      bigStat: grid,
+      bigStatCaption: t('gameover_avg_accuracy') + ` ${avgScore}%`,
+      headline: streak.currentStreak > 1 ? t('daily_streak_banner', { n: streak.currentStreak }) : t('mode_daily'),
+      chips,
+      accent: 'amber'
+    });
+    const outcome = await shareResult(shareText, undefined, image);
     if (outcome === 'unavailable') return;
     setShareState(outcome);
     setTimeout(() => setShareState('idle'), 2500);
@@ -107,8 +120,22 @@ export const DailyGame: React.FC<DailyGameProps> = ({ allQuestions }) => {
             onClick={handleShareDaily}
             className="shrink-0 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700"
           >
-            {shareState !== 'idle' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-slate-300" />}
-            <span>{shareState === 'copied' ? t('daily_share_copied') : shareState === 'shared' ? t('share_shared') : t('daily_share_button')}</span>
+            {shareState === 'downloaded' ? (
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+            ) : shareState !== 'idle' ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <Share2 className="w-3.5 h-3.5 text-slate-300" />
+            )}
+            <span>
+              {shareState === 'downloaded'
+                ? t('share_downloaded')
+                : shareState === 'copied'
+                ? t('daily_share_copied')
+                : shareState === 'shared'
+                ? t('share_shared')
+                : t('daily_share_button')}
+            </span>
           </button>
         </div>
 

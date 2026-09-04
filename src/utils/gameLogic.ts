@@ -2,6 +2,7 @@ import { LucideIcon, Trophy, Zap, BatteryCharging, Target, ThumbsUp, HelpCircle,
 import { TitleBadge, Question, AnswerRecord } from '../types/game';
 import { getLocalDateString } from './date';
 import { Language, TranslationKey, translate } from '../i18n/translations';
+import { SITE_URL } from '../constants/site';
 
 export function calculateScore(userGuess: number, officialBattery: number): { distance: number; score: number } {
   const distance = Math.abs(userGuess - officialBattery);
@@ -113,11 +114,11 @@ export function getResultEmoji(distance: number): string {
 // of how each answer landed, the average score, and the current streak —
 // the same shape as a Wordle share (a spoiler-free result grid plus a
 // one-line brag), handed to utils/share.ts's shareResult().
-export function getDailyShareText(answers: AnswerRecord[], streakDays: number, dateStr: string, lang: Language = 'zh'): string {
+export function getDailyShareText(answers: AnswerRecord[], streakDays: number, dateStr: string, lang: Language = 'zh', url: string = SITE_URL): string {
   const grid = answers.map((a) => getResultEmoji(a.distance)).join('');
   const avgScore = answers.length > 0 ? Math.round(answers.reduce((acc, a) => acc + a.score, 0) / answers.length) : 0;
   const streakLine = streakDays > 1 ? translate(lang, 'share_daily_streak_line', { days: streakDays }) : '';
-  return translate(lang, 'share_daily_text', { date: dateStr, grid, avg: avgScore, streakLine });
+  return translate(lang, 'share_daily_text', { date: dateStr, grid, avg: avgScore, streakLine, url });
 }
 
 export const TITLE_BADGES: TitleBadge[] = [
